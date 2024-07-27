@@ -1,0 +1,89 @@
+{% extends 'store/base.html' %}
+<!-- CSS only -->
+{%include 'store/partials/_header.html'%}
+
+
+{% load humanize %}
+
+{% load crispy_forms_tags %}
+{% block content %}
+<nav aria-label="breadcrumb" class="breadcrumb-nav">
+    <div class="container">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'store:index' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url  'store:cart' %}">cart</a></li>
+            <li class="breadcrumb-item"><a href="{% url  'store:check-out' %}">check-out</a></li>
+            <li class="breadcrumb-item active" aria-current="page">order</li>
+        </ol>
+    </div><!-- End .container -->
+</nav><!-- End .breadcrumb-nav -->
+            <!-- <div class="container"> -->
+                <div class="row d-flex justify-content-center m-3">
+                                <form id="paymentForm"  method="POST" action="{% url 'store:initiate_payment' %}">
+
+                                    
+                                            <div class="summary">
+                                                <h3 class="summary-title">Confirm Your Order</h3><!-- End .summary-title -->
+        
+                                                <table class="table table-summary">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>S/No.</th>
+                                                            <th>Item(s)</th>
+                                                            <th></th>
+                                                            <th></th>
+                                                            <th>amount</th>
+                                                        
+                                                    
+                                                        </tr>
+                                                    </thead>
+        
+                                                    <tbody>
+                                                        
+                                                       
+                                                        {% for item in order.product.all %}
+                                                        <tr>
+                                                        <td>{{forloop.counter}}</td>
+														<td>                                                            
+                                                                <img src="{{item.product.img_1.url}}" width="50" class="m-1">
+                                                            </td>
+                                                            <td>{{ item.product.title }}</td>
+                                                                                                                  
+                                                            <td >  * {{ order.quantity }}</td>
+                                                            <td>&#8358;{{ item.get_price_tag|floatformat:2|intcomma}}</td>
+                                                            {%endfor%}
+                                                          
+                                                        </tr>
+                                                        <tr>
+
+                                                            <td>delivery:</td>
+                                                            
+                                                            <td colspan="4">&#8358;{{order.get_delivery_cost|floatformat:2|intcomma}}</td>
+                                                        </tr>
+                                                        <tr class="summary-total">
+                                                            <td>Grand Total: &#8358; {{order.get_total_with_delivery|floatformat:2|intcomma}}</td>
+                                                            <td></td>
+                                                            <input type="hidden" name="amount" value="{{order.get_total_with_delivery}}"/>
+                                                            <input type="hidden" value="{{user.email}}" name="email" />
+             		
+                                                        </tr><!-- End .summary-total -->
+                                                    </tbody>
+                                                </table><!-- End .table table-summary -->
+        
+                                            </div><!-- End .summary -->
+                                    {% csrf_token %}
+                                            
+                                  
+                                    <div class="form-footer">
+                                        <button type="submit" class="btn btn-primary">
+                                            <span>Confirm</span>
+                                            <i class="icon-long-arrow-right"></i>
+                                        </button>
+                                    </div><!-- End .form-footer -->
+                                </form>
+                           
+                        </div><!-- End .tab-content -->
+                    </div><!-- End .form-tab -->
+                </div><!-- End .form-box -->
+        </div><!-- End .login-page section-bg -->
+{% endblock content %}

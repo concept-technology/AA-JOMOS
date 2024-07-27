@@ -1,0 +1,168 @@
+{% extends 'store/base.html' %}
+{% load humanize %}
+{% block content %}
+<main class="main">
+    <div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
+        <div class="container">
+            <a href="{% url 'store:categories-list' %}">
+                <h1 class="page-title">Wishlist<span>Shop</span></h1>
+            </a>
+        </div><!-- End .container -->
+    </div><!-- End .page-header -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                <li class="breadcrumb-item"><a href="#">Shop</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Wishlist</li>
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="page-content">
+        <div class="container">
+            <table class="table table-wishlist table-mobile">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Stock Status</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% if wishlist %}
+                    {% for item in wishlist %}
+                    <tr>
+                        <td class="product-col">
+                            <div class="product">
+                                <figure class="product-media">
+                                    <a href="{{ item.product.get_absolute_url }}">
+                                        <img src="{{ item.product.img_1.url }}" alt="Product image">
+                                    </a>
+                                </figure>
+                                <h3 class="product-title">
+                                    <a href="{{ item.product.get_absolute_url }}">{{ item.product.title }}</a>
+                                </h3><!-- End .product-title -->
+                            </div><!-- End .product -->
+                        </td>
+                        <td class="price-col">
+                            <div class="product-price">
+                                {% if item.product.discount_price %}
+                                <span class="new-price">&#8358;{{ item.product.discount_price|floatformat:2|intcomma }}</span>
+                                <span class="old-price">&#8358;{{ item.product.price|floatformat:2|intcomma }}</span>
+                                {% else %}
+                                <span class="new-price">&#8358;{{ item.product.price|floatformat:2|intcomma }}</span>
+                                {% endif %}
+                            </div><!-- End .product-price -->
+                        </td>
+                        {% if item.stock_quantity > 0 %}
+                        <td class="stock-col"><span class="in-stock">In stock: {{ item.stock_quantity }}</span></td>
+                        <td>
+                            <button class="btn btn-block btn-outline-primary-2 add-to-cart-btn" data-slug="{{ item.product.slug }}"><i class="icon-cart-plus"></i>Add to Cart</button>
+                        </td>
+                        {% else %}
+                        <td><span class="out-of-stock">Out of stock</span></td>
+                        <td class="action-col">
+                            <button class="btn btn-block btn-outline-primary-2 disabled">Out of Stock</button>
+                        </td>
+                        {% endif %}
+                        <!-- <td class="remove-col"><a href="{{items.product.delete_cart}}"><button class="btn-remove" data-id="{{ item.id }}"><i class="icon-close"></i></button> </a></td> -->
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <p>Your wishlist is empty.</p>
+                    {% endif %}
+                </tbody>
+            </table><!-- End .table table-wishlist -->
+            <div class="wishlist-share">
+                <div class="social-icons social-icons-sm mb-2">
+                    <label class="social-label">Share on:</label>
+                    <a href="#" class="social-icon" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
+                    <a href="#" class="social-icon" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
+                    <a href="#" class="social-icon" title="Instagram" target="_blank"><i class="icon-instagram"></i></a>
+                    <a href="#" class="social-icon" title="Youtube" target="_blank"><i class="icon-youtube"></i></a>
+                    <a href="#" class="social-icon" title="Pinterest" target="_blank"><i class="icon-pinterest"></i></a>
+                </div><!-- End .social-icons -->
+            </div><!-- End .wishlist-share -->
+        </div><!-- End .container -->
+    </div><!-- End .page-content -->
+
+    <script>
+        $(document).ready(function () {
+            function addToCart(event) {
+                event.preventDefault();
+                let productSlug = $(this).data('slug');
+                console.log('Add to cart triggered', { 'slug': productSlug });
+
+                $.ajax({
+                    url: "{% url 'store:add-to-cart' %}",
+                    method: 'POST',
+                    data: {
+                        slug: productSlug,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
+                    success: function (response) {
+                        console.log('Success response:', response);
+                        $('#cart-count').html(response.cart_count);
+
+                        // Display messages using SweetAlert
+                        if (response.messages) {
+                            response.messages.forEach(function (message) {
+                                Swal.fire({
+                                    text: message.message,
+                                    icon: message.tags.includes('success') ? 'success' : 'error',
+                                    timer: 3000,
+                                    showConfirmButton: false
+                                });
+                            });
+                        } else {
+                            console.log('No messages in response');
+                        }
+
+                        // Change button ID and text
+                        $('.add-to-cart-btn[data-slug="' + productSlug + '"]').addClass('delete-from-cart-btn').removeClass('add-to-cart-btn').text('Delete from Cart');
+                        // Attach delete event
+                        $('.delete-from-cart-btn[data-slug="' + productSlug + '"]').off('click').on('click', deleteFromCart);
+                    },
+                    error: function (response) {
+                        console.log('Error response:', response);
+                    }
+                });
+            }
+
+            function deleteFromCart(event) {
+                event.preventDefault();
+                let productSlug = $(this).data('slug');
+                console.log('Delete from cart triggered', { 'slug': productSlug });
+
+                $.ajax({
+                    url: "{% url 'store:delete-from-cart' %}",
+                    method: 'POST',
+                    data: {
+                        slug: productSlug,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
+                    success: function (response) {
+                        console.log('Success response:', response);
+                        $('#cart-count').html(response.cart_count);
+
+                        // Change button ID and text back to add to cart
+                        $('.delete-from-cart-btn[data-slug="' + productSlug + '"]').addClass('add-to-cart-btn').removeClass('delete-from-cart-btn').text('Add to Cart');
+                        // Attach add event
+                        $('.add-to-cart-btn[data-slug="' + productSlug + '"]').off('click').on('click', addToCart);
+                    },
+                    error: function (response) {
+                        console.log('Error response:', response);
+                    }
+                });
+            }
+
+            // Attach initial add to cart event
+            $('.add-to-cart-btn').off('click').on('click', addToCart);
+        });
+    </script>
+</main><!-- End .main -->
+{% endblock content %}

@@ -1,0 +1,91 @@
+{% extends 'store/base.html' %}
+
+{% block content %}
+    {{ block.super }}
+    {% load humanize %}
+
+    <nav aria-label="breadcrumb" class="breadcrumb-nav">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'store:index' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'store:categories-list' %}">Shop</a></li>
+                <li class="breadcrumb-item active">{{ user }}-cart</li>
+                <li class="breadcrumb-item"><a href="{% url 'store:verify-address' %}">Checkout</a></li>
+                <li class="breadcrumb-item" aria-current="page">Billing Address</li>
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="tab-pane" id="tab-address" role="tabpanel" aria-labelledby="tab-address-link">
+        <p>The following addresses will be used on the checkout page by default.</p>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card card-dashboard">
+                    <div class="card-body">
+                        <h3 class="card-title">Ship to</h3><!-- End .card-title -->
+                        
+                        {% for address_item in addresses %}
+                        <p>
+                            {{ user }}<br>
+                            {{ address_item.street_address }}<br>
+                            {{ address_item.apartment }},<br> 
+                            {{ address_item.town }}<br>
+                            {{ address_item.telephone }}<br>
+                            {{ address_item.zip_code }}<br>
+                            {{ address_item.country }}<br>
+                            {{ user.email }}<br>
+                            <a href="{{ address_item.get_absolute_url }}">Edit<i class="icon-edit"></i></a>
+                        </p>
+                        {% endfor %}
+                    </div><!-- End .card-body -->
+                </div><!-- End .card-dashboard -->
+            </div><!-- End .col-lg-6 -->
+
+            <div class="col-lg-6">
+                <div class="card card-dashboard">
+                    <div class="card-body">
+                        <div class="summary summary-cart">
+                            <h3 class="summary-title">Cart Order</h3><!-- End .summary-title -->
+
+                            <div class="checkout-discount">
+                                {% if coupon %}
+                                {% for code in coupon %}
+                                <p style="color: rgb(110, 194, 2);">Use {{ code.code }}</p>
+                                {% endfor %}
+                                {% endif %}
+                                <form method="post" action="{% url 'store:apply-coupon' %}?next={{ request.path }}">
+                                    {% csrf_token %}
+                                    <div>
+                                        <label>Do you have a promo code?</label>
+                                        <input class="form-control" placeholder="Enter coupon code" name="code">
+                                    </div>
+                                    <button type="submit" class="btn btn-secondary">Redeem</button>
+                                </form>
+                            </div><!-- End .checkout-discount -->
+
+                            <table class="table table-summary">
+                                <tbody>
+                                    <tr class="summary-subtotal">
+                                        <td>Subtotal:</td>
+                                        <td>&#8358;{{ total_order_cost|floatformat:2|intcomma }}</td>
+                                    </tr><!-- End .summary-subtotal -->
+                                    <tr class="summary-shipping">
+                                        <td>Delivery:</td>
+                                        <td>&#8358;{{ total_delivery_cost|floatformat:2|intcomma }}</td>
+                                    </tr>
+                                    <tr class="summary-total">
+                                        <td>Total:</td>
+                                        <td>&#8358;{{ total_cost_with_delivery|floatformat:2|intcomma }}</td>
+                                    </tr><!-- End .summary-total -->
+                                </tbody>
+                            </table><!-- End .table table-summary -->
+
+                            <a href="{% url 'store:initiate_payment' %}" class="btn btn-outline-primary-2 btn-order btn-block">Proceed to Payment</a>
+                        </div><!-- End .summary -->
+                    </div><!-- End .card-body -->
+                </div><!-- End .card-dashboard -->
+            </div><!-- End .col-lg-6 -->
+        </div><!-- End .row -->
+    </div><!-- .End .tab-pane -->
+{% endblock content %}

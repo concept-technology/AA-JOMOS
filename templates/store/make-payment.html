@@ -1,0 +1,138 @@
+{% extends 'store/base.html' %}
+{{block.super}}
+{% load humanize %}
+{% block content %}
+<div class="container newsletter-popup-container">
+	<div class="row justify-content-center">
+		<div class="col-10">
+				<div class="col-xl-3-5col col-lg-7 banner-content-wrap">
+					<div class="login-page bg-image pt-8 pb-8 pt-md-12 pb-md-12 pt-lg-17 pb-lg-17" style="background-image: url('assets/images/backgrounds/login-bg.jpg')">
+						<div class="container row">
+							<div class="form-box">
+										<transaction>
+											<h6>welcome to paystack gateway,<br class="m-2">you are about to pay the sum of &#8358;{{ payment.amount|floatformat:2|intcomma }} for your order</h6>
+										</transaction>
+										<div>
+											
+											<button onclick="payWithPaystack()" class="btn btn-primary btn-primary mb-4">Pay</button>			
+													
+										</div>
+										
+							</div><!-- End .form-box -->
+						</div><!-- End .container -->
+					</div><!-- End .login-page section-bg -->
+				</div>
+			
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+
+
+
+
+    
+    
+<script src="https://js.paystack.co/v1/inline.js"></script>
+
+<script>
+	function payWithPaystack() {
+		let currency = "NGN";
+		let plan = "";
+		let ref = "{{ payment.ref }}";
+		let amount = "{{ payment.amount }}";
+		let obj = {
+			key: "{{ paystack_pub_key }}",
+			email: "{{ payment.email }}",
+			amount: "{{ amount_value }}",
+			ref: ref,
+			callback: function (response) {
+				showLoadingIndicator()
+				window.location.href = "{% url 'store:verify_payment' payment.ref %}";
+			},
+		};
+		if (Boolean(currency)) {
+			obj.currency = currency.toUpperCase();
+		}
+		if (Boolean(plan)) {
+			obj.plan - plan;
+		}
+
+		var handler = PaystackPop.setup(obj);
+		handler.openIframe();
+	}
+
+
+
+	function showLoadingIndicator() {
+        // Disable all buttons to prevent further clicks
+        var buttons = document.querySelectorAll('button');
+        buttons.forEach(function(button) {
+            button.disabled = true;
+        });
+
+        // Show loading indicator (you can customize this based on your UI)
+        var loader = document.getElementById('loading-indicator');
+        if (loader) {
+            loader.style.display = 'block';
+        }
+    }
+
+    // Function to enable buttons and hide loading indicator
+    function hideLoadingIndicator() {
+        // Enable all buttons
+        var buttons = document.querySelectorAll('button');
+        buttons.forEach(function(button) {
+            button.disabled = false;
+        });
+
+        // Hide loading indicator
+        var loader = document.getElementById('loading-indicator');
+        if (loader) {
+            loader.style.display = 'none';
+        }
+    }
+
+	
+		function verifyPayment(ref) {
+			// Show loading indicator
+			document.getElementById('loading-indicator').style.display = 'block';
+	
+			fetch(`/verify-payment/${ref}/`, {
+				method: 'GET',
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest'
+				}
+			})
+			.then(response => response.json())
+			.then(data => {
+				// Hide loading indicator
+				document.getElementById('loading-indicator').style.display = 'none';
+	
+				if (data.status === 'success') {
+					// Redirect to success page
+					window.location.href = data.redirect_url;
+				} else {
+					alert(data.message);
+				}
+			})
+			.catch(error => {
+				console.error('Error:', error);
+				document.getElementById('loading-indicator').style.display = 'none';
+			});
+		}
+
+	
+
+</script>
+
+
+
+
+{% endblock content %}
+
+
+this is my html template

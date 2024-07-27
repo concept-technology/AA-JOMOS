@@ -1,0 +1,255 @@
+{% extends 'store/base.html' %}
+
+{% block content %}
+{% load humanize %}
+
+<div class="page-wrapper">
+    <main class="main">
+        <nav aria-label="breadcrumb" class="breadcrumb-nav mb-3">
+            <div class="container">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'store:index' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Shop</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">My Account</li>
+                </ol>
+            </div>
+        </nav>
+        <!-- End .breadcrumb-nav -->
+
+        {% if user.is_authenticated %}
+        <div class="page-content">
+            <div class="dashboard">
+                <div class="container">
+                    <div class="row">
+                        <aside class="col-md-4 col-lg-3">
+                            <ul class="nav nav-dashboard flex-column mb-3 mb-md-0" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="tab-dashboard-link" data-toggle="tab" href="#tab-dashboard" role="tab" aria-controls="tab-dashboard" aria-selected="true">Dashboard</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="tab-orders-link" data-toggle="tab" href="#tab-orders" role="tab" aria-controls="tab-orders" aria-selected="false">Orders</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="tab-downloads-link" data-toggle="tab" href="#tab-downloads" role="tab" aria-controls="tab-downloads" aria-selected="false">Downloads</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="tab-address-link" data-toggle="tab" href="#tab-address" role="tab" aria-controls="tab-address" aria-selected="false">Addresses</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="tab-account-link" data-toggle="tab" href="#tab-account" role="tab" aria-controls="tab-account" aria-selected="false">Account Details</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="tab-password-link" data-toggle="tab" href="#tab-password" role="tab" aria-controls="tab-password" aria-selected="false">Change Password</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'account_logout' %}">Sign Out</a>
+                                </li>
+                            </ul>
+                        </aside>
+                        <!-- End .col-lg-3 -->
+
+                        <div class="col-md-8 col-lg-9">
+                            <div class="tab-content">
+                                <div class="tab-pane fade show active" id="tab-dashboard" role="tabpanel" aria-labelledby="tab-dashboard-link">
+                                    <p>Hello <span class="font-weight-normal text-dark">{{ user }}</span></p>
+                                    <p>From your account dashboard you can view your <a href="#tab-orders" class="tab-trigger-link link-underline">recent orders</a>, manage your <a href="#tab-address" class="tab-trigger-link">shipping and billing addresses</a>, and <a href="#tab-account" class="tab-trigger-link">edit your password and account details</a>.</p>
+                                </div>
+                                <!-- .End .tab-pane -->
+
+                                <div class="tab-pane fade" id="tab-orders" role="tabpanel" aria-labelledby="tab-orders-link">
+									
+									{% if orders %}
+										
+										
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">S/No.</th>
+                                                <th scope="col">Item</th>
+                                                <th scope="col">Date</th>
+                                                <th scope="col">Ref.</th>
+                                                <th scope="col">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for order in orders %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>
+                                                    <ul>
+                                                        {% for item in order.product.all %}
+                                                        <li>
+                                                            <a href="{{ item.product.get_absolute_url}}">
+                                                                <img src="{{ item.product.img_1.url }}" width="50" class="m-1">
+                                                            </a>
+                                                                <span>{{ item.product.title }}</span>
+                                                                <span>(Quantity: {{ item.quantity }})</span>
+                                                        </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </td>
+                                                <td>{{ order.date }}</td>
+                                                <td>{{ order.reference }}</td>
+                                                <td>&#8358; {{ order.get_total|floatformat:2|intcomma }}</td>
+                                                <td>
+                                                    {% if not order.is_received %}
+                                                    <form method="post" action="{% url 'store:mark-order-received' order.id %}?next={{ request.path }}">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class=" btn btn-primary">Mark as Received</button>
+                                                    </form>
+                                                    {% else %}
+                                                    {% for item in order.product.all %}
+                                                    <button type="submit" class="btn-product btn" style="color: rgb(24, 228, 24);">Delivered</button>
+                                                 
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+									{%else%}
+									<p>you have no active order</p>
+									{% endif %}
+
+                                    <a href="{% url 'store:categories-list' %}" class="btn btn-outline-primary-2"><span>GO SHOP</span><i class="icon-long-arrow-right"></i></a>
+                                </div>
+                                <!-- .End .tab-pane -->
+
+                                <div class="tab-pane fade" id="tab-downloads" role="tabpanel" aria-labelledby="tab-downloads-link">
+                                    <p>No downloads available yet.</p>
+                                    <a href="{% url 'store:categories-list' %}" class="btn btn-outline-primary-2"><span>GO SHOP</span><i class="icon-long-arrow-right"></i></a>
+                                </div>
+                                <!-- .End .tab-pane -->
+
+                                <div class="tab-pane fade" id="tab-address" role="tabpanel" aria-labelledby="tab-address-link">
+                                    <p>The following addresses will be used on the checkout page by default.</p>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="card card-dashboard">
+                                                <div class="card-body">
+                                                    <h3 class="card-title">Delivery Address</h3>
+													<form method="post" action="{% url 'store:dash-board' %}">
+														{% csrf_token %}
+														{{address_form.as_p}}
+														<button type="submit" name="update_address" class="btn btn-primary">save changes<i class="icon-edit"></i></button></p>
+													</form>
+                          
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- End .col-lg-6 -->
+
+                                 
+                                    </div>
+                                    <!-- End .row -->
+                                </div>
+                                <!-- .End .tab-pane -->
+
+                                <div class="tab-pane fade" id="tab-account" role="tabpanel" aria-labelledby="tab-account-link">
+                                    <form method="post" action="{% url 'store:dash-board' %}">
+                                        {% csrf_token %}
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <label>First Name *</label>
+                                                <input type="text" name="first_name" value="{{ user.first_name }}" class="form-control" required>
+                                                {% for error in form.first_name.errors %}
+                                                <p class="text-danger">{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                            <!-- End .col-sm-6 -->
+
+                                            <div class="col-sm-6">
+                                                <label>Last Name *</label>
+                                                <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}" required>
+                                                {% for error in form.last_name.errors %}
+                                                <p class="text-danger">{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                            <!-- End .col-sm-6 -->
+                                        </div>
+                                        <!-- End .row -->
+
+                                        <label>Display Name *</label>
+                                        <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+                                        <small class="form-text">This will be how your name will be displayed in the account section and in reviews</small>
+                                        {% for error in form.username.errors %}
+                                        <p class="text-danger">{{ error }}</p>
+                                        {% endfor %}
+
+                                        <label>Email address *</label>
+                                        <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+                                        {% for error in form.email.errors %}
+                                        <p class="text-danger">{{ error }}</p>
+                                        {% endfor %}
+
+                                        <button type="submit" class="btn btn-outline-primary-2" name="update_profile">
+                                            <span>SAVE CHANGES</span>
+                                            <i class="icon-long-arrow-right"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                <!-- .End .tab-pane -->
+
+                                <div class="tab-pane fade" id="tab-password" role="tabpanel" aria-labelledby="tab-password-link">
+                                    <div class="card card-dashboard">
+                                        <div class="card-body">
+                                            <h3 class="card-title">Change Password</h3>
+                                            <form method="post" action="{% url 'store:dash-board' %}">
+                                                {% csrf_token %}
+                                                <div class="form-group">
+                                                    <label for="old_password">Old Password *</label>
+                                                    <input type="password" name="old_password" id="old_password" class="form-control" required>
+                                                    {% for error in password_form.old_password.errors %}
+                                                    <p class="text-danger">{{ error }}</p>
+                                                    {% endfor %}
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="new_password1">New Password *</label>
+                                                    <input type="password" name="new_password1" id="new_password1" class="form-control" required>
+                                                    {% for error in password_form.new_password1.errors %}
+                                                    <p class="text-danger">{{ error }}</p>
+                                                    {% endfor %}
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="new_password2">Confirm New Password *</label>
+                                                    <input type="password" name="new_password2" id="new_password2" class="form-control" required>
+                                                    {% for error in password_form.new_password2.errors %}
+                                                    <p class="text-danger">{{ error }}</p>
+                                                    {% endfor %}
+                                                </div>
+
+                                                <button type="submit" class="btn btn-outline-primary-2" name="change_password">
+                                                    <span>CHANGE PASSWORD</span>
+                                                    <i class="icon-long-arrow-right"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- .End .tab-pane -->
+                            </div>
+                        </div>
+                        <!-- End .col-lg-9 -->
+                    </div>
+                    <!-- End .row -->
+                </div>
+                <!-- End .container -->
+            </div>
+            <!-- End .dashboard -->
+        </div>
+        <!-- End .page-content -->
+        {% else %}
+        <p>You must <a href="{% url 'account_signup' %}">sign up</a> to view your profile.</p>
+        {% endif %}
+    </main>
+    <!-- End .main -->
+
+</div>
+<!-- End .page-wrapper -->
+
+<button id="scroll-top" title="Back to Top"><i class="icon-arrow-up"></i></button>
+
+{% endblock content %}
