@@ -73,7 +73,7 @@ admin.site.register(CustomersAddress, AddressAdmin)
 admin.site.register(Coupon, CouponAdmin)
 admin.site.register(Refunds)
 admin.site.register(Features)
-# admin.site.register(CustomerRating)
+admin.site.register(Color)
 
 admin.site.register(Inventory, InventAdmin)
 

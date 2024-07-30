@@ -436,7 +436,7 @@ logger = logging.getLogger(__name__)
 @require_POST
 def add_to_cart(request):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        slug = request.POST.get('slug')
+        slug = request.POST.get('slug')      
         product = get_object_or_404(Product, slug=slug)
         quantity = int(request.POST.get('quantity', 1))  # Default quantity to 1 if not provided
 
@@ -445,9 +445,7 @@ def add_to_cart(request):
 
             if cart_qs.exists():
                 cart_item = cart_qs.first()
-                cart_item.quantity += quantity  # Update the quantity
-                cart_item.save()
-                messages.success(request, f"{product.title} quantity updated in cart")
+                messages.error(request, f"{product.title} is already added to cart")
             else:
                 cart_item = Cart.objects.create(
                     user=request.user,
@@ -466,7 +464,6 @@ def add_to_cart(request):
                     'date': timezone.now()
                 }
             )
-
             if not order.product.filter(id=cart_item.id).exists():
                 order.product.add(cart_item)
             order.save()
@@ -1003,52 +1000,54 @@ class UpdateCartQuantity(View):
     def post(self, request, *args, **kwargs):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             id = int(self.request.POST.get('id'))
-            quantity = request.POST.get('quantity')
-            quantity1 = request.POST.get('quantity1')
+            quantity_data = request.POST.getlist('quantities[]')
+            color_data = request.POST.getlist('colors[]')
             
-            # Validate the quantity
-            try:
-                quantity = int(quantity) or int(quantity1)
-            except (ValueError, TypeError):
-                return JsonResponse({'message': 'Invalid quantity'}, status=400)
-            
-            size = request.POST.get('size')
+            # Validate the quantities
+            quantities = []
+            for qty in quantity_data:
+                try:
+                    quantities.append(int(qty))
+                except (ValueError, TypeError):
+                    return JsonResponse({'message': 'Invalid quantity'}, status=400)
             
             product = get_object_or_404(Product, pk=id)
             
             if request.user.is_authenticated:
                 cart = get_object_or_404(Cart, product=product, is_ordered=False, user=request.user)
+                cart.quantity = sum(quantities)  # Update total quantity
                 
-                cart.quantity = quantity
-                cart.size = size if size else None  # Handle the case where size is not provided
+                cart.colors.clear()  # Clear existing colors
+                for color_name, qty in zip(color_data, quantities):
+                    color = get_object_or_404(Color, name=color_name)
+                    cart.colors.add(color, through_defaults={'quantity': qty})
                 
                 cart.save()
             else:
                 session_cart = request.session.get('cart', {})
                 
                 if str(id) in session_cart:
-                    session_cart[str(id)]['quantity'] = quantity
-                    session_cart[str(id)]['size'] = size if size else None  # Handle the case where size is not provided
+                    session_cart[str(id)]['quantity'] = sum(quantities)
+                    session_cart[str(id)]['colors'] = [{'color': color, 'quantity': qty} for color, qty in zip(color_data, quantities)]
                 else:
                     session_cart[str(id)] = {
-                        'quantity': quantity,
-                        'size': size if size else None
+                        'quantity': sum(quantities),
+                        'colors': [{'color': color, 'quantity': qty} for color, qty in zip(color_data, quantities)]
                     }
                 
                 request.session['cart'] = session_cart
 
             if product.discount_price:
-                total_price = product.discount_price * quantity
+                total_price = product.discount_price * sum(quantities)
             else:
-                total_price = product.price * quantity
+                total_price = product.price * sum(quantities)
 
             messages = [{'message': 'Cart updated successfully', 'tags': 'success'}]
 
             return JsonResponse({
                 'product': product.title,
                 'id': id,
-                'qty': quantity,
-                'size': size,  # Ensure to return size even if it's None
+                'qty': sum(quantities),
                 'total_price': total_price,
                 'messages': messages
             })
@@ -1069,16 +1068,6 @@ def mark_order_as_received(request, order_id):
             # Redirect to the user dashboard or another appropriate page
 
     return redirect('user-dashboard')
-  
-def reorder_product(request, product_id):
-    pass
-#     product = get_object_or_404(Product, id=product_id)
-#     cart_item, created = Cart.objects.get_or_create(user=request.user, product=product, is_ordered=False)
-#     if not created:
-#         cart_item.quantity += 1
-#         cart_item.save()
-#     return redirect('store:index')                                          
-                                            
                                             
 def next_product(request, slug):
     product = get_object_or_404(Product, slug=slug)

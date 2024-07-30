@@ -115,12 +115,25 @@ class Features(models.Model):
     
  
 class Size(models.Model):
-    size = models.CharField(max_length=10)
+    size = models.CharField(max_length=10, unique=True)
+    price = models.IntegerField(default=0, blank=True,null=True)
+    
+    
     
     def __str__(self) -> str:
         return self.size
-    
-    
+
+class Color(models.Model):
+    name = models.CharField(max_length=50)
+    img  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
+    quantity = models.IntegerField(default =1,blank=True, null=True) 
+    is_available = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
+
 class Product(models.Model):
     title = models.CharField(max_length=255)
     description= models.TextField(max_length=1000)
@@ -132,6 +145,7 @@ class Product(models.Model):
     img_2  = models.ImageField(upload_to='static/media/img', default='img', blank=True, null=True)
     img_3  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
     img_4  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
+    color = models.ManyToManyField(Color)
     label = models.CharField(choices=label_choices, max_length=255, default='', blank=True)
     features = models.ForeignKey(Features, on_delete=models.CASCADE, blank=True,null=True)
     category = models.ForeignKey(Category, default='', on_delete=models.CASCADE)
@@ -145,6 +159,7 @@ class Product(models.Model):
     is_featured = models.BooleanField(default=False)
     is_deal_of_the_day = models.BooleanField(default=False)
     quantity_sold = models.PositiveIntegerField(default=0)
+    minimum_order = models.IntegerField(default=1)  
     
     def is_on_sale(self):
         return self.discount_price > 0
@@ -221,7 +236,8 @@ class Product(models.Model):
         if not next_product:
             next_product = Product.objects.order_by('id').first()
         return next_product
-   
+
+ 
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='product')
@@ -231,10 +247,12 @@ class Cart(models.Model):
     is_in_cart = models.BooleanField(default=False)
     cart_id = models.UUIDField(default=uuid.uuid4,)
     session_key = models.CharField(max_length=40, null=True, blank=True)
+    color = models.ManyToManyField(Color, blank=True, null=True, related_name='carts')
+    
     
     def get_discount_price(self):
         return self.quantity * self.product.discount_price
-    
+
     
     def get_normal_price(self):
         return self.quantity * self.product.price
@@ -265,8 +283,8 @@ class Cart(models.Model):
         dis_count_price = self.product.discount_price
         title = self.product.title
         if not dis_count_price:
-            return f"item: {title}, price: {price}, quantity: {self.quantity}"        
-        return f"item:{title} price: {dis_count_price}, quantity: {self.quantity}"
+            return f"item: {title}, price: {price}, quantity: {self.quantity} color:{self.color.name}"        
+        return f"item:{title} price: {dis_count_price}, quantity: {self.quantity} color: {self.color.name}"
             
 
     def get_title(self):
@@ -281,7 +299,12 @@ phone_regex = RegexValidator(
     regex=r'^\+?1?\d{9,15}$',
     message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
 )
-  
+
+class CartColor(models.Model):
+    cart = models.ForeignKey('Cart', on_delete=models.CASCADE)
+    color = models.ForeignKey(Color, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
 class CustomersAddress(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', blank=True, null=True )
     street_address = models.CharField(max_length=300)

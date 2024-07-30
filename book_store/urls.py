@@ -59,7 +59,6 @@ urlpatterns = [
      
      path('order/<int:order_id>/received/', views.mark_order_as_received, name='mark-order-received'),
      
-    path('reorder/<int:product_id>/', views.reorder_product, name='reorder_product'),
     
     path('view/next_product/<slug>', views.next_product, name='next_product'),
     
