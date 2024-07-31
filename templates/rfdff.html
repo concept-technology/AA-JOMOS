@@ -1,6 +1,4 @@
-{% extends 'store/base.html' %}
-{% load humanize %}
-{% block content %}
+{% extends "store/base.html" %}
 {% load static %}
 {% block content %}
 {% load star_rating %}   
@@ -340,326 +338,213 @@
     </div><!-- End .page-content -->
 </main><!-- End .main -->
 
-
-<main class="main">
-        	<div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
-        		<div class="container">
-					<a href="{% url 'store:categories-list' %}">
-						<h1 class="page-title">Wishlist<span>Shop</span></h1>
-
-					</a>
-        		</div><!-- End .container -->
-        	</div><!-- End .page-header -->
-            <nav aria-label="breadcrumb" class="breadcrumb-nav">
-                <div class="container">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                        <li class="breadcrumb-item"><a href="#">Shop</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Wishlist</li>
-                    </ol>
-                </div><!-- End .container -->
-            </nav><!-- End .breadcrumb-nav -->
-
-            <div class="page-content">
-            	<div class="container">
-					<table class="table table-wishlist table-mobile">
-						<thead>
-							<tr>
-								<th>Product</th>
-								<th>Price</th>
-								<th>Stock Status</th>
-								<th></th>
-								<th></th>
-							</tr>
-						</thead>
-
-						<tbody>
-                            
-                            
-							{% if wishlist %}						                   
-                            {% for items in wishlist %}            
-							<tr>
-								<td class="product-col">
-									<div class="product">
-										<figure class="product-media">
-											<a href="{{items.product.get_absolute_url}}">
-												<img src="{{items.product.img_1.url}}" alt="Product image">
-											</a>
-										</figure>
-
-										<h3 class="product-title">
-											<a href="#">{{items.product.title}}</a>
-										</h3><!-- End .product-title -->
-									</div><!-- End .product -->
-								</td>
-								<td class="price-col">
-									<div class="product-price">
-										{% if product.discount_price|floatformat:2|intcomma%}
-										<span class="new-price">&#8358;{{items.product.discount_price|floatformat:2|intcomma}}</span>
-										<span class="old-price">&#8358;{{items.product.price|floatformat:2|intcomma}}</span>
-										{% else %}
-										<span class="new-price">&#8358;{{items.product.price|floatformat:2|intcomma}}</span>
-										<span class="old-price">&#8358;{{items.product.discount_price|floatformat:2|intcomma}}</span>
-										{% endif %}
-									</div><!-- End .product-price -->
-								</td>
-								{% if items.stock_quantity > 0 %}
-								<td class="stock-col"><span class="in-stock">in stock: {{ items.stock_quantity }}</span></td>
-								<td>
-									<button class="btn btn-block btn-outline-primary-2 out-of-stock"><i class="icon-cart-plus"></i>Add to Cart</button>
-
-								</td>
-								{% else %}
-								<td><span class="out-of-stock">Out of stock</span></td>
-								<td class="action-col">
-									<button class="btn btn-block btn-outline-primary-2 disabled">Out of Stock</button>
-									
-								</td>
-
-								{% endif %}
-
-								<!-- <td class="action-col">
-                                    <div class="dropdown">
-									<button class="btn btn-block btn-outline-primary-2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="icon-list-alt"></i>Select Options
-                                    </button>
-
-                                    <div class="dropdown-menu">
-                                        <a class="dropdown-item" href="#">First option</a>
-                                        <a class="dropdown-item" href="#">Another option</a>
-                                        <a class="dropdown-item" href="#">The best option</a>
-                                      </div>
-                                    </div>
-								</td> -->
-								<td class="remove-col"><button class="btn-remove"><i class="icon-close"></i></button></td>
-							</tr>
-                            {% endfor %}
-							{% else %}
-   					 <p>Your wishlist is empty.</p>
-                            {% endif %}
-						
-                        </tbody>
-					</table><!-- End .table table-wishlist -->
-	            	<div class="wishlist-share">
-	            		<div class="social-icons social-icons-sm mb-2">
-	            			<label class="social-label">Share on:</label>
-	    					<a href="#" class="social-icon" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
-	    					<a href="#" class="social-icon" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
-	    					<a href="#" class="social-icon" title="Instagram" target="_blank"><i class="icon-instagram"></i></a>
-	    					<a href="#" class="social-icon" title="Youtube" target="_blank"><i class="icon-youtube"></i></a>
-	    					<a href="#" class="social-icon" title="Pinterest" target="_blank"><i class="icon-pinterest"></i></a>
-	    				</div><!-- End .soial-icons -->
-	            	</div><!-- End .wishlist-share -->
-            	</div><!-- End .container -->
-            </div><!-- End .page-content -->
-
-			<script>
-				$(document).ready(function() {
-					function debounce(func, wait) {
-						let timeout;
-						return function(...args) {
-							const later = () => {
-								clearTimeout(timeout);
-								func.apply(this, args);
-							};
-							clearTimeout(timeout);
-							timeout = setTimeout(later, wait);
-						};
-					}
-		
-					function addToCart() {
-						let productSlug = "{{ product.slug }}";
-						console.log('Add to cart triggered', { 'slug': productSlug });
-			
-						$.ajax({
-							url: "{% url 'store:add-to-cart' %}",
-							method: 'POST',
-							data: {
-								slug: productSlug,
-								csrfmiddlewaretoken: "{{ csrf_token }}"
-							},
-							success: function(response) {
-								console.log('Success response:', response);
-								$('#cart-count').html(response.cart_count);
-								
-								// Display messages using SweetAlert
-								if (response.messages) {
-									response.messages.forEach(function(message) {
-										Swal.fire({
-											text: message.message,
-											icon: message.tags.includes('success') ? 'success' : 'error',
-											timer: 3000,
-											showConfirmButton: false
-										});
-									});
-								} else {
-									console.log('No messages in response');
-								}
-			
-			
-								// Change button ID and text
-								$('#cart-btn').attr('id', 'delete-btn').text('Delete from Cart');
-								$('#cart-btn1').attr('id', 'delete-btn1').text('Delete from Cart');
-			
-								// Attach delete event
-								$('#delete-btn').off('click').on('click', deleteFromCart);
-								$('#delete-btn1').off('click').on('click', deleteFromCart);
-							},
-							error: function(response) {
-								console.log('Error response:', response);
-							}
-						});
-					}
-			
-					function deleteFromCart() {
-						let productSlug = "{{ product.slug }}";
-						console.log('Delete from cart triggered', { 'slug': productSlug });
-			
-						$.ajax({
-							url: "{% url 'store:delete-from-cart' %}",
-							method: 'POST',
-							data: {
-								slug: productSlug,
-								csrfmiddlewaretoken: "{{ csrf_token }}"
-							},
-							success: function(response) {
-								console.log('Success response:', response);
-								$('#cart-count').html(response.cart_count);
-			
-								// Change button ID and text back to add to cart
-								$('#delete-btn').attr('id', 'cart-btn').text('Add to Cart');
-								$('#delete-btn1').attr('id', 'cart-btn1').text('Add to Cart');
-			
-								// Display messages using SweetAlert
-								// Display messages using SweetAlert
-								if (response.messages) {
-									response.messages.forEach(function(message) {
-										Swal.fire({
-											text: message.message,
-											icon: message.tags.includes('success') ? 'success' : 'error',
-											timer: 3000,
-											showConfirmButton: false
-										});
-									});
-								} else {
-									console.log('No messages in response');
-								}
-			
-								// Attach add event
-								$('#cart-btn').off('click').on('click', addToCart);
-								$('#cart-btn1').off('click').on('click', addToCart);
-							},
-							error: function(response) {
-								console.log('Error response:', response);
-							}
-						});
-					}
-			
-					// Attach initial add to cart event
-					$('#cart-btn').off('click').on('click', addToCart);
-					$('#cart-btn1').off('click').on('click', addToCart);   
-				});
-			
-				
-				function getCookie(name) {
-					let cookieValue = null;
-					if (document.cookie && document.cookie !== '') {
-						const cookies = document.cookie.split(';');
-						for (let i = 0; i < cookies.length; i++) {
-							const cookie = cookies[i].trim();
-							if (cookie.substring(0, name.length + 1) === (name + '=')) {
-								cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-								break;
-							}
-						}
-					}
-					return cookieValue;
-				}
-			
-		
-			</script>
-			  
-        </main><!-- End .main -->
-{% endblock content %}
-
-
-
-
-
-
-@csrf_exempt
-@require_POST
-def add_to_cart(request):
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        slug = request.POST.get('slug')
-        product = get_object_or_404(Product, slug=slug)
-        quantity = int(request.POST.get('quantity', 1))  # Default quantity to 1 if not provided
-
-        if request.user.is_authenticated:
-            cart_qs = Cart.objects.filter(user=request.user, product=product, is_ordered=False)
-
-            if cart_qs.exists():
-                cart_item = cart_qs.first()
-                # cart_item.quantity += quantity  # Increment the quantity
-                # cart_item.save()
-                messages.error(request, f"{product.title} is already added to cart")
-            else:
-                cart_item = Cart.objects.get_or_create(
-                    user=request.user,
-                    product=product,
-                    quantity=quantity,
-                    is_ordered=False
-                )
-                messages.success(request, f"{product.title} is added to cart")
-
-            # Create or update the order
-            order_qs = Order.objects.filter(user=request.user, is_ordered=False)
-            if order_qs.exists():
-                order = order_qs.first()
-            else:
-                order = Order.objects.get_or_create(
-                    user=request.user,
-                    reference=f'order-{secrets.token_hex(8)}',
-                    date=timezone.now(),
-                    is_ordered=False
-                )
-
-            if not order.product.filter(id=cart_item.id).exists():
-                order.product.add(cart_item)
-            order.save()
-                  
-            if request.user.is_authenticated:
-                Wishlist.objects.filter(user=request.user, product=product).delete()
-            else:
-                session_key = get_session_key(request)
-                Wishlist.objects.filter(session_key=session_key, product=product).delete()
-            
-
-            storage = get_messages(request)
-            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
-
-            return JsonResponse({'success': True, 'cart_count': Cart.objects.filter(user=request.user, is_ordered=False).count(), 'messages': response_messages})
-        else:
-            # Handle cart for anonymous users
-            cart = request.session.get('cart', {})
-
-            if str(product.id) in cart:
-                # cart[str(product.id)]['quantity'] += quantity
-                messages.error(request, f"{product.title} is already in the cart cart")
-            else:
-                cart[str(product.id)] = {
-                    'product_id': product.id,
-                    'title': product.title,
-                    'quantity': quantity
+<script>
+    $(document).ready(function() {
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func.apply(this, args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+/*
+        const updateCart = debounce(function() {
+            let cartId = $('#product-id').val();
+            let quantity = $('#color-quantity-input').val();
+            let size = $('#size').val();
+            let color = $('#color').val();
+        
+            // Synchronize the values of the input fields
+            $('#cart-quantity-input').val(quantity);
+        
+            console.log('Cart update triggered', { 'id': cartId, 'qty': quantity, 'size': size });
+        
+            $.ajax({
+                url: "{% url 'store:update_cart_quantity' %}",
+                method: 'POST',
+                data: {
+                    id: cartId,
+                    quantity: quantity,
+                    size: size,
+                    color:color,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function(response) {
+                    console.log('Success response:', response);
+                    $('#new-price').text(`₦${response.total_price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
+                    $('#new-price1').text(`₦${response.total_price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
+                    $('#cart-quantity-input').val(response.qty);
+                    $('#cart-quantity-input1').val(response.qty);
+                },
+                error: function(response) {
+                    console.log('Error response:', response);
                 }
-                messages.success(request, f"{product.title} is added to cart")
+            });
+        }, 300); // Adjust debounce time as necessary
+*/      
+        $('#cart-color-input').off('change').on('change', function() {
+            $('#cart-quantity-input1').val($(this).val());
+            updateCart();
+        });
+        
+        $('#cart-quantity-input1').off('change').on('change', function() {
+            $('#cart-quantity-input').val($(this).val());
+            updateCart();
+        });
 
-            request.session['cart'] = cart
-            request.session.modified = True  # Ensure session is saved
 
-            storage = get_messages(request)
-            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
 
-            return JsonResponse({'success': True, 'cart': request.session.get('cart', {}), 'messages': response_messages})
+        function addToCart() {
+            let productSlug = "{{ product.slug }}";
+            console.log('Add to cart triggered', { 'slug': productSlug });
+        
+            // Assuming there are inputs with class 'color-quantity' containing color_id and quantity
+            let colorQuantities = [];
+            $('.color-quantity').each(function() {
+                let colorId = $(this).data('color-id'); // Assume each input has a data attribute for color_id
+                let quantity = $(this).val();
+                if (quantity > 0) {
+                    colorQuantities.push({ color_id: colorId, quantity: quantity });
+                }
+            });
+        
+            $.ajax({
+                url: "{% url 'store:add-to-cart' %}",
+                method: 'POST',
+                data: {
+                    slug: productSlug,
+                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                    color_quantities: JSON.stringify(colorQuantities) // Convert to JSON string for transmission
+                },
+                success: function(response) {
+                    console.log('Success response:', response);
+                    $('#cart-count').html(response.cart_count);
+                    
+                    // Display messages using SweetAlert
+                    if (response.messages) {
+                        response.messages.forEach(function(message) {
+                            Swal.fire({
+                                text: message.message,
+                                icon: message.tags.includes('success') ? 'success' : 'error',
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                        });
+                    } else {
+                        console.log('No messages in response');
+                    }
+        
+                    // Change button ID and text
+                    $('#cart-btn').attr('id', 'delete-btn').text('Delete Cart');
+                    $('#cart-btn1').attr('id', 'delete-btn1').text('Delete Cart');
+        
+                    // Attach delete event
+                    $('#delete-btn').off('click').on('click', deleteFromCart);
+                    $('#delete-btn1').off('click').on('click', deleteFromCart);
+                },
+                error: function(response) {
+                    console.log('Error response:', response);
+                }
+            });
+        }
 
-    return JsonResponse({'message': 'error processing your request'}, status=400)
+
+
+
+function deleteFromCart() {
+            let productSlug = "{{ product.slug }}";
+            console.log('Delete from cart triggered', { 'slug': productSlug });
+
+            $.ajax({
+                url: "{% url 'store:delete-from-cart' %}",
+                method: 'POST',
+                data: {
+                    slug: productSlug,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function(response) {
+                    console.log('Success response:', response);
+                    $('#cart-count').html(response.cart_count);
+
+                    // Change button ID and text back to add to cart
+                    $('#delete-btn').attr('id', 'cart-btn').text('Add to Cart');
+                    $('#delete-btn1').attr('id', 'cart-btn1').text('Add to Cart');
+
+                    // Display messages using SweetAlert
+                    // Display messages using SweetAlert
+                    if (response.messages) {
+                        response.messages.forEach(function(message) {
+                            Swal.fire({
+                                text: message.message,
+                                icon: message.tags.includes('success') ? 'success' : 'error',
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                        });
+                    } else {
+                        console.log('No messages in response');
+                    }
+
+                    // Attach add event
+                    $('#cart-btn').off('click').on('click', addToCart);
+                    $('#cart-btn1').off('click').on('click', addToCart);
+                },
+                error: function(response) {
+                    console.log('Error response:', response);
+                }
+            });
+        }
+
+        // Attach initial add to cart event
+        $('#cart-btn').off('click').on('click', addToCart);
+        $('#cart-btn1').off('click').on('click', addToCart);   
+    });
+
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+
+    $(document).ready(function() {
+        $('.toggle-wishlist').click(function() {
+            var button = $(this);
+            var add_url = button.data('add-url');
+            var remove_url = button.data('remove-url');
+            var in_wishlist = button.text().trim() === 'Remove from Wishlist';
+
+            var url = in_wishlist ? remove_url : add_url;
+            $.ajax({
+                url: url,
+                method: 'GET',
+                success: function(response) {
+                    if (response.in_wishlist) {
+                        $('.toggle-wishlist[data-product-id="' + button.data('product-id') + '"]').text('Remove from Wishlist');
+                    } else {
+                        $('.toggle-wishlist[data-product-id="' + button.data('product-id') + '"]').text('Add to Wishlist');
+                    }
+                }
+            });
+        });
+    });
+
+
+</script>
+   
+
+{% endblock %}

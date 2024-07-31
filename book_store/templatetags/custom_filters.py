@@ -8,8 +8,9 @@ def to_int(value):
         return int(value)
     except (ValueError, TypeError):
         return 0  # or you can return None or some other default value
-
-
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
 
 @register.filter
 def get_trending_products(trending_products_by_category, category_slug):

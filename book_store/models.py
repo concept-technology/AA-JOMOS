@@ -141,6 +141,7 @@ class Product(models.Model):
     size = models.ManyToManyField(Size, related_name='products')
     price = models.IntegerField(default=0)
     discount_price = models.IntegerField(default=0)
+    wholesale_price = models.IntegerField(default=0)
     img_1  = models.ImageField(upload_to='static/media/img', default='img')
     img_2  = models.ImageField(upload_to='static/media/img', default='img', blank=True, null=True)
     img_3  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
@@ -247,7 +248,7 @@ class Cart(models.Model):
     is_in_cart = models.BooleanField(default=False)
     cart_id = models.UUIDField(default=uuid.uuid4,)
     session_key = models.CharField(max_length=40, null=True, blank=True)
-    color = models.ManyToManyField(Color, blank=True, null=True, related_name='carts')
+    colors = models.ManyToManyField(Color, blank=True, null=True, related_name='carts')
     
     
     def get_discount_price(self):
@@ -283,8 +284,8 @@ class Cart(models.Model):
         dis_count_price = self.product.discount_price
         title = self.product.title
         if not dis_count_price:
-            return f"item: {title}, price: {price}, quantity: {self.quantity} color:{self.color.name}"        
-        return f"item:{title} price: {dis_count_price}, quantity: {self.quantity} color: {self.color.name}"
+            return f"item: {title}, price: {price}, quantity: {self.quantity} color:{self.colors.name}"        
+        return f"item:{title} price: {dis_count_price}, quantity: {self.quantity} color: {self.colors.name}"
             
 
     def get_title(self):
@@ -301,9 +302,9 @@ phone_regex = RegexValidator(
 )
 
 class CartColor(models.Model):
-    cart = models.ForeignKey('Cart', on_delete=models.CASCADE)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     color = models.ForeignKey(Color, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(default=1)
+    quantity = models.IntegerField(default=1)
 
 class CustomersAddress(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', blank=True, null=True )
@@ -400,8 +401,10 @@ class Order(models.Model):
     cart_id = models.UUIDField(null=True, blank=True)
     session_key = models.CharField(max_length=40, null=True, blank=True)
     
-    # def __str__(self):
-    #     return f" {self.user.username}, address:  {self.Payment}"
+    def __str__(self):
+        user =self.user
+        session_key = self.session_key
+        return f"{user if user else session_key}"
     
  
     # display the quantity in table

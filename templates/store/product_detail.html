@@ -1,10 +1,10 @@
-{% extends "store/base.html" %}
+{% extends 'store/base.html' %}
 {% load static %}
-{% block content %}
 {% load star_rating %}   
 {% load custom_filters %}
 {% load humanize %}
 {{block.super}}
+{% block content %}
 <main>
     <nav aria-label="breadcrumb" class="breadcrumb-nav border-0 mb-0">
         <div class="container d-flex align-items-center">
@@ -20,9 +20,8 @@
             <meta name="description" content="{{ product.description.title }}">
             <meta name="keywords" content="{{ product.title }}">
             {% endblock seo %}
-        </div><!-- End .container -->
-    </nav><!-- End .breadcrumb-nav -->
-
+        </div>
+    </nav>
     <div class="page-content" data-product-id="{{ product.id }}">
         <div class="container">
             <div class="product-details-top">
@@ -36,13 +35,11 @@
                                     <i class="icon-arrows"></i>
                                 </a>
                             </figure>
-
                             {% if product.img_2 %}
                             <figure class="product-separated-item">
                                 <img src="{{ product.img_2.url }}" alt="product image">
                             </figure>
                             {% endif %}
-
                             {% if product.img_3 %}
                             <figure class="product-separated-item">
                                 <img src="{{ product.img_3.url }}" alt="product image">
@@ -56,11 +53,9 @@
                             {% endif %}
                         </div><!-- End .product-gallery -->
                     </div><!-- End .col-md-6 -->
-
                     <div class="col-md-6">
                         <div class="product-details sticky-content">
-                            <h1 class="product-title" id="product-title">{{ product.title }}</h1><!-- End .product-title -->
-
+                            <h1 class="product-title" id="product-title">{{ product.title }}</h1>
                             <div class="ratings-container">
                                 <style>
                                     #star-ratings {
@@ -109,32 +104,34 @@
                             </button>  
                                 </div><!-- End .details-action-wrapper -->
                             </div><!-- End .product-details-action -->
-                            <div >
-                                <label for="qty"> Minimum order: {{product.minimum_order}} pcs</label>
-                                    <div class="product" data-product-id="{{ product.id }}"></div>>
-                                        <label for="colors">Select Colors:</label><br>
-                                        <div class="product-colors">
-                                            {% for color in product.color.all %}
-                                            <div class="color-option" data-color-id="{{ color.id }}">
-                                                <label>{{ color.name }}</label>
-                                                <input type="number" id="quantity-input" data-color-name="{{ color.name }}" data-color-id="{{ color.id }}" value="0" min="0">
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
                                     <div class="form-group">
                                         <label for="quantity">Quantity:</label>
                                     </div>
                                 <label for="size">Size:</label>
-                                <div class="select-custom">
-                                    <select id="size" class="form-control" name="size">
-                                        {% for cart_item in product.size.all %}                                 
-                                        <option value="{{cart_item.size}}" {% if cart_item.size == "{{cart_item.size}}" %}selected{% endif %}>{{cart_item.size}}</option>
+                                <div id="cart">
+                                    <input type="hidden" id="product-id" value="{{ product.id }}">
+                                    <div class="cart-item">
+                                        <h3>choose colors</h3>
+                                        {% for color in colors %}
+                                            <div class="color-quantity ">
+                                                <div class="d-flex align-items-center">
+                                                    <div>
+                                                        <label for="color-{{ color.name }}">Color: {{ color.name }}</label>
+                                                        <img src="{{color.img.url}}" alt="{{color.name}} image" style="width: 50px;">
+                                                    </div>
+                                                    <div>
+                                                   
+                                                        <input type="number" class="quantity-input" data-color="{{ color.name }}" value="{% if color_quantities|get_item:color.name %}{{ color_quantities|get_item:color.name }}{% else %}0{% endif %}">
+                                                      
+                                                            
+                                                    </div>
+                                                </div>
+                                            </div>
                                         {% endfor %}
-                                    </select>
-                                </div>
-                            </div><!-- End .details-filter-row -->
-
+                                    </div>
+                                </div>                            
+    </div>
+                            </div>
                             <div class="details-filter-row details-row-size">
                                 <label for="qty"> total Qty: </label>
                                 <input type="hidden" id="product-id" value="{{ product.id }}" name="id">   
@@ -212,11 +209,7 @@
                                         </div><!-- End .card-body -->
                                        
                                             </div><!-- End .product-desc-content -->
-                                        </div><!-- End .card-body -->
-
-                                        
-                                            
-                                            
+                                        </div><!-- End .card-body -->                   
                                             {% for rating in ratings %}               
                                         <div class="card card-box card-sm">
                                             <div class="card-header" id="product-review-heading">
@@ -274,55 +267,6 @@
                                     </div><!-- End .collapse -->
                                 </div><!-- End .card -->
                             </div><!-- End .accordion -->
-                            
-                            <div class="sticky-bar">
-                                <div class="container">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <figure class="product-media">
-                                                <a href="product.html">
-                                                    <img src="{{product.img_1.url}}" alt="Product image">
-                                                </a>
-                                            </figure><!-- End .product-media -->
-                                            <h4 class="product-title"><a href="product.html">{{product.description}}</a></h4><!-- End .product-title -->
-                                        </div><!-- End .col-6 -->
-                        
-                                        <div class="col-6 justify-content-end">
-                                            <div class="product-price">
-                                                {% if product.discount_price|floatformat:2|intcomma%}            
-                                                <span class="new-price" id="new-price1">&#8358;{{product.discount_price|floatformat:2|intcomma}}</span>
-                                                <span class="old-price">&#8358;{{product.price|floatformat:2|intcomma}}</span>
-                                                {% else %}
-                                                <span class="new-price" id="new-price1">&#8358;{{product.price|floatformat:2|intcomma}}</span>
-                                                <span class="old-price">&#8358;{{product.discount_price|floatformat:2|intcomma}}</span>
-                                                {% endif %}
-                                            </div><!-- End .product-price -->
-                                            <div class="product-details-quantity">
-                                                <input type="number"  id="cart-quantity-input1" class="form-control" data-item-id="{{ product.id }}" value="{{ product.quantity }}" min="1" max="10" step="1" data-decimals="0" required="" name="quantity" value="{{ product.quantity }}" style="display: none;"><div class="input-group  input-spinner"><div class="input-group-prepend"><button style="min-width: 26px" class="btn btn-decrement btn-spinner" type="button"><i class="icon-minus"></i></button></div><input type="text" style="text-align: center" class="form-control " required="" placeholder=""><div class="input-group-append"><button style="min-width: 26px" class="btn btn-increment btn-spinner" type="button"><i class="icon-plus"></i></button></div></div>
-                                                <!-- <input type="number" id="cart-quantity-input1" class="form-control" data-item-id="{{ product.id }}" value="{{ product.quantity }}" name="quantity" min="1" step="1" data-decimals="0" required> -->
-                                            </div>              
-                                            <div class="product-details-action">                                 
-                                        <button class="btn-product btn-cart" id="cart-btn1"><span>add to cart</span></button>
-                                            <button class="toggle-wishlist btn-product btn-wishlist btn" 
-                                                data-add-url="{{ product.get_add_to_wishlist_url }}" 
-                                                data-remove-url="{{ product.get_remove_from_wishlist_url }}" 
-                                                data-product-id="{{ product.id }}" 
-                                                >
-                                            {% if in_wishlist %}
-                                                Remove from Wishlist
-                                            {% else %}
-                                                Add to Wishlist
-                                            {% endif %}
-                                        </button>
-                                        
-                                                <!-- <button id="add-to-wishlist" class="btn-product btn-wishlist"data-url="{{ product.get_add_to_wishlist_url }}" class="btn btn-primary">Add to Wishlist</button> -->
-                                                
-                                                <!-- <a href="#" class="btn-product btn-wishlist" title="Wishlist"><span>Add to Wishlist</span></a> -->
-                                            </div><!-- End .product-details-action -->
-                                        </div><!-- End .col-6 -->
-                                    </div><!-- End .row -->
-                                </div><!-- End .container -->
-                            </div>
                         </div><!-- End .product-details -->
                     </div><!-- End .col-md-6 -->
                 </div><!-- End .row -->
@@ -330,253 +274,266 @@
         </div><!-- End .container -->
     </div><!-- End .page-content -->
 </main><!-- End .main -->
-
-<script>
-    $(document).ready(function() {
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                const later = () => {
+    <script>
+        $(document).ready(function() {
+            function debounce(func, wait) {
+                let timeout;
+                return function(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func.apply(this, args);
+                    };
                     clearTimeout(timeout);
-                    func.apply(this, args);
+                    timeout = setTimeout(later, wait);
                 };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-/*
-        const updateCart = debounce(function() {
-            let cartId = $('#product-id').val();
-            let quantity = $('#color-quantity-input').val();
-            let size = $('#size').val();
-            let color = $('#color').val();
-        
-            // Synchronize the values of the input fields
-            $('#cart-quantity-input').val(quantity);
-        
-            console.log('Cart update triggered', { 'id': cartId, 'qty': quantity, 'size': size });
-        
-            $.ajax({
-                url: "{% url 'store:update_cart_quantity' %}",
-                method: 'POST',
-                data: {
-                    id: cartId,
-                    quantity: quantity,
-                    size: size,
-                    color:color,
-                    csrfmiddlewaretoken: "{{ csrf_token }}"
-                },
-                success: function(response) {
-                    console.log('Success response:', response);
-                    $('#new-price').text(`₦${response.total_price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
-                    $('#new-price1').text(`₦${response.total_price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
-                    $('#cart-quantity-input').val(response.qty);
-                    $('#cart-quantity-input1').val(response.qty);
-                },
-                error: function(response) {
-                    console.log('Error response:', response);
-                }
-            });
-        }, 300); // Adjust debounce time as necessary
-*/      
-        $('#cart-color-input').off('change').on('change', function() {
-            $('#cart-quantity-input1').val($(this).val());
-            updateCart();
-        });
-        
-        $('#cart-quantity-input1').off('change').on('change', function() {
-            $('#cart-quantity-input').val($(this).val());
-            updateCart();
-        });
-
-
-
-        function addToCart() {
-            let productSlug = "{{ product.slug }}";
-            console.log('Add to cart triggered', { 'slug': productSlug });
-        
-            // Assuming there are inputs with class 'color-quantity' containing color_id and quantity
-            let colorQuantities = [];
-            $('.color-quantity').each(function() {
-                let colorId = $(this).data('color-id'); // Assume each input has a data attribute for color_id
-                let quantity = $(this).val();
-                if (quantity > 0) {
-                    colorQuantities.push({ color_id: colorId, quantity: quantity });
-                }
-            });
-        
-            $.ajax({
-                url: "{% url 'store:add-to-cart' %}",
-                method: 'POST',
-                data: {
-                    slug: productSlug,
-                    csrfmiddlewaretoken: "{{ csrf_token }}",
-                    color_quantities: JSON.stringify(colorQuantities) // Convert to JSON string for transmission
-                },
-                success: function(response) {
-                    console.log('Success response:', response);
-                    $('#cart-count').html(response.cart_count);
-                    
-                    // Display messages using SweetAlert
-                    if (response.messages) {
-                        response.messages.forEach(function(message) {
-                            Swal.fire({
-                                text: message.message,
-                                icon: message.tags.includes('success') ? 'success' : 'error',
-                                timer: 3000,
-                                showConfirmButton: false
-                            });
-                        });
-                    } else {
-                        console.log('No messages in response');
+            }
+    /*
+            const updateCart = debounce(function() {
+                let cartId = $('#product-id').val();
+                let quantity = $('#color-quantity-input').val();
+                let size = $('#size').val();
+                let color = $('#color').val();
+            
+                // Synchronize the values of the input fields
+                $('#cart-quantity-input').val(quantity);
+            
+                console.log('Cart update triggered', { 'id': cartId, 'qty': quantity, 'size': size });
+            
+                $.ajax({
+                    url: "{% url 'store:update_cart_quantity' %}",
+                    method: 'POST',
+                    data: {
+                        id: cartId,
+                        quantity: quantity,
+                        size: size,
+                        color:color,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
+                    success: function(response) {
+                        console.log('Success response:', response);
+                        $('#new-price').text(`₦${response.total_price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
+                        $('#new-price1').text(`₦${response.total_price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
+                        $('#cart-quantity-input').val(response.qty);
+                        $('#cart-quantity-input1').val(response.qty);
+                    },
+                    error: function(response) {
+                        console.log('Error response:', response);
                     }
-        
-                    // Change button ID and text
-                    $('#cart-btn').attr('id', 'delete-btn').text('Delete Cart');
-                    $('#cart-btn1').attr('id', 'delete-btn1').text('Delete Cart');
-        
-                    // Attach delete event
-                    $('#delete-btn').off('click').on('click', deleteFromCart);
-                    $('#delete-btn1').off('click').on('click', deleteFromCart);
-                },
-                error: function(response) {
-                    console.log('Error response:', response);
-                }
+                });
+            }, 300); // Adjust debounce time as necessary
+    */      
+            $('#cart-color-input').off('change').on('change', function() {
+                $('#cart-quantity-input1').val($(this).val());
+                updateCart();
             });
-        }
-
-
-
-
-function deleteFromCart() {
-            let productSlug = "{{ product.slug }}";
-            console.log('Delete from cart triggered', { 'slug': productSlug });
-
-            $.ajax({
-                url: "{% url 'store:delete-from-cart' %}",
-                method: 'POST',
-                data: {
-                    slug: productSlug,
-                    csrfmiddlewaretoken: "{{ csrf_token }}"
-                },
-                success: function(response) {
-                    console.log('Success response:', response);
-                    $('#cart-count').html(response.cart_count);
-
-                    // Change button ID and text back to add to cart
-                    $('#delete-btn').attr('id', 'cart-btn').text('Add to Cart');
-                    $('#delete-btn1').attr('id', 'cart-btn1').text('Add to Cart');
-
-                    // Display messages using SweetAlert
-                    // Display messages using SweetAlert
-                    if (response.messages) {
-                        response.messages.forEach(function(message) {
-                            Swal.fire({
-                                text: message.message,
-                                icon: message.tags.includes('success') ? 'success' : 'error',
-                                timer: 3000,
-                                showConfirmButton: false
-                            });
-                        });
-                    } else {
-                        console.log('No messages in response');
-                    }
-
-                    // Attach add event
-                    $('#cart-btn').off('click').on('click', addToCart);
-                    $('#cart-btn1').off('click').on('click', addToCart);
-                },
-                error: function(response) {
-                    console.log('Error response:', response);
-                }
+            
+            $('#cart-quantity-input1').off('change').on('change', function() {
+                $('#cart-quantity-input').val($(this).val());
+                updateCart();
             });
-        }
-
-        // Attach initial add to cart event
-        $('#cart-btn').off('click').on('click', addToCart);
-        $('#cart-btn1').off('click').on('click', addToCart);   
-    });
-
     
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+    
+    
+            function addToCart() {
+                let productSlug = "{{ product.slug }}";
+                console.log('Add to cart triggered', { 'slug': productSlug });
+            
+                // Assuming there are inputs with class 'color-quantity' containing color_id and quantity
+                let colorQuantities = [];
+                $('.color-quantity').each(function() {
+                    let colorId = $(this).data('color-id'); // Assume each input has a data attribute for color_id
+                    let quantity = $(this).val();
+                    if (quantity > 0) {
+                        colorQuantities.push({ color_id: colorId, quantity: quantity });
+                    }
+                });
+            
+                $.ajax({
+                    url: "{% url 'store:add-to-cart' %}",
+                    method: 'POST',
+                    data: {
+                        slug: productSlug,
+                        csrfmiddlewaretoken: "{{ csrf_token }}",
+                        color_quantities: JSON.stringify(colorQuantities) // Convert to JSON string for transmission
+                    },
+                    success: function(response) {
+                        console.log('Success response:', response);
+                        $('#cart-count').html(response.cart_count);
+                        
+                        // Display messages using SweetAlert
+                        if (response.messages) {
+                            response.messages.forEach(function(message) {
+                                Swal.fire({
+                                    text: message.message,
+                                    icon: message.tags.includes('success') ? 'success' : 'error',
+                                    timer: 3000,
+                                    showConfirmButton: false
+                                });
+                            });
+                        } else {
+                            console.log('No messages in response');
+                        }
+            
+                        // Change button ID and text
+                        $('#cart-btn').attr('id', 'delete-btn').text('Delete Cart');
+                        $('#cart-btn1').attr('id', 'delete-btn1').text('Delete Cart');
+            
+                        // Attach delete event
+                        $('#delete-btn').off('click').on('click', deleteFromCart);
+                        $('#delete-btn1').off('click').on('click', deleteFromCart);
+                    },
+                    error: function(response) {
+                        console.log('Error response:', response);
+                    }
+                });
+            }
+    
+    
+    
+    
+    function deleteFromCart() {
+                let productSlug = "{{ product.slug }}";
+                console.log('Delete from cart triggered', { 'slug': productSlug });
+    
+                $.ajax({
+                    url: "{% url 'store:delete-from-cart' %}",
+                    method: 'POST',
+                    data: {
+                        slug: productSlug,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
+                    success: function(response) {
+                        console.log('Success response:', response);
+                        $('#cart-count').html(response.cart_count);
+    
+                        // Change button ID and text back to add to cart
+                        $('#delete-btn').attr('id', 'cart-btn').text('Add to Cart');
+                        $('#delete-btn1').attr('id', 'cart-btn1').text('Add to Cart');
+    
+                        // Display messages using SweetAlert
+                        // Display messages using SweetAlert
+                        if (response.messages) {
+                            response.messages.forEach(function(message) {
+                                Swal.fire({
+                                    text: message.message,
+                                    icon: message.tags.includes('success') ? 'success' : 'error',
+                                    timer: 3000,
+                                    showConfirmButton: false
+                                });
+                            });
+                        } else {
+                            console.log('No messages in response');
+                        }
+    
+                        // Attach add event
+                        $('#cart-btn').off('click').on('click', addToCart);
+                        $('#cart-btn1').off('click').on('click', addToCart);
+                    },
+                    error: function(response) {
+                        console.log('Error response:', response);
+                    }
+                });
+            }
+    
+            // Attach initial add to cart event
+            $('#cart-btn').off('click').on('click', addToCart);
+            $('#cart-btn1').off('click').on('click', addToCart);   
+        });
+    
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
                 }
             }
+            return cookieValue;
         }
-        return cookieValue;
-    }
-
-
-    $(document).ready(function() {
-        $('.toggle-wishlist').click(function() {
-            var button = $(this);
-            var add_url = button.data('add-url');
-            var remove_url = button.data('remove-url');
-            var in_wishlist = button.text().trim() === 'Remove from Wishlist';
-
-            var url = in_wishlist ? remove_url : add_url;
-            $.ajax({
-                url: url,
-                method: 'GET',
-                success: function(response) {
-                    if (response.in_wishlist) {
-                        $('.toggle-wishlist[data-product-id="' + button.data('product-id') + '"]').text('Remove from Wishlist');
-                    } else {
-                        $('.toggle-wishlist[data-product-id="' + button.data('product-id') + '"]').text('Add to Wishlist');
+     
+        $(document).ready(function() {
+            $('.toggle-wishlist').click(function() {
+                var button = $(this);
+                var add_url = button.data('add-url');
+                var remove_url = button.data('remove-url');
+                var in_wishlist = button.text().trim() === 'Remove from Wishlist';
+    
+                var url = in_wishlist ? remove_url : add_url;
+                $.ajax({
+                    url: url,
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.in_wishlist) {
+                            $('.toggle-wishlist[data-product-id="' + button.data('product-id') + '"]').text('Remove from Wishlist');
+                        } else {
+                            $('.toggle-wishlist[data-product-id="' + button.data('product-id') + '"]').text('Add to Wishlist');
+                        }
                     }
-                }
+                });
             });
         });
-    });
 
-
-
-
-
-
-    (document).ready(function() {
-        $('#quantity-input').change(function() {
-            var product_id = $('.product').data('product-id');
-            var color_quantities = [];
-
-            $('#quantity-input').each(function() {
-                var color_name = $(this).data('color-name');
-                var color_id = $(this).data('color-id');
-                var quantity = parseInt($(this).val());
-                if (quantity > 0) {
-                    color_quantities.push({
-                        color_name: color_name,
-                        color_id: color_id,
-                        quantity: quantity
-                    });
-                }
-            });
-
-            $.ajax({
-                url: '{% url "store:update_cart_quantity" %}',
-                method: 'POST',
-                data: {
-                    product_id: product_id,
-                    color_quantities: JSON.stringify(color_quantities),
-                    csrfmiddlewaretoken: '{{ csrf_token }}'
-                },
-                success: function(response) {
-                    console.log(response.message);
-                },
-                error: function(xhr, status, error) {
-                    console.log('Error: ' + error);
-                }
+        $(document).ready(function() {
+            $('.quantity-input').on('change', function() {
+                let productId = $('#product-id').val();
+                let quantities = [];
+                let colors = [];
+                
+                $('.quantity-input').each(function() {
+                    let color = $(this).data('color');
+                    let quantity = parseInt($(this).val()) || 0;  // Ensure quantity is an integer
+                    if (color) {
+                        colors.push(color);
+                        quantities.push(quantity);
+                    }
+                });
+        
+                let totalQuantity = quantities.reduce((acc, qty) => acc + qty, 0);
+        
+                console.log('Quantities:', quantities);
+                console.log('Colors:', colors);
+                console.log('Total Quantity:', totalQuantity);        
+                $.ajax({
+                    url: '{% url "store:update_cart_quantity" %}',
+                    type: 'POST',
+                    data: {
+                        'id': productId,
+                        'quantities[]': quantities,
+                        'colors[]': colors,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.messages) {
+                            response.messages.forEach(function(message) {
+                                Swal.fire({
+                                    title: 'Message',
+                                    text: message.message,
+                                    icon: message.tags
+                                });
+                            });
+                        }
+        
+                        if (response.total_price !== undefined) {
+                            // Update cart quantity display
+                            $('#cart-quantity').text(response.qty);
+                            // Update total price display
+                            $('#total-price').text(response.total_price);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(xhr);
+                    }
+                });
             });
         });
-    });
-</script>
-   
+        
+    </script>
 
-{% endblock %}
+    
+{% endblock content %}
+    

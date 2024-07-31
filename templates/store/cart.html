@@ -32,6 +32,7 @@
                             <tbody>
                               
                                     {% for item in cart_items %}
+                                    <div class="cart-item" data-product-id="{{ item.product.id }}">
                                         <tr>
                                             <td class="product-col">
                                                 <div class="product">
@@ -52,7 +53,14 @@
                                             <td class="price-col"><span>&#8358;{{ item.get_price_tag|floatformat:2|intcomma }}</span></td>
                                             <td class="quantity-col">
                                                 <div class="cart-product-quantity">
-                                                    <input type="number" id="cart-quantity-input1" class="form-control" data-item-id="{{ item.id }}" value="{{ item.quantity }}" name="quantity" min="1" step="1" data-decimals="0" required>
+                                                    <div class="color-quantity-inputs">
+                                                        {% for color_quantity in item.colors.all %}
+                                                        <div class="color-input">
+                                                            <label>{{ color_quantity.name }}</label>
+                                                            <input type="number" class="quantity-input" data-color="{{ color_quantity.name }}" value="{{ color_quantity.quantity }}" min="{{item.quantity}}" max="{{item.quantity}}">
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>               
                                                     <input type="hidden" value="{{ item.id }}" id="product-id">
                                                 </div>
                                             </td>
@@ -64,6 +72,9 @@
                                                 </a>
                                             </td>
                                         </tr>
+
+                                        
+                                    </div>
                                     {% endfor %}
                               
                             </tbody>

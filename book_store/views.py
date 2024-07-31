@@ -33,6 +33,7 @@ from django.apps import AppConfig
 from django.contrib import messages 
 from django.contrib.messages import get_messages
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 
 
@@ -711,14 +712,12 @@ def verify_payment(request, ref):
     try:
         order = Order.objects.get(is_ordered=False, user=request.user)
         payment = Payment.objects.get(ref=ref)
-
         paystack_secret_key = settings.PAYSTACK_SECRET_KEY
         verify_url = f'https://api.paystack.co/transaction/verify/{ref}'
         headers = {
             'Authorization': f'Bearer {paystack_secret_key}',
             'Content-Type': 'application/json',
         }
-
         response = requests.get(verify_url, headers=headers, timeout=30)
 
         if response.status_code == 200:
@@ -922,25 +921,29 @@ def search_view(request):
     return render(request, 'store/search_results.html', context)
 
 
+@ensure_csrf_cookie
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
-    
+    colors = Color.objects.all()  # Assuming you want to show all colors for the product
+
     if request.user.is_authenticated:
         in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
         is_in_cart = Cart.objects.filter(product=product, is_ordered=False, user=request.user).exists()
         user_rating = CustomerRating.objects.filter(user=request.user, product=product).first()
+        cart = Cart.objects.filter(product=product, is_ordered=False, user=request.user).first()
     else:
         session_key = get_session_key(request)
         is_in_cart = Cart.objects.filter(product=product, is_ordered=False, session_key=session_key).exists()
         in_wishlist = Wishlist.objects.filter(session_key=session_key, product=product).exists()
         user_rating = None
-    
+        cart = Cart.objects.filter(product=product, is_ordered=False, session_key=session_key).first()
+
     ratings = product.ratings.all()
     average_rating = product.average_rating()
     all_user_rating = product.ratings.filter(user=request.user) if request.user.is_authenticated else None
     next_product = product.get_next_product()
     related_products = product.get_related_products()
-    
+
     if request.method == 'POST' and request.user.is_authenticated:
         rating_form = CustomerRatingForm(request.POST, instance=user_rating)
         if rating_form.is_valid():
@@ -951,6 +954,12 @@ def product_detail(request, slug):
             return redirect('store:product-detail', slug=product.slug)
     else:
         rating_form = CustomerRatingForm(instance=user_rating) if request.user.is_authenticated else None
+
+    color_quantities = {}
+    if cart:
+        for color in colors:
+            cart_color = CartColor.objects.filter(cart=cart, color=color).first()
+            color_quantities[color.name] = cart_color.quantity if cart_color else 0
 
     context = {
         'product': product,
@@ -965,8 +974,10 @@ def product_detail(request, slug):
         'csrf_token': request.META.get('CSRF_COOKIE'),
         'related_products': related_products,
         'in_wishlist': in_wishlist,
+        'colors': colors,
+        'color_quantities': color_quantities
     }
-    
+
     return render(request, 'store/product_detail.html', context)
 
 
@@ -999,25 +1010,24 @@ class DeleteCartItem(View):
 class UpdateCartQuantity(View):
     def post(self, request, *args, **kwargs):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            id = int(self.request.POST.get('id'))
+            id = int(request.POST.get('id'))
             quantity_data = request.POST.getlist('quantities[]')
             color_data = request.POST.getlist('colors[]')
             
-            # Validate the quantities
             quantities = []
             for qty in quantity_data:
                 try:
                     quantities.append(int(qty))
                 except (ValueError, TypeError):
-                    return JsonResponse({'message': 'Invalid quantity'}, status=400)
+                    return JsonResponse({'messages': [{'message': 'Invalid quantity', 'tags': 'error'}]}, status=400)
             
             product = get_object_or_404(Product, pk=id)
             
             if request.user.is_authenticated:
                 cart = get_object_or_404(Cart, product=product, is_ordered=False, user=request.user)
-                cart.quantity = sum(quantities)  # Update total quantity
+                cart.quantity = sum(quantities)
                 
-                cart.colors.clear()  # Clear existing colors
+                cart.colors.clear()
                 for color_name, qty in zip(color_data, quantities):
                     color = get_object_or_404(Color, name=color_name)
                     cart.colors.add(color, through_defaults={'quantity': qty})
@@ -1052,8 +1062,7 @@ class UpdateCartQuantity(View):
                 'messages': messages
             })
         
-        return JsonResponse({'message': 'error'}, status=400)
-
+        return JsonResponse({'messages': [{'message': 'Error', 'tags': 'error'}]}, status=400)
 
 def mark_order_as_received(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
