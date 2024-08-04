@@ -169,7 +169,7 @@
                                     {% endif %}
                                     <tr class="summary-total">
                                         <td>Total:</td>
-                                        <td id="total_order_and_delivery">
+                                        <td id="total-with-delivery">
                                             {% if total_with_delivery %}
                                                 &#8358;{{ total_with_delivery|floatformat:2|intcomma }}
                                             {% else %}
@@ -227,8 +227,13 @@
                             //$('#cart-total').text(cartTotal);
                             $('#order-total-').text(`₦${response.total_order.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
                             $('#cart-item-total-'+ cartItemId).text(`₦${response.cart_item_total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
-                            $('#total_order_and_delivery').text(`₦${response.total_order_and_delivery.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
-
+                            //$('#total_order_and_delivery').text(`₦${response.total_order_and_delivery.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
+                            $('#total-with-delivery').text(response.total_order_and_delivery)
+                            
+                            var totalWithDelivery = response.total_order_and_delivery;
+                            var formattedTotal = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(totalWithDelivery);
+                            $('#total-with-delivery').text(formattedTotal);
+    
                             console.log(response);
                         } else {
                             console.log('Error updating cart');
@@ -301,7 +306,7 @@
                             if (response.success) {
                                 $('tr[data-cart-item-id="' + cartItemId + '"]').remove();
                                 $('#cart-total').text(response.cart_total);
-                                $('#total-with-delivery').text(response.total_with_delivery);
+                                //$('#total-with-delivery').text(response.total_with_delivery);
                                 Swal.fire(
                                     'Deleted!',
                                     'Your item has been deleted.',

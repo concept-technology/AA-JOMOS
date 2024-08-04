@@ -1578,13 +1578,22 @@ class UpdateCartQuantity(View):
                 item.get_total_price() for item in cart_items
             )
 
-            order_qs = Order.objects.get(product=cart_item, is_ordered=False)
-            total_order_and_delivery = order_qs.get_total_with_delivery()
-
+            # Fetch the order and calculate the total with delivery
+            try:
+                if request.user.is_authenticated:
+                    order_qs = Order.objects.get(user=request.user, is_ordered=False)
+                else:
+                    session_cart_id = request.session.get('cart_id')
+                    order_qs = Order.objects.get(cart_id=session_cart_id, is_ordered=False)
+                
+                total_order_and_delivery = order_qs.get_total_with_delivery()
+                print(total_order_and_delivery)
+            except Order.DoesNotExist:
+                return JsonResponse({'message': 'Order does not exist'}, status=404)
             return JsonResponse({
                 'cart_item_id': cart_item_id,
                 'qty': quantity,
-                'total_order_and_delivery': total_order_and_delivery,
+                'total_order_and_delivery': int(total_order_and_delivery),
                 'cart_item_total': cart_item_total,  # Ensure total cart value is included
                 'total_order': total_price,  # Include the total price for all items
                 'messages': [{'message': 'Cart updated successfully', 'tags': 'success'}],
