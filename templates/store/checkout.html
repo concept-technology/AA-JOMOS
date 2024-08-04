@@ -86,14 +86,14 @@
 									<thead>
 										<tr>
 											<th>Product</th>
-											<th>Total</th>
+											<th>price</th>
 										</tr>
 									</thead>
 
 									<tbody>
 										{% for item in order.cart %}
 										<tr>
-											<td><a href="#">{{ item.product.title }} * {{ item.quantity }}</a></td>
+											<td><a href="#">{{ item.product.title }} {{ item.quantity }} pcs *</a></td>
 											<td>&#8358;{{ item.get_price_tag|floatformat:2|intcomma }}</td>
 										</tr>
 										{% endfor %}

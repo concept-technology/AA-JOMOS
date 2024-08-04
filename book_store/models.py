@@ -11,8 +11,6 @@ from django.contrib.sessions.models import Session
 from star_ratings.models import Rating
 import uuid
 from django.db.models import Avg
-# from django.utils import timezone
-
 from django.urls import reverse
 
 category_choices = (
@@ -117,9 +115,9 @@ class Features(models.Model):
 class Size(models.Model):
     size = models.CharField(max_length=10, unique=True)
     price = models.IntegerField(default=0, blank=True,null=True)
+    quantity = models.IntegerField(default=1)
     
-    
-    
+  
     def __str__(self) -> str:
         return self.size
 
@@ -243,14 +241,12 @@ class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='product')
     quantity = models.IntegerField(default =1) 
-    is_ordered = models.BooleanField(default=False)
-    size = models.CharField(max_length=10,blank=True,null=True)
+    is_ordered = models.BooleanField(default=False)  
     is_in_cart = models.BooleanField(default=False)
     cart_id = models.UUIDField(default=uuid.uuid4,)
     session_key = models.CharField(max_length=40, null=True, blank=True)
-    colors = models.ManyToManyField(Color, blank=True, null=True, related_name='carts')
-    
-    
+    size = models.ForeignKey(Size, on_delete=models.CASCADE, blank=True, null=True)
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, blank=True, null=True)
     def get_discount_price(self):
         return self.quantity * self.product.discount_price
 
@@ -284,8 +280,8 @@ class Cart(models.Model):
         dis_count_price = self.product.discount_price
         title = self.product.title
         if not dis_count_price:
-            return f"item: {title}, price: {price}, quantity: {self.quantity} color:{self.colors.name}"        
-        return f"item:{title} price: {dis_count_price}, quantity: {self.quantity} color: {self.colors.name}"
+            return f"item: {title}, price: {price}, quantity: {self.quantity}, color:{self.color.name}, size {self.size.size}"        
+        return f"item:{title} price: {dis_count_price}, quantity: {self.quantity}, color: {self.color.name if self.color else None}, size {self.size.size}"
             
 
     def get_title(self):
@@ -298,13 +294,15 @@ address_choices =(
 
 phone_regex = RegexValidator(
     regex=r'^\+?1?\d{9,15}$',
-    message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
+    message="Phone number  must be entered in the format: '+999999999'. Up to 15 digits allowed."
 )
 
 class CartColor(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     color = models.ForeignKey(Color, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
+    def __str__(self) -> str:
+        return f"{self.color.name} {self.quantity}"
 
 class CustomersAddress(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', blank=True, null=True )

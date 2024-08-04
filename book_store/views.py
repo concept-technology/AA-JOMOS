@@ -297,11 +297,6 @@ def home_view(request):
     return render(request,'store/index.html', context)
 
 
-
-
-
-
-
 def get_session_key(request):
     if not request.session.session_key:
         request.session.create()
@@ -309,7 +304,9 @@ def get_session_key(request):
 
 logger = logging.getLogger(__name__)
 
+
 class CartView(View):
+    @method_decorator(ensure_csrf_cookie)
     def get(self, request, *args, **kwargs):
         try:
             coupon_form = CouponForm()
@@ -323,17 +320,22 @@ class CartView(View):
                 if not session_cart_id:
                     session_cart_id = str(uuid.uuid4())
                     request.session['cart_id'] = session_cart_id
-                    print(f"New session cart_id created: {session_cart_id}")
 
                 cart_items = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False)
                 order = Order.objects.filter(cart_id=session_cart_id, is_ordered=False).first()
-                
-                print(f"Session cart_id: {session_cart_id}")
-                print(f"Cart items: {cart_items}")
-                print(f"Order: {order}")
 
             coupons = Coupon.objects.filter(active=True)
             locations = AbujaLocation.objects.all()
+            
+            
+            # Create a dictionary to hold color quantities for each cart item
+            color_quantities = {}
+            for cart_item in cart_items:
+                cart_colors = CartColor.objects.filter(cart=cart_item)
+                color_quantities[cart_item.id] = {
+                    'product_id': cart_item.product.id,
+                    'colors': {cart_color.color.name: cart_color.quantity for cart_color in cart_colors}
+                }
 
             context = {
                 'coupon_form': coupon_form,
@@ -342,7 +344,9 @@ class CartView(View):
                 'coupons': coupons,
                 'order': order,
                 'cart_items': cart_items,
+                'color_quantities': color_quantities,
                 'total_with_delivery': order.get_total_with_delivery() if order else 0,
+                # 'minimum_order':max_value,
             }
 
             return render(request, 'store/cart.html', context)
@@ -350,6 +354,7 @@ class CartView(View):
         except ObjectDoesNotExist:
             messages.error(request, 'You do not have an active order.')
             return redirect('store:categories')
+
     def post(self, request, *args, **kwargs):
         try:
             if request.user.is_authenticated:
@@ -362,9 +367,6 @@ class CartView(View):
                     request.session.modified = True
 
                 order = Order.objects.filter(cart_id=session_cart_id, is_ordered=False).first()
-
-            # Debugging information
-            print(f"Order before forms: {order}")
 
             coupon_form = CouponForm(request.POST)
             location_form = AbujaLocationForm(request.POST)
@@ -381,23 +383,27 @@ class CartView(View):
 
             if location_form.is_valid():
                 location_id = location_form.cleaned_data['location']
-                print(f"Location ID from form: {location_id}")
                 abuja_location = AbujaLocation.objects.get(id=location_id)
                 order.abuja_location = abuja_location
                 order.save()
                 messages.success(request, 'Delivery location updated successfully.')
-
-            # Debugging information
-            print(f"Order after forms: {order}")
 
             if request.user.is_authenticated:
                 cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
             else:
                 cart_items = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False)
 
+            # Create a dictionary to hold color quantities for each cart item
+            color_quantities = {}
+            for cart_item in cart_items:
+                cart_colors = CartColor.objects.filter(cart=cart_item)
+                color_quantities[cart_item.id] = {
+                    'product_id': cart_item.product.id,
+                    'colors': {cart_color.color.name: cart_color.quantity for cart_color in cart_colors}
+                }
+
             coupons = Coupon.objects.filter(active=True)
             locations = AbujaLocation.objects.all()
-
             context = {
                 'coupon_form': coupon_form,
                 'location_form': location_form,
@@ -406,6 +412,7 @@ class CartView(View):
                 'order': order,
                 'cart_items': cart_items,
                 'total_with_delivery': order.get_total_with_delivery() if order else 0,
+                'color_quantities': color_quantities,
             }
 
             return render(request, 'store/cart.html', context)
@@ -414,6 +421,55 @@ class CartView(View):
             messages.error(request, 'You do not have an active order.')
             return redirect('store:cart')
 
+    def put(self, request, *args, **kwargs):
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            cart_id = int(request.POST.get('cart_id'))
+            quantity_data = request.POST.getlist('quantities[]')
+            color_data = request.POST.getlist('colors[]')
+
+            quantities = []
+            for qty in quantity_data:
+                try:
+                    quantities.append(int(qty))
+                except (ValueError, TypeError):
+                    return JsonResponse({'message': 'Invalid quantity'}, status=400)
+
+            cart_item = get_object_or_404(Cart, pk=cart_id)
+
+            if request.user.is_authenticated:
+                cart_item.quantity = sum(quantities)
+
+                CartColor.objects.filter(cart=cart_item).delete()
+                for color_name, qty in zip(color_data, quantities):
+                    if qty > 0:
+                        color = get_object_or_404(Color, name=color_name)
+                        CartColor.objects.create(cart=cart_item, color=color, quantity=qty)
+
+                cart_item.save()
+            else:
+                session_cart = request.session.get('cart', {})
+                if str(cart_id) in session_cart:
+                    session_cart[str(cart_id)]['quantity'] = sum(quantities)
+                    session_cart[str(cart_id)]['colors'] = [{'color': color, 'quantity': qty} for color, qty in zip(color_data, quantities) if qty > 0]
+                else:
+                    session_cart[str(cart_id)] = {
+                        'quantity': sum(quantities),
+                        'colors': [{'color': color, 'quantity': qty} for color, qty in zip(color_data, quantities) if qty > 0]
+                    }
+
+                request.session['cart'] = session_cart
+
+            total_price = cart_item.product.discount_price * sum(quantities) if cart_item.product.discount_price else cart_item.product.price * sum(quantities)
+
+            return JsonResponse({
+                'product': cart_item.product.title,
+                'id': cart_id,
+                'qty': sum(quantities),
+                'total_price': total_price,
+                'message': 'Cart updated successfully'
+            })
+
+        return JsonResponse({'message': 'error'}, status=400)
 
 
 
@@ -433,120 +489,143 @@ def cart_count_view(request):
 
 logger = logging.getLogger(__name__)
 
-@csrf_exempt
-@require_POST
-def add_to_cart(request):
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        slug = request.POST.get('slug')      
-        product = get_object_or_404(Product, slug=slug)
-        quantity = int(request.POST.get('quantity', 1))  # Default quantity to 1 if not provided
+# @csrf_exempt
+# @require_POST
+# def add_to_cart(request):
+#     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+#         slug = request.POST.get('slug')      
+#         product = get_object_or_404(Product, slug=slug)
+#         quantity = int(request.POST.get('quantity', 1))  # Default quantity to 1 if not provided
 
-        if request.user.is_authenticated:
-            cart_qs = Cart.objects.filter(user=request.user, product=product, is_ordered=False)
+#         if request.user.is_authenticated:
+#             cart_qs = Cart.objects.filter(user=request.user, product=product, is_ordered=False)
 
-            if cart_qs.exists():
-                cart_item = cart_qs.first()
-                messages.error(request, f"{product.title} is already added to cart")
-            else:
-                cart_item = Cart.objects.create(
-                    user=request.user,
-                    product=product,
-                    quantity=quantity,
-                    is_ordered=False
-                )
-                messages.success(request, f"{product.title} is added to cart")
+#             if cart_qs.exists():
+#                 cart_item = cart_qs.first()
+#                 messages.error(request, f"{product.title} is already added to cart")
+#             else:
+#                 cart_item = Cart.objects.create(
+#                     user=request.user,
+#                     product=product,
+#                     quantity=quantity,
+#                     is_ordered=False
+#                 )
+#                 messages.success(request, f"{product.title} is added to cart")
 
-            # Create or update the order
-            order, created = Order.objects.get_or_create(
-                user=request.user,
-                is_ordered=False,
-                defaults={
-                    'reference': f'order-{secrets.token_hex(8)}',
-                    'date': timezone.now()
-                }
-            )
-            if not order.product.filter(id=cart_item.id).exists():
-                order.product.add(cart_item)
-            order.save()
+#             # Create or update the order
+#             order, created = Order.objects.get_or_create(
+#                 user=request.user,
+#                 is_ordered=False,
+#                 defaults={
+#                     'reference': f'order-{secrets.token_hex(8)}',
+#                     'date': timezone.now()
+#                 }
+#             )
+#             if not order.product.filter(id=cart_item.id).exists():
+#                 order.product.add(cart_item)
+#             order.save()
 
-            Wishlist.objects.filter(user=request.user, product=product).delete()
+#             Wishlist.objects.filter(user=request.user, product=product).delete()
 
-            storage = get_messages(request)
-            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
+#             storage = get_messages(request)
+#             response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
 
-            cart_count = Cart.objects.filter(user=request.user, is_ordered=False).count()
+#             cart_count = Cart.objects.filter(user=request.user, is_ordered=False).count()
 
-            return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
-        else:
-            session_cart_id = request.session.get('cart_id')
-            if not session_cart_id:
-                session_cart_id = str(uuid.uuid4())
-                request.session['cart_id'] = session_cart_id
-                request.session.modified = True
-                logger.info(f"New session cart_id created: {session_cart_id}")
+#             return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
+#         else:
+#             session_cart_id = request.session.get('cart_id')
+#             if not session_cart_id:
+#                 session_cart_id = str(uuid.uuid4())
+#                 request.session['cart_id'] = session_cart_id
+#                 request.session.modified = True
+#                 logger.info(f"New session cart_id created: {session_cart_id}")
             
-            cart_qs = Cart.objects.filter(cart_id=session_cart_id, product=product, is_ordered=False)
-            if cart_qs.exists():
-                cart_item = cart_qs.first()
-                cart_item.quantity += quantity  # Update the quantity
-            else:
-                cart_item = Cart.objects.create(cart_id=session_cart_id, product=product, is_ordered=False, quantity=quantity)
-            cart_item.save()
-            messages.success(request, f"{product.title} is added to cart")
+#             cart_qs = Cart.objects.filter(cart_id=session_cart_id, product=product, is_ordered=False)
+#             if cart_qs.exists():
+#                 cart_item = cart_qs.first()
+#                 cart_item.quantity += quantity  # Update the quantity
+#             else:
+#                 cart_item = Cart.objects.create(cart_id=session_cart_id, product=product, is_ordered=False, quantity=quantity)
+#             cart_item.save()
+#             messages.success(request, f"{product.title} is added to cart")
 
-            # Create or update the order
-            order, created = Order.objects.get_or_create(
-                cart_id=session_cart_id,
-                is_ordered=False,
-                defaults={
-                    'reference': f'order-{secrets.token_hex(8)}',
-                    'date': timezone.now()
-                }
-            )
+#             # Create or update the order
+#             order, created = Order.objects.get_or_create(
+#                 cart_id=session_cart_id,
+#                 is_ordered=False,
+#                 defaults={
+#                     'reference': f'order-{secrets.token_hex(8)}',
+#                     'date': timezone.now()
+#                 }
+#             )
 
-            if not order.product.filter(id=cart_item.id).exists():
-                order.product.add(cart_item)
-            order.save()
+#             if not order.product.filter(id=cart_item.id).exists():
+#                 order.product.add(cart_item)
+#             order.save()
 
-            storage = get_messages(request)
-            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
+#             storage = get_messages(request)
+#             response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
 
-            cart_count = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False).count()
+#             cart_count = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False).count()
 
-            return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
-    return JsonResponse({'message': 'error processing your request'}, status=400)
+#             return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
+#     return JsonResponse({'message': 'error processing your request'}, status=400)
 
 
 
-def delete_cart(request, slug):
-    product = get_object_or_404(Product, slug=slug)
-    next_url = request.GET.get('next')
+# def delete_cart(request, slug):
+#     product = get_object_or_404(Product, slug=slug)
+#     next_url = request.GET.get('next')
 
-    if request.user.is_authenticated:
-        cart = Cart.objects.filter(product=product, user=request.user, is_ordered=False)
-        order = Order.objects.filter(user=request.user, is_ordered=False).first()
+#     if request.user.is_authenticated:
+#         cart = Cart.objects.filter(product=product, user=request.user, is_ordered=False)
+#         order = Order.objects.filter(user=request.user, is_ordered=False).first()
         
-        if order and order.product.filter(product=product).exists():
-            cart.delete()
-            messages.success(request, 'Deleted from cart')
-        else:
-            messages.error(request, 'You have already removed this item from the cart or no active order exists')
+#         if order and order.product.filter(product=product).exists():
+#             cart.delete()
+#             messages.success(request, 'Deleted from cart')
+#         else:
+#             messages.error(request, 'You have already removed this item from the cart or no active order exists')
         
-    else:
-        session_cart_id = request.session.get('cart_id')
-        if session_cart_id:
-            cart = Cart.objects.filter(product=product, cart_id=session_cart_id, is_ordered=False)
-            if cart.exists():
-                cart.delete()
-                messages.success(request, 'Deleted from cart')
-            else:
-                messages.error(request, 'Item not found in cart')
-        else:
-            messages.error(request, 'No active cart found in session')
+#     else:
+#         session_cart_id = request.session.get('cart_id')
+#         if session_cart_id:
+#             cart = Cart.objects.filter(product=product, cart_id=session_cart_id, is_ordered=False)
+#             if cart.exists():
+#                 cart.delete()
+#                 messages.success(request, 'Deleted from cart')
+#             else:
+#                 messages.error(request, 'Item not found in cart')
+#         else:
+#             messages.error(request, 'No active cart found in session')
 
-    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-        return redirect(next_url)
-    return redirect("store:index")
+#     if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+#         return redirect(next_url)
+#     return redirect("store:index")
+
+
+@csrf_exempt
+def delete_cart(request):
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        cart_item_id = request.POST.get('cart_item_id')
+        if cart_item_id:
+            cart_item = get_object_or_404(Cart, id=cart_item_id, is_ordered=False)
+            cart_item.delete()
+            # messages.success(request, 'Deleted from cart')
+            if request.user.is_authenticated:
+                cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
+            else:
+                session_cart_id = request.session.get('cart_id')
+                if session_cart_id:
+                    cart_items = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False)
+                else:
+                    return JsonResponse({'message': 'No active cart found in session'}, status=400)
+            cart_total = sum(item.product.discount_price * item.quantity if item.quantity < item.product.minimum_order else item.product.wholesale_price * item.quantity for item in cart_items)
+            return JsonResponse({'success': True, 'cart_total': cart_total})
+        return JsonResponse({'message': 'Cart item ID not provided'}, status=400)
+    return JsonResponse({'message': 'Invalid request'}, status=400)
+
 
 
 
@@ -921,11 +1000,12 @@ def search_view(request):
     return render(request, 'store/search_results.html', context)
 
 
+
 @ensure_csrf_cookie
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
-    colors = Color.objects.all()  # Assuming you want to show all colors for the product
-
+    colors = product.color.all()  # Fetch only the colors associated with the product
+    size = product.size.count()
     if request.user.is_authenticated:
         in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
         is_in_cart = Cart.objects.filter(product=product, is_ordered=False, user=request.user).exists()
@@ -960,7 +1040,9 @@ def product_detail(request, slug):
         for color in colors:
             cart_color = CartColor.objects.filter(cart=cart, color=color).first()
             color_quantities[color.name] = cart_color.quantity if cart_color else 0
-
+    if is_in_cart:
+        cart_quantity = cart.quantity 
+    cart_quantity = None
     context = {
         'product': product,
         'ratings': ratings,
@@ -975,7 +1057,9 @@ def product_detail(request, slug):
         'related_products': related_products,
         'in_wishlist': in_wishlist,
         'colors': colors,
-        'color_quantities': color_quantities
+        'color_quantities': color_quantities,
+        'quantity': cart_quantity,
+        'size':size,
     }
 
     return render(request, 'store/product_detail.html', context)
@@ -1007,62 +1091,60 @@ class DeleteCartItem(View):
         return JsonResponse({'message': 'error'}, status=400)
 
 
-class UpdateCartQuantity(View):
+class UpdateProductQuantity(View):
     def post(self, request, *args, **kwargs):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            id = int(request.POST.get('id'))
-            quantity_data = request.POST.getlist('quantities[]')
-            color_data = request.POST.getlist('colors[]')
+            id = int(self.request.POST.get('id'))
+            quantity = request.POST.get('quantity')
+            quantity1 = request.POST.get('quantity1')
             
-            quantities = []
-            for qty in quantity_data:
-                try:
-                    quantities.append(int(qty))
-                except (ValueError, TypeError):
-                    return JsonResponse({'messages': [{'message': 'Invalid quantity', 'tags': 'error'}]}, status=400)
+            # Validate the quantity
+            try:
+                quantity = int(quantity) or int(quantity1)
+            except (ValueError, TypeError):
+                return JsonResponse({'message': 'Invalid quantity'}, status=400)
+            
+            size = request.POST.get('size')
             
             product = get_object_or_404(Product, pk=id)
             
             if request.user.is_authenticated:
                 cart = get_object_or_404(Cart, product=product, is_ordered=False, user=request.user)
-                cart.quantity = sum(quantities)
                 
-                cart.colors.clear()
-                for color_name, qty in zip(color_data, quantities):
-                    color = get_object_or_404(Color, name=color_name)
-                    cart.colors.add(color, through_defaults={'quantity': qty})
+                cart.quantity = quantity
+                cart.size = size if size else None  # Handle the case where size is not provided
                 
                 cart.save()
             else:
                 session_cart = request.session.get('cart', {})
                 
                 if str(id) in session_cart:
-                    session_cart[str(id)]['quantity'] = sum(quantities)
-                    session_cart[str(id)]['colors'] = [{'color': color, 'quantity': qty} for color, qty in zip(color_data, quantities)]
+                    session_cart[str(id)]['quantity'] = quantity
+                    session_cart[str(id)]['size'] = size if size else None  # Handle the case where size is not provided
                 else:
                     session_cart[str(id)] = {
-                        'quantity': sum(quantities),
-                        'colors': [{'color': color, 'quantity': qty} for color, qty in zip(color_data, quantities)]
+                        'quantity': quantity,
+                        'size': size if size else None
                     }
                 
                 request.session['cart'] = session_cart
-
-            if product.discount_price:
-                total_price = product.discount_price * sum(quantities)
+            if quantity < product.minimum_order:
+                total_price = product.discount_price  * quantity
             else:
-                total_price = product.price * sum(quantities)
+                total_price = product.wholesale_price * quantity
 
             messages = [{'message': 'Cart updated successfully', 'tags': 'success'}]
 
             return JsonResponse({
                 'product': product.title,
                 'id': id,
-                'qty': sum(quantities),
+                'qty': quantity,
+                'size': size,  # Ensure to return size even if it's None
                 'total_price': total_price,
                 'messages': messages
             })
         
-        return JsonResponse({'messages': [{'message': 'Error', 'tags': 'error'}]}, status=400)
+        return JsonResponse({'message': 'error'}, status=400)
 
 def mark_order_as_received(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -1164,3 +1246,348 @@ def wishlist_count(request):
 
 
 
+def update_size_color(request, product_slug):
+    product = Product.objects.get(slug=product_slug)
+    selected_size = request.GET.get('size')
+    selected_color = request.GET.get('color')
+
+    # You can filter the sizes and colors based on your logic
+    sizes = product.size.all() if not selected_size else product.size.filter(size=selected_size)
+    colors = product.color.all() if not selected_color else product.color.filter(name=selected_color)
+    stock = Stock.objects.get(product=product)
+    context = {
+        'product': product,
+        'sizes': sizes,
+        'colors': colors,
+        'stock': stock
+    }
+
+    return render(request, 'store/color_size_update.html', context)
+
+
+
+@csrf_exempt
+@require_POST
+def add_to_cart(request):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        slug = request.POST.get('slug')
+        size_id = request.POST.get('size')
+        color_id = request.POST.get('color')
+        quantity = int(request.POST.get('quantity', 1))
+        product = get_object_or_404(Product, slug=slug)
+        size = get_object_or_404(Size, id=size_id) if size_id else None
+        color = get_object_or_404(Color, id=color_id) if color_id else None
+
+        if request.user.is_authenticated:
+            cart_qs = Cart.objects.filter(
+                user=request.user,
+                product=product,
+                size=size,
+                color=color,
+                is_ordered=False
+            )
+
+            if cart_qs.exists():
+                cart_item = cart_qs.first()
+                cart_item.quantity += quantity
+                cart_item.save()
+                # messages.success(request, f"Updated {product.title} in cart")
+            else:
+                cart_item = Cart.objects.create(
+                    user=request.user,
+                    product=product,
+                    size=size,
+                    color=color,
+                    quantity=quantity,
+                    is_ordered=False
+                )
+                messages.success(request, f"{product.title} added to cart")
+
+            order, created = Order.objects.get_or_create(
+                user=request.user,
+                is_ordered=False,
+                defaults={
+                    'reference': f'order-{secrets.token_hex(8)}',
+                    'date': timezone.now()
+                }
+            )
+            if not order.product.filter(id=cart_item.id).exists():
+                order.product.add(cart_item)
+            order.save()
+
+            Wishlist.objects.filter(user=request.user, product=product).delete()
+
+            storage = get_messages(request)
+            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
+
+            cart_count = Cart.objects.filter(user=request.user, is_ordered=False).count()
+
+            return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
+        else:
+            session_cart_id = request.session.get('cart_id')
+            if not session_cart_id:
+                session_cart_id = str(uuid.uuid4())
+                request.session['cart_id'] = session_cart_id
+                request.session.modified = True
+
+            cart_qs = Cart.objects.filter(
+                cart_id=session_cart_id,
+                product=product,
+                size=size,
+                color=color,
+                is_ordered=False
+            )
+            if cart_qs.exists():
+                cart_item = cart_qs.first()
+                cart_item.quantity += quantity
+                cart_item.save()
+                messages.success(request, f"Updated {product.title} in cart")
+            else:
+                cart_item = Cart.objects.create(
+                    cart_id=session_cart_id,
+                    product=product,
+                    size=size,
+                    color=color,
+                    quantity=quantity,
+                    is_ordered=False
+                )
+                messages.success(request, f"{product.title} added to cart")
+
+            order, created = Order.objects.get_or_create(
+                cart_id=session_cart_id,
+                is_ordered=False,
+                defaults={
+                    'reference': f'order-{secrets.token_hex(8)}',
+                    'date': timezone.now()
+                }
+            )
+            if not order.product.filter(id=cart_item.id).exists():
+                order.product.add(cart_item)
+            order.save()
+
+            storage = get_messages(request)
+            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
+
+            cart_count = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False).count()
+
+            return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
+    return JsonResponse({'message': 'Error processing your request'}, status=400)
+
+
+
+@csrf_exempt
+@require_POST
+def update_cart_color_and_qty(request):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        slug = request.POST.get('slug')
+        size_id = request.POST.get('size')
+        color_id = request.POST.get('color')
+        quantity = int(request.POST.get('quantity', 1))
+        product = get_object_or_404(Product, slug=slug)
+        size = get_object_or_404(Size, id=size_id) if size_id else None
+        color = get_object_or_404(Color, id=color_id) if color_id else None
+
+        if request.user.is_authenticated:
+            cart_qs = Cart.objects.filter(
+                user=request.user,
+                product=product,
+                size=size,
+                color=color,
+                is_ordered=False
+            )
+
+            if cart_qs.exists():
+                cart_item = cart_qs.first()
+                cart_item.quantity = quantity
+                
+                cart_item.save()
+                messages.success(request, f"Updated {product.title} in cart")
+            else:
+                cart_item = Cart.objects.create(
+                    user=request.user,
+                    product=product,
+                    size=size,
+                    color=color,
+                    quantity=quantity,
+                    is_ordered=False
+                )
+                messages.success(request, f"{product.title} added to cart")
+                
+                cart_item.product.price = size.price
+                cart_item.product.discount_price = size.price
+                cart_item.save()
+            # Create or update the order
+            order, created = Order.objects.get_or_create(
+                user=request.user,
+                is_ordered=False,
+                defaults={
+                    'reference': f'order-{secrets.token_hex(8)}',
+                    'date': timezone.now()
+                }
+            )
+            if not order.product.filter(id=cart_item.id).exists():
+                order.product.add(cart_item)
+            order.save()
+
+            Wishlist.objects.filter(user=request.user, product=product).delete()
+
+            storage = get_messages(request)
+            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
+
+            cart_count = Cart.objects.filter(user=request.user, is_ordered=False).count()
+
+            return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
+        else:
+            session_cart_id = request.session.get('cart_id')
+            if not session_cart_id:
+                session_cart_id = str(uuid.uuid4())
+                request.session['cart_id'] = session_cart_id
+                request.session.modified = True
+
+            cart_qs = Cart.objects.filter(
+                cart_id=session_cart_id,
+                product=product,
+                size=size,
+                color=color,
+                is_ordered=False
+            )
+            if cart_qs.exists():
+                cart_item = cart_qs.first()
+                cart_item.quantity = quantity
+                cart_item.save()
+                messages.success(request, f"Updated {product.title} in cart")
+            else:
+                cart_item = Cart.objects.create(
+                    cart_id=session_cart_id,
+                    product=product,
+                    size=size,
+                    color=color,
+                    quantity=quantity,
+                    is_ordered=False
+                )
+                messages.success(request, f"{product.title} added to cart")
+
+            # Create or update the order
+            order, created = Order.objects.get_or_create(
+                cart_id=session_cart_id,
+                is_ordered=False,
+                defaults={
+                    'reference': f'order-{secrets.token_hex(8)}',
+                    'date': timezone.now()
+                }
+            )
+            if not order.product.filter(id=cart_item.id).exists():
+                order.product.add(cart_item)
+            order.save()
+
+            storage = get_messages(request)
+            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
+
+            cart_count = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False).count()
+
+            return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
+    return JsonResponse({'message': 'Error processing your request'}, status=400)
+
+# class UpdateCartQuantity(View):
+#     def post(self, request, *args, **kwargs):
+#         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+#             cart_item_id = int(request.POST.get('cart_item_id'))
+#             quantity = request.POST.get('quantity')         
+            
+#             try:
+#                 quantity = int(quantity)
+#                 if quantity <= 0:
+#                     return JsonResponse({'message': 'Invalid quantity'}, status=400)
+#             except (ValueError, TypeError):
+#                 return JsonResponse({'message': 'Invalid quantity'}, status=400)
+
+#             cart_item = get_object_or_404(Cart, id=cart_item_id, is_ordered=False)
+
+#             cart_item.quantity = quantity
+#             cart_item.save()
+
+#             if quantity < cart_item.product.minimum_order:
+#                 sub_total = cart_item.product.discount_price * quantity
+#             else:
+#                 sub_total = cart_item.product.wholesale_price * quantity
+
+#             if request.user.is_authenticated:
+#                 cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
+#             else:
+#                 session_cart_id = request.session.get('cart_id')
+#                 cart_items = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False)
+            
+#             cart_total = sum(
+#                 item.product.discount_price * item.quantity if item.quantity < item.product.minimum_order else item.product.wholesale_price * item.quantity
+#                 for item in cart_items
+#             )
+
+#             messages = [{'message': 'Cart updated successfully', 'tags': 'success'}]
+
+#             return JsonResponse({
+#                 'cart_item_id': cart_item_id,
+#                 'qty': quantity,
+#                 'sub_total': sub_total,
+#                 'cart_item_total': cart_total,
+#                 'messages': messages,
+#                 'total_with_delivery': '',
+#             })
+        
+#         return JsonResponse({'message': 'error'}, status=400)
+
+class UpdateCartQuantity(View):
+    def post(self, request, *args, **kwargs):
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            cart_item_id = int(request.POST.get('cart_item_id'))
+            quantity = request.POST.get('quantity')
+            price = request.POST.get('price')
+
+            # Validate the quantity
+            try:
+                quantity = int(quantity)
+                if quantity <= 0:
+                    return JsonResponse({'message': 'Invalid quantity'}, status=400)
+            except (ValueError, TypeError):
+                return JsonResponse({'message': 'Invalid quantity'}, status=400)
+
+            # Fetch and update the cart item
+            cart_item = get_object_or_404(Cart, id=cart_item_id, is_ordered=False)
+            cart_item.quantity = quantity
+            cart_item.save()
+
+            # Calculate the subtotal for the updated item
+            if quantity < cart_item.product.minimum_order:
+                cart_item_total = cart_item.product.discount_price * quantity
+            else:
+                cart_item_total = cart_item.product.wholesale_price * quantity
+
+            # Calculate the updated total cart value
+            if request.user.is_authenticated:
+                cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
+            else:
+                session_cart_id = request.session.get('cart_id')
+                cart_items = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False)
+
+            cart_total = sum(
+                item.product.discount_price * item.quantity if item.quantity < item.product.minimum_order else item.product.wholesale_price * item.quantity
+                for item in cart_items
+            )
+
+            # Calculate the total price for all items in the cart
+            total_price = sum(
+                item.get_total_price() for item in cart_items
+            )
+
+            order_qs = Order.objects.get(product=cart_item, is_ordered=False)
+            total_order_and_delivery = order_qs.get_total_with_delivery()
+
+            return JsonResponse({
+                'cart_item_id': cart_item_id,
+                'qty': quantity,
+                'total_order_and_delivery': total_order_and_delivery,
+                'cart_item_total': cart_item_total,  # Ensure total cart value is included
+                'total_order': total_price,  # Include the total price for all items
+                'messages': [{'message': 'Cart updated successfully', 'tags': 'success'}],
+            })
+
+        return JsonResponse({'message': 'error'}, status=400)

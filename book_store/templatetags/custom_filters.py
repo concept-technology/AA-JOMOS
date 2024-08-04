@@ -9,6 +9,7 @@ def to_int(value):
     except (ValueError, TypeError):
         return 0  # or you can return None or some other default value
 @register.filter
+
 def get_item(dictionary, key):
     return dictionary.get(key)
 
