@@ -13,18 +13,15 @@
                 <li class="breadcrumb-item"><a href="{% url 'store:categories-list' %}">Shop</a></li>
                 <li class="breadcrumb-item active" aria-current="page">{{ product.title }}</li>
             </ol>
-
             {% block title %}
             {{ product.title }}
             {% endblock title %}
-
             {% block seo %}
             <meta name="description" content="{{ product.description.title }}">
             <meta name="keywords" content="{{ product.title }}">
             {% endblock seo %}
         </div><!-- End .container -->
     </nav><!-- End .breadcrumb-nav -->
-
     <div class="page-content">
         <div class="container">
             <div class="product-details-top">
@@ -78,32 +75,29 @@
                                 </div>
                                 <span class="ratings-text">{{ item.count }} {{ count }} (reviews)</span>
                             </div><!-- End .ratings-container -->
-
+                            
+                            {% for item in sizes %}              
                             <div class="product-price">
-                                {% if product.discount_price %}
-                                <span class="new-price" id="new-price">&#8358;{{ product.discount_price|floatformat:2|intcomma }}</span>
-                                <span class="old-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
-                                {% else %}
-                                <span class="new-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
+                                {% if forloop.counter == 1 %}
+                                <span class="new-price" id="new-price">&#8358;{{ item.discount_price|floatformat:2|intcomma }}</span>
+                                <span class="old-price">&#8358;{{ item.price|floatformat:2|intcomma }}</span>
                                 {% endif %}
                             </div><!-- End .product-price -->
+                            {% endfor %}
 
                             <div class="product-content">
                                 <p id="product-description">{{ product.description }}</p>
-                            </div><!-- End .product-content -->
+                            </div>
 
                             <div class="product-details-action">           
-                                <button class="btn-product btn-cart btn" type="submit" id="cart-btn">
+                                <button class="btn-product btn-cart " type="submit" id="cart-btnx">
                                 <!--class=" btn btn-product btn-wishlist"  -->
                                 <span>
-                                    
                                     {% if is_in_cart %}
-                                    in cart
-                                        
+                                    added to cart                                       
                                     {% else %}
-                                    Add to cart
-                                    {% endif %}
-                                        
+                                    update quantity to add to cart
+                                    {% endif %}              
                                 </span></button>
                                 <div class="details-action-wrapper">
                                     <!-- <button id="remove-from-wishlist" class="btn-product btn-wishlist  btn-link" data-url="{{ product.get_remove_from_wishlist_url }}" class="btn btn-danger">Remove from Wishlist</button> -->
@@ -124,39 +118,40 @@
                             </div><!-- End .product-details-action -->
                             {% if product.size %}
                             <h4 for="size"> Available Sizes:</h4>
-                            <div class="details-filter-row details-row-size">
-                                <div class="select-custom">
-                                    <div class="d-flex">
-                                        
-                                            
-                                        {% for size in product.size.all %}
-                                        
-                                        {% if forloop.counter > 1 %}                             
-                                        <a href="{% url 'store:update_size_color' product.slug %}" ><br>
-                                            <b class="size-selector" data-size="{{ size.size }}">{{ size.size }} </b>                                        
-                                        </a>  
-                                        {% else %}
-                                        <a>
-                                            <b class="size-selector" data-size="{{ size.size }}">{{ size.size }}</b>                                           
-                                        </a>                        
-                                        {% endif %}
-
-                                        {%endfor%}
-     
-                                    </div>
-                                        
-                                </div>
-                            </div><!-- End .details-filter-row -->
+                         
                             {% endif %}
 
                             <div class="details-filter-row details-row-size">
-                                <label for="qty">Qty:</label>
-                                <div class="product-details-quantity">
-                                    {% csrf_token %}
-                                    <input type="number" id="cart-quantity-input" class="form-control" data-item-id="{{ product.id }}" value="{{quantity }}" name="quantity" min="1" step="1" data-decimals="0" required>
-                                    <input type="hidden" id="product-id" value="{{ product.id }}" name="id">
-                                </div><!-- End .product-details-quantity -->
-                            </div><!-- End .details-filter-row -->
+                                <div class="product-cat">                          
+                                    {% for size in product.size.all %}
+                                    <div class="size-section">
+                                        {% for color in product.color.all %}
+                                        <div class="color-section d-flex align-content-center  w-50">
+                                            <div>
+                                            <img src="{{color.img.url}}" width="50px" height="55px">
+                                            <div class="product-cat">
+                                                <span>{{ color.name }}</span>                      
+                                            </div>
+                                             </div>
+                                            <div class="d-flex m-3">
+                                                <div>
+                                                    <h3>{{ size.size }}</h3>
+                                                    <div class="product-price">
+                                                        <p class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</p>
+                                                        <p class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</p>                              
+                                                    </div>
+                                                </div>
+                                                    
+                                                <div>
+                                                    <input type="number" min="0" max="{{color.quantity}}" class="quantity" data-size="{{ size.id }}" data-color="{{ color.id }}" value="" placeholder="quantity">                 
+                                                </div> <br>                                              
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div><!-- End .product-cat -->
+                                {% endfor %}   
+
+                            </div>
 
                             <div class="product-details-footer">
                                 <div class="product-cat">
@@ -224,19 +219,11 @@
                                                     {% endif %}
                                                 </ul>
                                                 {% endif %}
-                                            
                                             </div><!-- End .product-desc-content -->
-                                        </div><!-- End .card-body -->
-                                       
+                                        </div><!-- End .card-body -->                                      
                                             </div><!-- End .product-desc-content -->
-                                        </div><!-- End .card-body -->
-
-                                        
-                                            
-                                            
-                                            {% for rating in ratings %}
-                                                
-                                                
+                                        </div><!-- End .card-body -->                                     
+                                            {% for rating in ratings %}            
                                         <div class="card card-box card-sm">
                                             <div class="card-header" id="product-review-heading">
                                                 <h2 class="card-title">
@@ -248,8 +235,7 @@
                                             <div id="product-accordion-review" class="collapse" aria-labelledby="product-review-heading" data-parent="#product-accordion">
                                                 <div class="card-body">
                                                     <div class="reviews">
-                                                        <div class="review">
-                                                      
+                                                        <div class="review">            
                                                         <div class="review">
                                                             <div class="row no-gutters">
                                                                 <div class="col-auto">
@@ -293,58 +279,7 @@
                                     </div><!-- End .collapse -->
                                 </div><!-- End .card -->
                             </div><!-- End .accordion -->
-                            
-                            <div class="sticky-bar">
-                                <div class="container">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <figure class="product-media">
-                                                <a href="product.html">
-                                                    <img src="{{product.img_1.url}}" alt="Product image">
-                                                </a>
-                                            </figure><!-- End .product-media -->
-                                            <h4 class="product-title"><a href="product.html">{{product.title}}</a></h4><!-- End .product-title -->
-                                        </div><!-- End .col-6 -->
-                        
-                                        <div class="col-6 justify-content-end">
-                                            <div class="product-price">
-                                                {% if product.discount_price|floatformat:2|intcomma%}            
-                                                <span class="new-price" id="new-price1">&#8358;{{product.discount_price|floatformat:2|intcomma}}</span>
-                                                <span class="old-price">&#8358;{{product.price|floatformat:2|intcomma}}</span>
-                                                {% else %}
-                                                <span class="new-price" id="new-price1">&#8358;{{product.price|floatformat:2|intcomma}}</span>
-                                                <span class="old-price">&#8358;{{product.discount_price|floatformat:2|intcomma}}</span>
-                                                {% endif %}
-                                            </div><!-- End .product-price -->
-                                            <div class="product-details-quantity">
-                                                <input type="number"  id="cart-quantity-input1" class="form-control" data-item-id="{{ product.id }}" value="{{ product.quantity }}" min="1" max="10" step="1" data-decimals="0" required="" name="quantity" value="{{ product.quantity }}" style="display: none;"><div class="input-group  input-spinner"><div class="input-group-prepend"><button style="min-width: 26px" class="btn btn-decrement btn-spinner" type="button"><i class="icon-minus"></i></button></div><input type="text" style="text-align: center" class="form-control " required="" placeholder=""><div class="input-group-append"><button style="min-width: 26px" class="btn btn-increment btn-spinner" type="button"><i class="icon-plus"></i></button></div></div>
-                                                <!-- <input type="number" id="cart-quantity-input1" class="form-control" data-item-id="{{ product.id }}" value="{{ product.quantity }}" name="quantity" min="1" step="1" data-decimals="0" required> -->
-                                            </div><!-- End .product-details-quantity -->
-                        
-                                            <div class="product-details-action">
-
-                                                
-                                        <button class="btn-product btn-cart" id="cart-btn1"><span>add to cart</span></button>
-                                            <button class="toggle-wishlist btn-product btn-wishlist btn" 
-                                                data-add-url="{{ product.get_add_to_wishlist_url }}" 
-                                                data-remove-url="{{ product.get_remove_from_wishlist_url }}" 
-                                                data-product-id="{{ product.id }}" 
-                                                >
-                                            {% if in_wishlist %}
-                                                Remove from Wishlist
-                                            {% else %}
-                                                Add to Wishlist
-                                            {% endif %}
-                                        </button>
-                                        
-                                                <!-- <button id="add-to-wishlist" class="btn-product btn-wishlist"data-url="{{ product.get_add_to_wishlist_url }}" class="btn btn-primary">Add to Wishlist</button> -->
-                                                
-                                                <!-- <a href="#" class="btn-product btn-wishlist" title="Wishlist"><span>Add to Wishlist</span></a> -->
-                                            </div><!-- End .product-details-action -->
-                                        </div><!-- End .col-6 -->
-                                    </div><!-- End .row -->
-                                </div><!-- End .container -->
-                            </div>
+                      
                         </div><!-- End .product-details -->
                     </div><!-- End .col-md-6 -->
                 </div><!-- End .row -->
@@ -354,172 +289,7 @@
 </main><!-- End .main -->
 
 <script>
-    $(document).ready(function() {
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func.apply(this, args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        const updateCart = debounce(function() {
-            let cartId = $('#product-id').val();
-            let quantity = $('#cart-quantity-input').val();
-            let quantity1 = $('#cart-quantity-input1').val();
-            let size = $('#size').val();
-        
-            // Synchronize the values of the input fields
-            $('#cart-quantity-input').val(quantity);
-            $('#cart-quantity-input1').val(quantity);
-        
-            console.log('Cart update triggered', { 'id': cartId, 'qty': quantity, 'size': size });
-        
-            $.ajax({
-                url: "{% url 'store:update_product_quantity' %}",
-                method: 'POST',
-                data: {
-                    id: cartId,
-                    quantity: quantity,
-                    size: size,
-                    csrfmiddlewaretoken: "{{ csrf_token }}"
-                },
-                success: function(response) {
-                    console.log('Success response:', response);
-                    $('#new-price').text(`₦${response.total_price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
-                    $('#new-price1').text(`₦${response.total_price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
-                    $('#cart-quantity-input').val(response.qty);
-                    $('#cart-quantity-input1').val(response.qty);
-                },
-                error: function(response) {
-                    console.log('Error response:', response);
-                }
-            });
-        }, 300); // Adjust debounce time as necessary
-        
-        $('#cart-quantity-input').off('change').on('change', function() {
-            $('#cart-quantity-input1').val($(this).val());
-            updateCart();
-        });
-        
-        $('#cart-quantity-input1').off('change').on('change', function() {
-            $('#cart-quantity-input').val($(this).val());
-            updateCart();
-        });
-        
-        function addToCart() {
-            let productSlug = "{{ product.slug }}";
-            console.log('Add to cart triggered', { 'slug': productSlug });
-
-            $.ajax({
-                url: "{% url 'store:add-to-cart' %}",
-                method: 'POST',
-                data: {
-                    slug: productSlug,
-                    csrfmiddlewaretoken: "{{ csrf_token }}"
-                },
-                success: function(response) {
-                    console.log('Success response:', response);
-                    $('#cart-count').html(response.cart_count);
-                    
-                    // Display messages using SweetAlert
-                    if (response.messages) {
-                        response.messages.forEach(function(message) {
-                            Swal.fire({
-                                text: message.message,
-                                icon: message.tags.includes('success') ? 'success' : 'error',
-                                timer: 3000,
-                                showConfirmButton: false
-                            });
-                        });
-                    } else {
-                        console.log('No messages in response');
-                    }
-
-
-                    // Change button ID and text
-                    $('#cart-btn').attr('id', 'delete-btn').text('Delete Cart');
-                    $('#cart-btn1').attr('id', 'delete-btn1').text('Delete Cart');
-
-                    // Attach delete event
-                    $('#delete-btn').off('click').on('click', deleteFromCart);
-                    $('#delete-btn1').off('click').on('click', deleteFromCart);
-                },
-                error: function(response) {
-                    console.log('Error response:', response);
-                }
-            });
-        }
-
-        function deleteFromCart() {
-            let productSlug = "{{ product.slug }}";
-            console.log('Delete from cart triggered', { 'slug': productSlug });
-
-            $.ajax({
-                url: "{% url 'store:delete-from-cart' %}",
-                method: 'POST',
-                data: {
-                    slug: productSlug,
-                    csrfmiddlewaretoken: "{{ csrf_token }}"
-                },
-                success: function(response) {
-                    console.log('Success response:', response);
-                    $('#cart-count').html(response.cart_count);
-
-                    // Change button ID and text back to add to cart
-                    $('#delete-btn').attr('id', 'cart-btn').text('Add to Cart');
-                    $('#delete-btn1').attr('id', 'cart-btn1').text('Add to Cart');
-
-                    // Display messages using SweetAlert
-                    // Display messages using SweetAlert
-                    if (response.messages) {
-                        response.messages.forEach(function(message) {
-                            Swal.fire({
-                                text: message.message,
-                                icon: message.tags.includes('success') ? 'success' : 'error',
-                                timer: 3000,
-                                showConfirmButton: false
-                            });
-                        });
-                    } else {
-                        console.log('No messages in response');
-                    }
-
-                    // Attach add event
-                    $('#cart-btn').off('click').on('click', addToCart);
-                    $('#cart-btn1').off('click').on('click', addToCart);
-                },
-                error: function(response) {
-                    console.log('Error response:', response);
-                }
-            });
-        }
-
-        // Attach initial add to cart event
-        $('#cart-btn').off('click').on('click', addToCart);
-        $('#cart-btn1').off('click').on('click', addToCart);   
-    });
-
-    
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
+ 
 
     $(document).ready(function() {
         $('.toggle-wishlist').click(function() {
@@ -546,56 +316,38 @@
 
 
 
-
-
-
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const sizeElements = document.querySelectorAll('.size-selector');
-            const colorElements = document.querySelectorAll('.color-selector');
+        
+        $(document).ready(function() {
+            $('.quantity').on('change', function() {
+                const size = $(this).data('size');
+                const color = $(this).data('color');
+                const quantity = $(this).val();
+                const slug = '{{ product.slug }}';
     
-            sizeElements.forEach(function(element) {
-                element.addEventListener('click', function() {
-                    const size = this.dataset.size;
-                    const productSlug = '{{ product.slug }}';
-                    updateSizeColor(productSlug, size, null);
-                });
-            });
-    
-            colorElements.forEach(function(element) {
-                element.addEventListener('click', function() {
-                    const color = this.dataset.color;
-                    const productSlug = '{{ product.slug }}';
-                    updateSizeColor(productSlug, null, color);
-                });
-            });
-    
-            function updateSizeColor(productSlug, size, color) {
-                const url = `{% url 'store:update_size_color' product.slug %}`;
-                let params = '';
-    
-                if (size) {
-                    params += `size=${size}`;
-                }
-    
-                if (color) {
-                    params += params ? `&color=${color}` : `color=${color}`;
-                }
-    
-                fetch(`${url}?${params}`, {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "store:update_cart_size"  %}',
+                    data: {
+                        'slug': slug,
+                        'size': size,
+                        'color': color,
+                        'quantity': quantity,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            console.log('Cart updated successfully');
+                        } else {
+                            alert('Failed to update cart');
+                        }
                     }
-                })
-                .then(response => response.text())
-                .then(data => {
-                    document.querySelector('#size-color-container').innerHTML = data;
-                })
-                .catch(error => console.error('Error:', error));
-            }
+                });
+            });
+    
+    
+    
+            
         });
-
     
 </script>
    

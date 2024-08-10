@@ -95,23 +95,31 @@
                                             <h3 class="product-title">
                                                 <a href="{{ item.product.get_absolute_url }}">{{ item.product.title }}<br> <span>
                                                 {% if item.color.name %}
-                                                color: {{item.color.name}}  
+                                                color: {{item.color.name}} <br>
+                                                
                                                 {% endif %}
-                                                    <br>                      
-                                                  {% if item.size.size %}
-                                                  size: {{item.size.size}}
+                                                {% if item.size.size %}
+                                                size: {{item.size.size}}
+                                                <p style="color: chocolate;">{{item.color.quantity}} in stock</p> 
                                                   {% endif %}
-                                                     </span></a>
+                                                    </span></a>
                                             </h3>
                                         </div>
                                         <input type="hidden" name="id" id="cart-item-id" value="{{item.product.id}}">
                                     </td>
-                                    <td class="price-col"><span id="cart-item-total-">&#8358;{{ item.get_price_tag|floatformat:2|intcomma }}vvv</span></td>
+                                    <td class="price-col">
+                                        {% if item.size.price %}
+                                        <span class="new-price">&#8358; {{item.size.discount_price|floatformat:2|intcomma}}</span><br>
+                                        <span id="cart-item-total-" class="old-price" style="text-decoration: line-through;">&#8358; {{item.size.price|floatformat:2|intcomma}}</span><br>
+                                        {% else %}
+                                        {{ item.get_price_tag|floatformat:2|intcomma }}
+                                        {% endif %}                 
+                                </td>
                                     <td class="quantity-col" data-cart-id="{{ item.id }}">
                                         <div class="cart-product-quantity">
                                             <div class="color-quantity-inputs">
-                                                <input type="number" class="quantity-input" data-cart-item-id="{{ item.id }}" value="{{ item.quantity }}" min="{{minimum_order}}">
-                                                <input type="hidden" class="color-price-{{item.id}}" name="price" data-cart-item-price="{{ item.price }}" value="{{ item.price }}">
+                                                <input type="number" class="quantity-input" data-cart-item-id="{{ item.id }}" value="{{ item.quantity }}" min="{{minimum_order}}" max="{{item.color.quantity}}">
+                                                <input type="hidden" class="color-price-{{item.id}}" name="price" data-cart-item-price="{{ item.price }}" value="{{ item.price }}" max="{{item.quantity}}">
                                             </div>               
                                         </div> 
                                     </td>
@@ -121,8 +129,7 @@
                                     </td>
                                 </tr>
                                 {% endfor %}
-                            </tbody>
-                            
+                            </tbody>                      
                         </table>
                     </div>
                     <aside class="col-lg-3">
@@ -138,7 +145,7 @@
                                 <tbody>
                                     <tr class="summary-subtotal">
                                         <td>Subtotal:</td>
-                                        <td id="order-total-"> &#8358;{{order.get_total|floatformat:2|intcomma}} order</td>
+                                        <td id="order-total-"> &#8358;{{order.get_total|floatformat:2|intcomma}}</td>
                                     </tr>
                                     <tr class="summary-shipping-row">
                                         <td>Delivery:</td>

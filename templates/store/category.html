@@ -105,24 +105,29 @@
                                                     <a href="#" class="btn-product-icon btn-compare" title="Compare"><span>Compare</span></a>
                                                 </div> -->
                                                 <div class="product-action">
-													<button class="btn-product btn-cart1" type="submit" data-slug="{{ item.product.slug }}" id="cart-btn-{{ item.product.slug }}"><span>add to cart</span></button>
+
+														<a href="{{item.product.get_absolute_url}}" class="btn-product btn-cart1" type="submit" data-slug="" id="cart-btn-x{{ item.product.slug }}"><span>{{item.product.title}}</span></a>
                                                     <!-- <button class="btn-product btn-cart1" type="submit" id="cart-btn1"><span>add to cart</span></button>			 -->
                                                 </div><!-- End .product-action -->
                                             </figure><!-- End .product-media -->
 
                                             <div class="product-body">
-                                                <div class="product-cat">
-                                                    <a href="{{product.get_absolute_url}}">{{item.product.title}}</a>
-                                                </div><!-- End .product-cat -->
-                                                <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{item.product.title}}</a></h3><!-- End .product-title -->
+												
+												<h3 class="product-title"><a href="{{product.get_absolute_url}}">{{item.product.title}}</a></h3>
+												{% if item.total_stock == 0 %}
+													<p href="{{product.get_absolute_url}}">out of stock</p>
+															{% else %}
+															<b href="{{product.get_absolute_url}}">{{item.total_stock}} in stock</b>
+													{% endif %}
                                                 <div class="product-price">
-                                                    {% if product.discount_price|floatformat:2|intcomma%}
-                                                    <span class="new-price">&#8358;{{item.product.discount_price|floatformat:2|intcomma}}</span>
-                                                    <span class="old-price">&#8358;{{item.product.price|floatformat:2|intcomma}}</span>
-                                                    {% else %}
-                                                    <span class="new-price">&#8358;{{item.product.price|floatformat:2|intcomma}}</span>
-                                                    <span class="old-price">&#8358;{{item.product.discount_price|floatformat:2|intcomma}}</span>
-                                                    {% endif %}
+													{% for size in item.sizes %}													
+													{% if forloop.counter == 1 %}			
+                                                    <b class="new-price">&#8358;{{size.discount_price|floatformat:2|intcomma}}</b>
+                                                    <span class="old-price">&#8358;{{size.price|floatformat:2|intcomma}}</span> <br>
+													{% endif %}					
+													
+													{% endfor %}
+													
                                                 </div><!-- End .product-price -->
                                                 <div class="ratings-container">
                                                     <style>
@@ -254,143 +259,6 @@
                 </div><!-- End .container -->
             </div><!-- End .page-content -->
 
-
-<script>
-	$(document).ready(function(){
-		function debounce(func, wait) {
-			let timeout;
-			return function(...args) {
-				const later = () => {
-					clearTimeout(timeout);
-					func.apply(this, args);
-				};
-				clearTimeout(timeout);
-				timeout = setTimeout(later, wait);
-			};
-		}
-	
-		const updateCart = debounce(function(){
-			let cartId = "{{product.id}}";
-			let quantity = $('#cart-quantity-input').val();
-			let size = $('#size').val();
-	
-			console.log('Cart update triggered', {'id': cartId, 'qty': quantity, 'size': size});
-			
-			$.ajax({
-				url: "{% url 'store:update_cart_quantity' %}",
-				method: 'POST',
-				data: {
-					id: cartId,
-					quantity: quantity,
-					size: size,
-					csrfmiddlewaretoken: "{{csrf_token}}"
-					
-				},
-				success: function(response){
-					// Handle success, update the cart UI
-					console.log('Success response:', response);
-					
-					// Update the price and quantity in the UI
-					$('#new-price').text(`₦${response.total_price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
-					$('#cart-quantity-input').val(response.qty);
-				},
-				error: function(response){
-					console.log('Error response:', response);
-				}
-			});
-		}, 300);  // Adjust debounce time as necessary
-	
-		// Bind addToCart to all add to cart buttons
-		$('.btn-cart1').off('click').on('click', function(e){
-			e.preventDefault();
-			addToCart($(this).data('slug'));
-		});
-	});
-	
-	function addToCart(productSlug) {
-		console.log('Add to cart triggered', { 'slug': productSlug });
-	
-		$.ajax({
-			url: "{% url 'store:add-to-cart' %}",
-			method: 'POST',
-			data: {
-				slug: productSlug,
-				csrfmiddlewaretoken: "{{ csrf_token }}"
-			},
-			success: function(response) {
-				// Handle success, update the cart UI
-				console.log('Success response:', response);
-				$('#cart-count').html(response.cart_count);
-				
-				// Change button ID and text
-				$(`#cart-btn-${productSlug}`).attr('id', `delete-btn-${productSlug}`).text('Delete from Cart');
-				
-				// Display messages using SweetAlert
-				if (Array.isArray(response.messages)) {
-					response.messages.forEach(function(message) {
-						Swal.fire({
-							text: message.message,
-							icon: message.tags.includes('success') ? 'success' : 'error',
-							timer: 3000,
-							showConfirmButton: false
-						});
-					});
-				}
-	
-				// Attach delete event
-				$(`#delete-btn-${productSlug}`).off('click').on('click', function(e){
-					e.preventDefault();
-					deleteFromCart(productSlug);
-				});
-			},
-			error: function(response) {
-				console.log('Error response:', response);
-			}
-		});
-	}
-	
-	function deleteFromCart(productSlug) {
-		console.log('Delete from cart triggered', { 'slug': productSlug });
-	
-		$.ajax({
-			url: "{% url 'store:delete-from-cart' %}",
-			method: 'POST',
-			data: {
-				slug: productSlug,
-				csrfmiddlewaretoken: "{{ csrf_token }}"
-			},
-			success: function(response) {
-				// Handle success, update the cart UI
-				console.log('Success response:', response);
-				$('#cart-count').html(response.cart_count);
-				
-				// Change button ID and text back to add to cart
-				$(`#delete-btn-${productSlug}`).attr('id', `cart-btn-${productSlug}`).text('Add to Cart');
-	
-				// Display messages using SweetAlert
-				if (Array.isArray(response.messages)) {
-					response.messages.forEach(function(message) {
-						Swal.fire({
-							text: message.message,
-							icon: message.tags.includes('success') ? 'success' : 'error',
-							timer: 3000,
-							showConfirmButton: false
-						});
-					});
-				}
-				// Attach add event
-				$(`#cart-btn-${productSlug}`).off('click').on('click', function(e){
-					e.preventDefault();
-					addToCart(productSlug);
-				});
-			},
-			error: function(response) {
-				console.log('Error response:', response);
-			}
-		});
-	}
-	
-</script>
 
         </main><!-- End .main -->
 

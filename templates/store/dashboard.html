@@ -100,11 +100,15 @@
                                                     {% else %}
                                                     {% for item in order.product.all %}
                                                     <button type="submit" class="btn-product btn" style="color: rgb(24, 228, 24);">Delivered</button>
-                                                 
                                                     {% endfor %}
                                                     {% endif %}
-                                                </td>
+            
+                                                </td>                                                   
                                             </tr>
+                                            <form action="">
+                                                {{form.as_p}}
+                                                <button class="btn btn-primary">Review</button>
+                                            </form>
                                             {% endfor %}
                                         </tbody>
                                     </table>

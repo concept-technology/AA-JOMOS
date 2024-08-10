@@ -93,15 +93,17 @@
 
                             <div class="products mb-3">
                                 <div class="row justify-content-center">
-                                    {% for item in results %} 
+                                    {% for item in products_with_sizes %} 
 									<input type="hidden" value="{{item.product.slug}}" id="">            
 
                                     <div class="col-6 col-md-4 col-lg-4">
                                         <div class="product product-7 text-center">
                                             <figure class="product-media">
                                                 <span class="product-label {{item.label}}">{{item.get_human_readable_label}}</span>
-                                                <a href="{{item.get_absolute_url}}">
-                                                    <img src="{{item.img_1.url}}" alt="Product image" class="product-image" style="height: 300px; object-fit:cover">
+                                                <a href="{{item.product.get_absolute_url}}">				
+													{% for color in item.color.all %}										
+                                                    <img src="{{color.img.url}}" alt="Product image" class="product-image" style="height: 300px; object-fit:cover">
+													{% endfor %}
                                                 </a>
 
                                                 <!-- <div class="product-action-vertical">
@@ -121,13 +123,13 @@
                                                 </div><!-- End .product-cat -->
                                                 <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{item.title}}</a></h3><!-- End .product-title -->
                                                 <div class="product-price">
-                                                    {% if product.discount_price|floatformat:2|intcomma%}
-                                                    <span class="new-price">&#8358;{{item.discount_price|floatformat:2|intcomma}}</span>
-                                                    <span class="old-price">&#8358;{{item.price|floatformat:2|intcomma}}</span>
-                                                    {% else %}
-                                                    <span class="new-price">&#8358;{{item.price|floatformat:2|intcomma}}</span>
-                                                    <span class="old-price">&#8358;{{item.discount_price|floatformat:2|intcomma}}</span>
+													
+													{% for size in item.sizes  %}		
+                                                    {% if forloop.counter == 1%}
+                                                    <span class="new-price">&#8358;{{size.discount_price|floatformat:2|intcomma}}</span>
+                                                    <span class="old-price">&#8358;{{size.price|floatformat:2|intcomma}}</span>
                                                     {% endif %}
+													{% endfor %}
                                                 </div><!-- End .product-price -->
                                                 <div class="ratings-container">
                                                     <style>
@@ -138,7 +140,7 @@
                                                     </style>
                                                     <div id="star-ratings">
                                                         {{ item.average_rating|floatformat:1 }}
-                                                        {% star_rating item.average_rating %}
+                                                        {% star_rating item.ratings %}
                                                     </div>
                                                     <span class="ratings-text">( {{item.count}} reviews)</span>
                                                 </div><!-- End .rating-container -->                                      

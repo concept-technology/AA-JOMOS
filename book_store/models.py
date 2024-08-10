@@ -12,6 +12,8 @@ from star_ratings.models import Rating
 import uuid
 from django.db.models import Avg
 from django.urls import reverse
+from django.db.models import F, OuterRef, Subquery
+
 
 category_choices = (
         ('new', 'new'),
@@ -39,6 +41,14 @@ gender_choices =(
     ('Male', 'male'),
     ('Female', 'female'),
 )
+
+
+class SizeManager(models.Manager):
+    def get_top_discounted_sizes(self, limit=3):
+        return self.annotate(
+            discount_amount=F('price') - F('discount_price')
+        ).filter(discount_price__gt=0).order_by('-discount_amount')[:limit]
+
 
 class ProductManager(models.Manager):
     def get_top_products(self, limit=3):
@@ -79,11 +89,21 @@ class ProductManager(models.Manager):
         return self.filter(label='label-new')[:limit]
 
 
+    # def get_top_discounted_products(self, limit=3):
+    #     return self.annotate(discount_amount=models.F('price') - models.F('discount_price')) \
+    #                .filter(discount_price__gt=0) \
+    #                .order_by('-discount_amount')[:limit]
+    
     def get_top_discounted_products(self, limit=3):
-        return self.annotate(discount_amount=models.F('price') - models.F('discount_price')) \
-                   .filter(discount_price__gt=0) \
-                   .order_by('-discount_amount')[:limit]
-                   
+        size_subquery = Size.objects.filter(
+            product_id=OuterRef('pk')
+        ).annotate(
+            discount_amount=F('price') - F('discount_price')
+        ).order_by('-discount_amount').values('discount_amount')[:1]
+        
+        return self.annotate(
+            top_discount_amount=Subquery(size_subquery)
+        ).order_by('-top_discount_amount')[:limit]          
 class Category(models.Model):
     title = models.CharField(max_length=255,)
     slug =models.SlugField(default='')
@@ -115,9 +135,11 @@ class Features(models.Model):
 class Size(models.Model):
     size = models.CharField(max_length=10, unique=True)
     price = models.IntegerField(default=0, blank=True,null=True)
+    discount_price = models.IntegerField(default=0)
+    wholesale_price = models.IntegerField(default=0)
     quantity = models.IntegerField(default=1)
-    
-  
+    objects = SizeManager()
+ 
     def __str__(self) -> str:
         return self.size
 
@@ -136,15 +158,12 @@ class Product(models.Model):
     title = models.CharField(max_length=255)
     description= models.TextField(max_length=1000)
     additional_information= models.TextField(max_length=1000, default='')
-    size = models.ManyToManyField(Size, related_name='products')
-    price = models.IntegerField(default=0)
-    discount_price = models.IntegerField(default=0)
-    wholesale_price = models.IntegerField(default=0)
+    size = models.ManyToManyField(Size, related_name='products', through='ProductSizeColor') 
     img_1  = models.ImageField(upload_to='static/media/img', default='img')
     img_2  = models.ImageField(upload_to='static/media/img', default='img', blank=True, null=True)
     img_3  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
     img_4  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
-    color = models.ManyToManyField(Color)
+    color = models.ManyToManyField(Color, through='ProductSizeColor')
     label = models.CharField(choices=label_choices, max_length=255, default='', blank=True)
     features = models.ForeignKey(Features, on_delete=models.CASCADE, blank=True,null=True)
     category = models.ForeignKey(Category, default='', on_delete=models.CASCADE)
@@ -213,12 +232,6 @@ class Product(models.Model):
     def get_human_readable_label(self):
         return dict(label_choices).get(self.label, '')
     
-    # def get_cart_increment(self):
-    #     return reverse("store:reduce_cart", kwargs={"slug": self.slug,})
-    
-    # def get_cart_increment(self):
-    #     return reverse("store:increase_cart", kwargs={"slug": self.slug,})
-
     def __str__(self):
         return f"{self.title}"
     
@@ -235,54 +248,118 @@ class Product(models.Model):
         if not next_product:
             next_product = Product.objects.order_by('id').first()
         return next_product
+    
+class ProductSizeColor(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    size = models.ForeignKey(Size, on_delete=models.CASCADE)
+    color = models.ForeignKey(Color, on_delete=models.CASCADE)
 
- 
+    class Meta:
+        unique_together = ('product', 'size', 'color')
+        
+
+    def __str__(self):
+        return f'{self.product.title} - {self.size.size} - {self.color.name}'
+
+       
+# class Cart(models.Model):
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', null=True, blank=True)
+#     product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='product')
+#     quantity = models.IntegerField(default =1) 
+#     is_ordered = models.BooleanField(default=False)  
+#     is_in_cart = models.BooleanField(default=False)
+#     cart_id = models.UUIDField(default=uuid.uuid4,)
+#     session_key = models.CharField(max_length=40, null=True, blank=True)
+#     size = models.ForeignKey(Size, on_delete=models.CASCADE, blank=True, null=True)
+#     color = models.ForeignKey(Color, on_delete=models.CASCADE, blank=True, null=True)
+#     def get_discount_price(self):
+#         return self.quantity * self.product.discount_price
+
+    
+#     def get_normal_price(self):
+#         return self.quantity * self.product.price
+            
+#     def get_amount_saved(self):
+#         return self.get_normal_price() - self.get_discount_price()
+    
+#     def get_price_tag(self):
+#         discount_price = self.product.discount_price
+#         normal_price = self.product.price
+#         if discount_price:
+#             return discount_price
+#         return normal_price
+
+   
+#     def get_total_price(self):
+#         if self.get_discount_price():
+#             return self.get_discount_price()
+#         return self.get_normal_price()
+        
+#     def add_quantity(self):
+#         qty = self.quantity
+#         qty +=1
+#         return qty
+    
+#     def __str__(self):
+#         price = self.product.price
+#         dis_count_price = self.product.discount_price
+#         title = self.product.title
+#         if not dis_count_price:
+#             return f"item: {title}, price: {price}, quantity: {self.quantity}, color:{self.color.name}, size {self.size.size}"        
+#         return f"item:{title} price: {dis_count_price}, quantity: {self.quantity}, color: {self.color.name if self.color else None}, size {self.size.size}"
+            
+
+#     def get_title(self):
+#         return self.product.title
+
+
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', null=True, blank=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='product')
-    quantity = models.IntegerField(default =1) 
-    is_ordered = models.BooleanField(default=False)  
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product')
+    quantity = models.IntegerField(default=1)
+    is_ordered = models.BooleanField(default=False)
     is_in_cart = models.BooleanField(default=False)
     cart_id = models.UUIDField(default=uuid.uuid4,)
     session_key = models.CharField(max_length=40, null=True, blank=True)
     size = models.ForeignKey(Size, on_delete=models.CASCADE, blank=True, null=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, blank=True, null=True)
-    def get_discount_price(self):
-        return self.quantity * self.product.discount_price
 
-    
+    def get_discount_price(self):
+        if self.size and self.size.discount_price:
+            return self.quantity * self.size.discount_price
+        return self.quantity * self.size.price
+
     def get_normal_price(self):
-        return self.quantity * self.product.price
-            
+        if self.size:
+            return self.quantity * self.size.price
+        return 0
+
     def get_amount_saved(self):
         return self.get_normal_price() - self.get_discount_price()
-    
-    def get_price_tag(self):
-        discount_price = self.product.discount_price
-        normal_price = self.product.price
-        if discount_price:
-            return discount_price
-        return normal_price
 
-   
+    def get_price_tag(self):
+        if self.size:
+            discount_price = self.size.discount_price
+            normal_price = self.size.price
+            if discount_price:
+                return discount_price
+            return normal_price
+        return 0
+
     def get_total_price(self):
-        if self.get_discount_price():
+        if self.size:
             return self.get_discount_price()
         return self.get_normal_price()
-        
+
     def add_quantity(self):
-        qty = self.quantity
-        qty +=1
-        return qty
-    
+        self.quantity += 1
+        return self.quantity
+
     def __str__(self):
-        price = self.product.price
-        dis_count_price = self.product.discount_price
+        price = self.size.discount_price if self.size.discount_price else self.size.price
+        # discount_price = self.size.discount_price if self.size else "N/A"
         title = self.product.title
-        if not dis_count_price:
-            return f"item: {title}, price: {price}, quantity: {self.quantity}, color:{self.color.name}, size {self.size.size}"        
-        return f"item:{title} price: {dis_count_price}, quantity: {self.quantity}, color: {self.color.name if self.color else None}, size {self.size.size}"
-            
+        return f"item: {title}, price: {price }, quantity: {self.quantity}, color: {self.color.name if self.color else None}, size {self.size.size if self.size else None}"
 
     def get_title(self):
         return self.product.title

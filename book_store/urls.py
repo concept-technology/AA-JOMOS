@@ -10,7 +10,6 @@ urlpatterns = [
      
      
     path('category/', views.ProductCategories_view, name='categories-list'),
-    
     path('category/<slug:slug>', views.product_list_by_category, name='product_list_by_category'),
 #  
     path('', views.home_view,name='index'),
@@ -19,7 +18,6 @@ urlpatterns = [
     
     path('login', views.login, name='login'),
     path('update-cart-size/', views.update_cart_color_and_qty, name='update_cart_size'),
-     path('product/<slug:product_slug>/update/', views.update_size_color, name='update_size_color'),
     
 # cart seection
      path('cart-count/', views.cart_count_view, name='cart-count'),    
@@ -27,7 +25,6 @@ urlpatterns = [
     #  path('add-to-cart/',views.AddToCartView.as_view(), name='add-to-cart'),
      path('delete-from-cart/',views.delete_cart, name='delete-from-cart'),
      path('update-cart/', views.UpdateCartQuantity.as_view(), name='update_cart_quantity'),
-     path('update-quantity/', views.UpdateProductQuantity.as_view(), name='update_product_quantity'),
      path('cart/', views.CartView.as_view(), name='cart'),
     #  path('cart/<slug>', views.CartView.as_view(), name='cart_item'),
      path('delete-cart-item/', views.delete_cart, name='delete-cart-item'),

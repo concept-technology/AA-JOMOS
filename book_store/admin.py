@@ -12,7 +12,7 @@ admin.site.register(Payment, PaymentAdmin)
 class ProductAdmin(admin.ModelAdmin):
     def image_tag(self, obj):
         return format_html('<img src="{}" style="max-width:50px; max-height:100px"/>'.format(obj.img_1.url))
-    list_display = ['title', 'image_tag', 'price', 'discount_price']
+    list_display = ['title', 'image_tag',]
     image_tag.short_description = 'Image'
     
 
@@ -74,6 +74,7 @@ admin.site.register(Coupon, CouponAdmin)
 admin.site.register(Refunds)
 admin.site.register(Features)
 admin.site.register(Color)
+admin.site.register(ProductSizeColor)
 
 admin.site.register(Inventory, InventAdmin)
 
