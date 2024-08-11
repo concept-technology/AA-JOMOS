@@ -6,7 +6,7 @@ app_name ='store'
 
 urlpatterns = [
 
-     path('submit_rating/', views.product_detail, name='submit_rating'),
+     path('submit_rating/<str:slug>', views.product_detail, name='submit_rating'),
      
      
     path('category/', views.ProductCategories_view, name='categories-list'),
@@ -64,13 +64,12 @@ urlpatterns = [
     path('contact/', views.contact_view, name='contact'),
     
     path('payment/success', views.success_page, name='success-page'),
-    
-    
     path('add-to-wishlist/<int:product_id>/', views.toggle_wishlist, name='add-to-wishlist'),
-    path('remove-from-wishlist/<int:product_id>/', views.remove_from_wishlist, name='remove-from-wishlist'),
+    path('remove-from-wishlist/<str:slug>/', views.remove_from_wishlist, name='remove-from-wishlist'),
     path('wishlist-count/', views.wishlist_count, name='wishlist-count'),
     path('wishlist/', views.wishlist, name='wishlist'),
     
+    path('rate/product/<str:slug>', views.rate_product, name='rate_product')    
     
     
   # Other URL patterns...

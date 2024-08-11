@@ -100,7 +100,6 @@
                                     {% endif %}              
                                 </span></button>
                                 <div class="details-action-wrapper">
-                                    <!-- <button id="remove-from-wishlist" class="btn-product btn-wishlist  btn-link" data-url="{{ product.get_remove_from_wishlist_url }}" class="btn btn-danger">Remove from Wishlist</button> -->
                                     <button class="toggle-wishlist btn-product btn-wishlist btn" 
                                     data-add-url="{{ product.get_add_to_wishlist_url }}" 
                                     data-remove-url="{{ product.get_remove_from_wishlist_url }}" 
@@ -266,7 +265,7 @@
                                                             <form method="post">
                                                                 {% csrf_token %}
                                                                 {{ rating_form.as_p }}
-                                                                <button type="submit" class="btn btn-primary">Submit Rating</button>
+                                                                <!-- <button type="submit" class="btn btn-primary">Submit Rating</button> -->
                                                             </form>
                                                         {% endif %}
                                                     </div><!-- End .reviews -->

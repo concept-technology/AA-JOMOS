@@ -94,6 +94,8 @@
                             <div class="products mb-3">
                                 <div class="row justify-content-center">
                                     {% for item in products_with_sizes %} 
+									{% for color in item.color.all %}										
+
 									<input type="hidden" value="{{item.product.slug}}" id="">            
 
                                     <div class="col-6 col-md-4 col-lg-4">
@@ -101,19 +103,11 @@
                                             <figure class="product-media">
                                                 <span class="product-label {{item.label}}">{{item.get_human_readable_label}}</span>
                                                 <a href="{{item.product.get_absolute_url}}">				
-													{% for color in item.color.all %}										
                                                     <img src="{{color.img.url}}" alt="Product image" class="product-image" style="height: 300px; object-fit:cover">
-													{% endfor %}
                                                 </a>
 
-                                                <!-- <div class="product-action-vertical">
-                                                    <a href="" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
-                                                    <a href="#" class="btn-product-icon btn-quickview" title="Quick view"><span>Quick view</span></a>
-                                                    <a href="#" class="btn-product-icon btn-compare" title="Compare"><span>Compare</span></a>
-                                                </div> -->
                                                 <div class="product-action">
-													<!-- <button class="btn-product btn-cart1" type="submit" data-slug="{{ item.product.slug }}" id="cart-btn-{{ item.product.slug }}"><span>add to cart</span></button> -->
-                                                    <!-- <button class="btn-product btn-cart1" type="submit" id="cart-btn1"><span>add to cart</span></button>			 -->
+													<button class="btn-product btn-cart1" type="submit" data-slug,="{{ item.product.slug }}" id="cart-btn-{{ item.product.slug }}"><span>{{item.product.title}}</span></button>
                                                 </div><!-- End .product-action -->
                                             </figure><!-- End .product-media -->
 
@@ -138,15 +132,18 @@
                                                             color: gold;
                                                         }
                                                     </style>
+											
                                                     <div id="star-ratings">
-                                                        {{ item.average_rating|floatformat:1 }}
+														{{ item.average_rating|floatformat:1 }}
                                                         {% star_rating item.ratings %}
                                                     </div>
                                                     <span class="ratings-text">( {{item.count}} reviews)</span>
+						
                                                 </div><!-- End .rating-container -->                                      
                                             </div><!-- End .product-body -->
                                         </div><!-- End .product -->
                                     </div><!-- End .col-sm-6 col-lg-4 -->
+									{% endfor %}
 
                                     {% endfor %}
 

@@ -1,0 +1,17 @@
+{% extends 'store/base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="w-50">
+        <h2>{{product.title}} <small>review</small></h2>
+        <img src="{{product.img_1.url}}">
+        <form method="post"  class="w-50" style="width: 100px;" action="{% url 'store:submit_rating' product.slug %}">
+            {% csrf_token %}
+            <input type="hidden" name="product_slug" value="{{product.slug}}">
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Submit Rating</button>
+        </form>
+    </div>
+</div>
+{% endblock content %}
+    

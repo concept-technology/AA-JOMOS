@@ -34,6 +34,7 @@ from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.db.models import Avg, Count
 
 
 
@@ -54,38 +55,109 @@ class StoreConfig(AppConfig):
 #     messages.success(request, 'Coupon is applied')
 #                 if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
 #                     return redirect(next_url)
-class DashBoardView(LoginRequiredMixin,View):
-    def get(self, request, *args, **kwargs):       
+# class DashBoardView(LoginRequiredMixin,View):
+#     def get(self, request, *args, **kwargs):       
+#         profile_form = UserProfileForm(instance=self.request.user)
+#         password_form = PasswordChangeForm(self.request.user)
+#         cart = Cart.objects.filter(user=self.request.user, is_ordered=True)
+#         order = Order.objects.filter(user=self.request.user, is_ordered=True).order_by('id')
+#         form = CustomerRatingForm(request.POST or None)
+#         rating_form = CustomerRatingForm(self.request.POST or None) if order else None
+#         # Handle case where address might not exist 
+#         address = CustomersAddress.objects.filter(user=self.request.user).first()
+#         address_form = AddressForm(instance=address) if address else AddressForm()
+        
+#         context = {
+#             'profile_form': profile_form,
+#             'password_form': password_form,
+#             'orders': order,
+#             'cart': cart,
+#             'address': address,
+#             'address_form': address_form,
+#             'rating_form':rating_form,
+#             'form': form
+#         }
+#         return render(self.request, 'store/dashboard.html', context)
+    
+#     def post(self, request, *args, **kwargs):
+#         profile_form = UserProfileForm(self.request.POST, instance=self.request.user)
+#         password_form = PasswordChangeForm(self.request.user, self.request.POST)
+        
+#         # Handle case where address might not exist
+#         address = CustomersAddress.objects.filter(user=self.request.user).first()
+#         address_form = AddressForm(self.request.POST, instance=address) if address else AddressForm(self.request.POST)
+        
+#         if 'update_profile' in self.request.POST and profile_form.is_valid():
+#             profile_form.save()
+#             messages.success(self.request, 'Your profile has been updated successfully!')
+#             return redirect('store:dash-board')
+        
+#         elif 'change_password' in self.request.POST and password_form.is_valid():
+#             user = password_form.save()
+#             update_session_auth_hash(self.request, user)  # Important!
+#             messages.success(self.request, 'Your password has been changed successfully!')
+#             return redirect('store:dash-board')
+        
+#         elif 'update_address' in self.request.POST and address_form.is_valid():
+#             address_form.save(commit=False)
+#             address_form.instance.user = self.request.user  # Ensure the address is linked to the current user
+#             address_form.save()
+#             messages.success(self.request, 'Your address has been updated successfully!')
+#             return redirect('store:dash-board')
+        
+#         # Handle invalid forms
+#         if not profile_form.is_valid():
+#             messages.error(self.request, 'There was an error updating your profile.')
+#         if not password_form.is_valid():
+#             messages.error(self.request, 'There was an error changing your password.')
+#         if not address_form.is_valid():
+#             messages.error(self.request, 'There was an error updating your address.')
+
+#         # Re-render the page with the forms and error messages
+#         context = {
+#             'profile_form': profile_form,
+#             'password_form': password_form,
+#             'orders': Order.objects.filter(user=self.request.user, is_ordered=True).order_by('id'),
+#             'cart': Cart.objects.filter(user=self.request.user, is_ordered=True),
+#             'address': address,
+#             'address_form': address_form,
+#         }
+#         return render(self.request, 'store/dashboard.html', context)
+
+
+class DashBoardView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
         profile_form = UserProfileForm(instance=self.request.user)
         password_form = PasswordChangeForm(self.request.user)
         cart = Cart.objects.filter(user=self.request.user, is_ordered=True)
-        order = Order.objects.filter(user=self.request.user, is_ordered=True).order_by('id')
-        form = CustomerRatingForm(request.POST or None)
-        rating_form = CustomerRatingForm(self.request.POST or None) if order else None
-        # Handle case where address might not exist 
+        orders = Order.objects.filter(user=self.request.user, is_ordered=True).order_by('id')
         address = CustomersAddress.objects.filter(user=self.request.user).first()
         address_form = AddressForm(instance=address) if address else AddressForm()
         
+        # # Fetch all products the user has reviewed
+        # reviewed_products = Rating.objects.filter(user_ratings=self.request.user).values_list('object_id', flat=True)
+
+        # # Fetch all products in the user's orders that have not been reviewed yet
+        # unreviewed_products = Product.objects.filter(order__in=orders).exclude(id__in=reviewed_products).distinct()
+
         context = {
             'profile_form': profile_form,
             'password_form': password_form,
-            'orders': order,
+            'orders': orders,
             'cart': cart,
             'address': address,
             'address_form': address_form,
-            'rating_form':rating_form,
-            'form': form
+            'rating_form': CustomerRatingForm(),
+            # 'unreviewed_products': unreviewed_products,  # Pass unreviewed products to context
         }
         return render(self.request, 'store/dashboard.html', context)
     
     def post(self, request, *args, **kwargs):
         profile_form = UserProfileForm(self.request.POST, instance=self.request.user)
         password_form = PasswordChangeForm(self.request.user, self.request.POST)
-        
-        # Handle case where address might not exist
         address = CustomersAddress.objects.filter(user=self.request.user).first()
         address_form = AddressForm(self.request.POST, instance=address) if address else AddressForm(self.request.POST)
-        
+
         if 'update_profile' in self.request.POST and profile_form.is_valid():
             profile_form.save()
             messages.success(self.request, 'Your profile has been updated successfully!')
@@ -103,16 +175,13 @@ class DashBoardView(LoginRequiredMixin,View):
             address_form.save()
             messages.success(self.request, 'Your address has been updated successfully!')
             return redirect('store:dash-board')
-        
-        # Handle invalid forms
-        if not profile_form.is_valid():
-            messages.error(self.request, 'There was an error updating your profile.')
-        if not password_form.is_valid():
-            messages.error(self.request, 'There was an error changing your password.')
-        if not address_form.is_valid():
-            messages.error(self.request, 'There was an error updating your address.')
 
-        # Re-render the page with the forms and error messages
+        # Fetch all products the user has reviewed
+        # reviewed_products = Rating.objects.filter(user_ratings=self.request.user).values_list('object_id', flat=True)
+
+        # # Fetch all products in the user's orders that have not been reviewed yet
+        # unreviewed_products = Product.objects.filter(order__in=Order.objects.filter(user=self.request.user, is_ordered=True)).exclude(id__in=reviewed_products).distinct()
+
         context = {
             'profile_form': profile_form,
             'password_form': password_form,
@@ -120,13 +189,20 @@ class DashBoardView(LoginRequiredMixin,View):
             'cart': Cart.objects.filter(user=self.request.user, is_ordered=True),
             'address': address,
             'address_form': address_form,
+            'rating_form': CustomerRatingForm(),
+            # 'unreviewed_products': unreviewed_products,  # Pass unreviewed products to context
         }
         return render(self.request, 'store/dashboard.html', context)
-   
-    
 
 
-
+def rate_product(request, slug):
+    form = CustomerRatingForm( request.POST or None)
+    product = get_object_or_404(Product, slug=slug)
+    context ={
+        'form': form,
+        'product':product
+    }
+    return render(request, 'store/rate_product.html',context)
 
 
 def generate_random_number(digits=10):
@@ -206,7 +282,6 @@ def ProductCategories_view(request):
         return render(request, 'store/category.html', context)
 
 
-
 def product_list_by_category(request, slug):
     try:
         category = get_object_or_404(Category, slug=slug)
@@ -218,10 +293,14 @@ def product_list_by_category(request, slug):
         size_id = request.GET.get('size')
 
         if min_price and max_price:
-            products = products.filter(price__gte=min_price, price__lte=max_price)
+            # Filter products based on size prices within the range
+            products = products.filter(
+                productsizecolor__size__discount_price__gte=min_price,
+                productsizecolor__size__discount_price__lte=max_price
+            )
 
         if size_id:
-            products = products.filter(size__id=size_id)
+            products = products.filter(productsizecolor__size__id=size_id)
 
         products_with_ratings = [
             {
@@ -241,6 +320,7 @@ def product_list_by_category(request, slug):
             paginated_products = paginator.page(1)
         except EmptyPage:
             paginated_products = paginator.page(paginator.num_pages)
+
         context = {
             'category': category,
             'products': products,
@@ -255,7 +335,7 @@ def product_list_by_category(request, slug):
     except ObjectDoesNotExist:
         messages.error(request, 'not found on the server')
         return redirect('store:index')
-     
+   
 
 def logout_view(request):
     logout(request)
@@ -336,7 +416,7 @@ class CartView(View):
             for cart_item in cart_items:
                 cart_colors = CartColor.objects.filter(cart=cart_item)
                 color_quantities[cart_item.id] = {
-                    'product_id': cart_item.product.id,
+                    'slug': cart_item.product.id,
                     'colors': {cart_color.color.name: cart_color.quantity for cart_color in cart_colors}
                 }
 
@@ -807,7 +887,6 @@ def verify_payment(request, ref):
             'Content-Type': 'application/json',
         }
         response = requests.get(verify_url, headers=headers, timeout=30)
-
         if response.status_code == 200:
             data = response.json()
             paystack_amount = data['data']['amount'] / 100  # Convert kobo to naira
@@ -824,12 +903,12 @@ def verify_payment(request, ref):
                 # Update order status and create invoice
                 order.is_ordered = True
                 order.payment = payment
-                order.reference = create_ref_code()  # Assuming you have a function to create a reference code
+                order.reference = create_ref_code() #create a reference code
                 order.save()
 
                 # Create invoice
                 invoice = Invoice.objects.create(
-                    invoice_number=generate_random_number(),  # Define/create your own function for generating invoice numbers
+                    invoice_number=generate_random_number(),  # function for generating invoice numbers
                     order=order,
                     payment=payment,
                     issued_at=timezone.now()
@@ -1019,7 +1098,8 @@ def search_view(request):
 
 @ensure_csrf_cookie
 def product_detail(request, slug):
-    product = get_object_or_404(Product, slug=slug)
+    form_slug = request.POST.get('product_slug') 
+    product = get_object_or_404(Product, slug=slug) if slug else form_slug 
     colors = product.color.all()  # Fetch only the colors associated with the product
     sizes = product.size.all()  # Fetch only the sizes associated with the product
 
@@ -1048,6 +1128,7 @@ def product_detail(request, slug):
             rating.user = request.user
             rating.product = product
             rating.save()
+            messages.success(request, 'thank you for reviewing our products')
             return redirect('store:product-detail', slug=product.slug)
     else:
         rating_form = CustomerRatingForm(instance=user_rating) if request.user.is_authenticated else None
@@ -1065,7 +1146,7 @@ def product_detail(request, slug):
         'ratings': ratings,
         'average_rating': average_rating,
         'count': product.ratings.count(),
-        'rating_form': rating_form,
+        # 'rating_form': rating_form,
         'now': timezone.now(),
         'all_user_rating': all_user_rating,
         'is_in_cart': is_in_cart,
@@ -1162,19 +1243,18 @@ def toggle_wishlist(request, product_id):
     return JsonResponse({'message': message, 'in_wishlist': in_wishlist})
 
 
-
 def remove_from_wishlist(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-
+    print(f"Attempting to remove product: {product.title}")
     if request.user.is_authenticated:
-        Wishlist.objects.filter(user=request.user, product=product).delete()
+        affected_rows = Wishlist.objects.filter(user=request.user, product=product).delete()
     else:
         session_key = get_session_key(request)
-        Wishlist.objects.filter(session_key=session_key, product=product).delete()
+        affected_rows = Wishlist.objects.filter(session_key=session_key, product=product).delete()
 
+    print(f"Deleted rows: {affected_rows}")
+    
     return JsonResponse({'message': "Removed from wishlist"})
-
-
 
 def wishlist(request):
     if request.user.is_authenticated:
@@ -1182,11 +1262,17 @@ def wishlist(request):
     else:
         session_key = get_session_key(request)
         wishlist_items = Wishlist.objects.filter(session_key=session_key).select_related('product')
-    
+
+    # Debug: Check wishlist items
+    print(f"Wishlist items: {[item.product.title for item in wishlist_items]}")
+
     # Fetch stock information
     for item in wishlist_items:
-        item.stock_quantity = Stock.objects.get(product=item.product).quantity
-    
+        try:
+            item.stock_quantity = Stock.objects.get(product=item.product).quantity
+        except Stock.DoesNotExist:
+            item.stock_quantity = 0  # Handle case where stock is not found
+
     context = {
         'wishlist': wishlist_items
     }
@@ -1601,3 +1687,6 @@ class UpdateCartQuantity(View):
             })
 
         return JsonResponse({'message': 'error'}, status=400)
+
+
+

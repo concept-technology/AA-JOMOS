@@ -13,8 +13,7 @@ import uuid
 from django.db.models import Avg
 from django.urls import reverse
 from django.db.models import F, OuterRef, Subquery
-
-
+from django.db.models import Avg, Count, Sum
 category_choices = (
         ('new', 'new'),
         ('featured', 'featured'),
@@ -59,19 +58,13 @@ class ProductManager(models.Manager):
         return self.filter(category__slug=category_slug).order_by('-ratings__rating')[:limit]
 
     
-    def get_top_selling_by_category(self, limit=5):
-            categories = Category.objects.all()
-            top_selling_products = []
+    @staticmethod
+    def get_top_selling_by_category():
+        # Ensure products have at least one sale
+        return Product.objects.annotate(
+            total_quantity_sold=Sum('quantity_sold')
+        ).filter(total_quantity_sold__gt=0).order_by('-total_quantity_sold')
 
-            for category in categories:
-                products = self.filter(category=category).order_by('-label')[:5]
-                top_selling_products.append({
-                    'category': category,
-                    'products': products
-                })
-
-            return top_selling_products
-        
     def get_products_by_label(self, limit=5):
         labels = [choice[0] for choice in label_choices]
         products_by_label = []
@@ -199,7 +192,11 @@ class Product(models.Model):
     
     @staticmethod
     def get_top_rated_products():
-        return Product.objects.annotate(avg_rating=Avg('ratings__rating')).order_by('-avg_rating')[:5]
+        # Ensure products have at least one review
+        return Product.objects.annotate(
+            average_rating=Avg('ratings__rating'),
+            review_count=Count('ratings')
+        ).filter(review_count__gt=0).order_by('-average_rating')
 
     def get_stock_status(self):
         stock = Stock.objects.filter(product=self).first()
@@ -211,7 +208,7 @@ class Product(models.Model):
         return reverse("store:add-to-wishlist", kwargs={"product_id": self.id})
 
     def get_remove_from_wishlist_url(self):
-        return reverse("store:remove-from-wishlist", kwargs={"product_id": self.id})
+        return reverse("store:remove-from-wishlist", kwargs={"slug": self.slug})
 
   
     def get_related_products(self):

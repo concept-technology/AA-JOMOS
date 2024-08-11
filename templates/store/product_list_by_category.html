@@ -40,17 +40,11 @@
                                             <figure class="product-media">
                                                 <span class="product-label label-new">{{item.product.get_human_readable_label}}</span>
                                                 <a href="{{item.product.get_absolute_url}}">
-                                                    <img src="{{item.product.img_1.url}}" alt="Product image" class="product-image">
+                                                    <img src="{{item.product.img_1.url}}" alt="Product image" class="product-image" style="height: 300px; object-fit:cover">
                                                 </a>
 
-                                                <div class="product-action-vertical">
-                                                    <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
-                                                    <a href="popup/quickView.html" class="btn-product-icon btn-quickview" title="Quick view"><span>Quick view</span></a>
-                                                    <a href="#" class="btn-product-icon btn-compare" title="Compare"><span>Compare</span></a>
-                                                </div><!-- End .product-action-vertical -->
-
                                                 <div class="product-action">
-													<button class="btn-product btn-cart1" type="submit" data-slug="{{ item.product.slug }}" id="cart-btn-{{ item.product.slug }}"><span>add to cart</span></button>
+													<button class="btn-product btn-cart1" type="submit" data-slugx="{{ item.product.slug }}" id="cart-btn-{{ item.product.slug }}"><span>{{item.product.title}}</span></button>
 
                                                     <!-- <a href="" class="btn-product btn-cart"><span>add to cart</span></a> -->
                                                 </div><!-- End .product-action -->
@@ -62,13 +56,12 @@
                                                 </div><!-- End .product-cat -->
                                                 <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{item.product.title}}</a></h3><!-- End .product-title -->
                                                 <div class="product-price">
-                                                    {% if product.discount_price|floatformat:2|intcomma%}            
-                                                    <span class="new-price">&#8358;{{item.product.discount_price|floatformat:2|intcomma}}</span>
-                                                    <span class="old-price">&#8358;{{item.product.price|floatformat:2|intcomma}}</span>
-                                                    {% else %}
-                                                    <span class="new-price">&#8358;{{item.product.price|floatformat:2|intcomma}}</span>
-                                                    <span class="old-price">&#8358;{{item.product.discount_price|floatformat:2|intcomma}}</span>
+                                                    {% for size in item.size  %}		
+                                                    {% if forloop.counter == 1%}
+                                                    <span class="new-price">&#8358;{{size.discount_price|floatformat:2|intcomma}}</span>
+                                                    <span class="old-price">&#8358;{{size.price|floatformat:2|intcomma}}</span>
                                                     {% endif %}
+													{% endfor %}
                                                 </div><!-- End .product-price -->
                                                 <div class="ratings-container">
                                                     <style>

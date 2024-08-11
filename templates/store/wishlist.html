@@ -50,18 +50,27 @@
                         </td>
                         <td class="price-col">
                             <div class="product-price">
-                                {% if item.product.discount_price %}
-                                <span class="new-price">&#8358;{{ item.product.discount_price|floatformat:2|intcomma }}</span>
-                                <span class="old-price">&#8358;{{ item.product.price|floatformat:2|intcomma }}</span>
+                                
+                                {% for item in wishlist.size.all %}    
+                                {% if forloop.counter == 1 %}
+                                <span class="new-price">&#8358;{{ item.discount_price|floatformat:2|intcomma }}</span>
+                                <span class="old-price">&#8358;{{ item.price|floatformat:2|intcomma }}</span>
                                 {% else %}
                                 <span class="new-price">&#8358;{{ item.product.price|floatformat:2|intcomma }}</span>
                                 {% endif %}
+                                {% endfor %}
                             </div><!-- End .product-price -->
                         </td>
                         {% if item.stock_quantity > 0 %}
                         <td class="stock-col"><span class="in-stock">In stock: {{ item.stock_quantity }}</span></td>
                         <td>
-                            <button class="btn btn-block btn-outline-primary-2 add-to-cart-btn" data-slug="{{ item.product.slug }}"><i class="icon-cart-plus"></i>Add to Cart</button>
+                            <!-- <button class="btn-product btn-wishlist" 
+                            data-product-id="{{ item.id }}">
+                                Remove from Wishlist
+
+                    </button> -->
+                    <button class="btn-wishlist" data-product-id="{{ product.id }}">Remove from Wishlist</button>
+
                         </td>
                         {% else %}
                         <td><span class="out-of-stock">Out of stock</span></td>
@@ -91,48 +100,10 @@
     </div><!-- End .page-content -->
 
     <script>
+  
+        
         $(document).ready(function () {
-            function addToCart(event) {
-                event.preventDefault();
-                let productSlug = $(this).data('slug');
-                console.log('Add to cart triggered', { 'slug': productSlug });
-
-                $.ajax({
-                    url: "{% url 'store:add-to-cart' %}",
-                    method: 'POST',
-                    data: {
-                        slug: productSlug,
-                        csrfmiddlewaretoken: "{{ csrf_token }}"
-                    },
-                    success: function (response) {
-                        console.log('Success response:', response);
-                        $('#cart-count').html(response.cart_count);
-
-                        // Display messages using SweetAlert
-                        if (response.messages) {
-                            response.messages.forEach(function (message) {
-                                Swal.fire({
-                                    text: message.message,
-                                    icon: message.tags.includes('success') ? 'success' : 'error',
-                                    timer: 3000,
-                                    showConfirmButton: false
-                                });
-                            });
-                        } else {
-                            console.log('No messages in response');
-                        }
-
-                        // Change button ID and text
-                        $('.add-to-cart-btn[data-slug="' + productSlug + '"]').addClass('delete-from-cart-btn').removeClass('add-to-cart-btn').text('Delete from Cart');
-                        // Attach delete event
-                        $('.delete-from-cart-btn[data-slug="' + productSlug + '"]').off('click').on('click', deleteFromCart);
-                    },
-                    error: function (response) {
-                        console.log('Error response:', response);
-                    }
-                });
-            }
-
+ 
             function deleteFromCart(event) {
                 event.preventDefault();
                 let productSlug = $(this).data('slug');
@@ -163,6 +134,49 @@
             // Attach initial add to cart event
             $('.add-to-cart-btn').off('click').on('click', addToCart);
         });
+
+        $(document).ready(function() {
+            $('.btn-wishlist').click(function() {
+                var button = $(this);
+                var product_id = button.data('product-id');
+        
+                // SweetAlert confirmation
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "Do you want to remove this item from your wishlist?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, remove it!',
+                    cancelButtonText: 'No, keep it'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `/remove-from-wishlist/${product_id}/`,  // Updated URL
+                            method: 'POST',
+                            data: {
+                                'csrfmiddlewaretoken': '{{ csrf_token }}',  // CSRF token
+                            },
+                            success: function(response) {
+                                Swal.fire(
+                                    'Removed!',
+                                    response.message,
+                                    'success'
+                                );
+                                button.text('Add to Wishlist');
+                            },
+                            error: function(xhr, status, error) {
+                                Swal.fire(
+                                    'Error!',
+                                    'There was a problem removing the item from your wishlist.',
+                                    'error'
+                                );
+                            }
+                        });
+                    }
+                });
+            });
+        });
+        
     </script>
 </main><!-- End .main -->
 {% endblock content %}

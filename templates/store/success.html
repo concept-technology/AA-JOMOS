@@ -82,7 +82,7 @@
                 <table>
                     <tr>
                         <td class="title">
-                            <h2>zokash household</h2>
+                            <h2>A.A Jomos</h2>
                         </td>
                         <td>
                             Invoice No: {{ invoice.invoice_number }}<br>
@@ -99,7 +99,7 @@
                 <table>
                     <tr>
                         <td>
-                            zokash household, ventures.<br>
+                            A.A Jomos, ventures.<br>
                             12345 Sunny Road<br>
                             Sunnyville, TX 12345
                         </td>
@@ -131,14 +131,14 @@
         {% for item in order.product.all %}
         <tr class="item">
             <td>{{ item.product.title }}</td>
-            <td>{{ item.product.get_price_tag }}</td>
+            <td>{{ item.product.size.discount_price }}</td>
             <td>{{ item.product.get_total_price|floatformat:2|intcomma}}</td>
         </tr>
         {% endfor %}
         
         <tr class="total">
             <td></td>
-            <td>Total order: {{ order.get_total_with_delivery }}</td>
+            <td>Total order:&#8358; {{ order.get_total_with_delivery }}</td>
         </tr>
     </table>
 

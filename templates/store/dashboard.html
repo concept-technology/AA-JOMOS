@@ -65,10 +65,6 @@
                                         <thead>
                                             <tr>
                                                 <th scope="col">S/No.</th>
-                                                <th scope="col">Item</th>
-                                                <th scope="col">Date</th>
-                                                <th scope="col">Ref.</th>
-                                                <th scope="col">Amount</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -78,37 +74,51 @@
                                                 <td>
                                                     <ul>
                                                         {% for item in order.product.all %}
-                                                        <li>
+                                                        <li class="d-flex p-5">
                                                             <a href="{{ item.product.get_absolute_url}}">
-                                                                <img src="{{ item.product.img_1.url }}" width="50" class="m-1">
+                                                              {{forloop.counter}}  <img src="{{ item.color.img.url }}" width="50" class="m-1">
                                                             </a>
-                                                                <span>{{ item.product.title }}</span>
-                                                                <span>(Quantity: {{ item.quantity }})</span>
+                                                            <div>
+
+                                                                <span>{{ item.product.title }}</span><br>
+                                                                <b>price: &#8358; {{ item.size.discount_price }}</b><br>
+                                                                <span>Quantity: {{ item.quantity }}</span><br>
+                                                                <span>color:{{ item.color.name }}</span><br>
+                                                                <span>size:{{ item.size.size }}</span><br>
+                                                            </div>
+                                                            {% if not order.is_received %}
+                                                            <form method="post" action="{% url 'store:mark-order-received' order.id %}?next={{ request.path }}">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class=" btn btn-primary">Mark as Received</button>
+                                                            </form>     
+                                                            {% else %}
+                                                            {% for item in order.product.all %}
+                                                            <div class="d-flex">
+                                                                
+                                                                {% if forloop.counter == 1 %}
+                                                                    
+                                                                <button class="btn-product btn"  style="color: rgb(24, 228, 24);">Delivered</button>
+                                                                
+                                                                <a href="{% url 'store:rate_product' item.product.slug %}">
+                                                                    <button class="btn-product btn"  style="color: rgb(235, 200, 7);">review product</button>
+                                                                </a>
+                                                                {% endif %}
+                                                            </div>
+                                                            {% endfor %}
+                                                            {% endif %}                          
                                                         </li>
                                                         {% endfor %}
+                                                        <li>
+                                                            <b>Date: {{ order.date }}</b><br>
+                                                            <b>Ref No: {{ order.reference }}</b><br>
+                                                            <b>Amount: &#8358; {{ order.get_total|floatformat:2|intcomma }}</b><br>
+                                                        </li>
                                                     </ul>
                                                 </td>
-                                                <td>{{ order.date }}</td>
-                                                <td>{{ order.reference }}</td>
-                                                <td>&#8358; {{ order.get_total|floatformat:2|intcomma }}</td>
-                                                <td>
-                                                    {% if not order.is_received %}
-                                                    <form method="post" action="{% url 'store:mark-order-received' order.id %}?next={{ request.path }}">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class=" btn btn-primary">Mark as Received</button>
-                                                    </form>
-                                                    {% else %}
-                                                    {% for item in order.product.all %}
-                                                    <button type="submit" class="btn-product btn" style="color: rgb(24, 228, 24);">Delivered</button>
-                                                    {% endfor %}
-                                                    {% endif %}
-            
-                                                </td>                                                   
+                                               
+                                                                                          
                                             </tr>
-                                            <form action="">
-                                                {{form.as_p}}
-                                                <button class="btn btn-primary">Review</button>
-                                            </form>
+                                    
                                             {% endfor %}
                                         </tbody>
                                     </table>
