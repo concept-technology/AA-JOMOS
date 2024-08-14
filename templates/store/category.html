@@ -105,7 +105,6 @@
                                                     <a href="#" class="btn-product-icon btn-compare" title="Compare"><span>Compare</span></a>
                                                 </div> -->
                                                 <div class="product-action">
-
 														<a href="{{item.product.get_absolute_url}}" class="btn-product btn-cart1" type="submit" data-slug="" id="cart-btn-x{{ item.product.slug }}"><span>{{item.product.title}}</span></a>
                                                     <!-- <button class="btn-product btn-cart1" type="submit" id="cart-btn1"><span>add to cart</span></button>			 -->
                                                 </div><!-- End .product-action -->
@@ -137,10 +136,16 @@
                                                         }
                                                     </style>
                                                     <div id="star-ratings">
+														
+														{% if item.product.average_rating %}
+															
+														
                                                         {{ item.product.average_rating|floatformat:1 }}
                                                         {% star_rating item.product.average_rating %}
+														{% else %}
+														<p>no reviews</p>
+														{% endif %}
                                                     </div>
-                                                    <span class="ratings-text">( {{item.count}} reviews)</span>
                                                 </div><!-- End .rating-container -->                                      
                                             </div><!-- End .product-body -->
                                         </div><!-- End .product -->

@@ -90,10 +90,7 @@
                     <i class="icon-shopping-cart"></i>
                         <span class="cart-count" id="cart-count">0</span>
                         <!-- <span class="cart-txt">$ 164,00</span> -->
-                    </a>
-                    
-                  
-           
+                    </a>           
                 </div><!-- End .cart-dropdown -->
             </div>
         </div><!-- End .container -->
@@ -122,7 +119,7 @@
                                       {% endfor %}
                                     </div><!-- End .demo-list -->
                                     <div class="megamenu-action text-center">
-                                        <a href="#" class="btn btn-outline-primary-2 view-all-demos"><span>View All Demos</span><i class="icon-long-arrow-right"></i></a>
+                                        <a href="{% url 'store:categories-list' %}" class="btn btn-outline-primary-2 view-all-demos"><span>View All</span><i class="icon-long-arrow-right"></i></a>
                                     </div><!-- End .text-center -->
                                 </div><!-- End .menu-col -->
                             </div><!-- End .megamenu -->

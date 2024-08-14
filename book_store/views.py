@@ -1,3 +1,4 @@
+import json
 import requests
 import secrets
 import uuid
@@ -17,7 +18,8 @@ from allauth.account.forms import LoginForm, SignupForm
 from django.core.exceptions import ObjectDoesNotExist
 from .form import *
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.conf import settings
+# from django.conf import settings
+from aa_jomos import settings
 import random
 import string
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -29,6 +31,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
 # apps.py
+from django.db import transaction
 from django.apps import AppConfig
 from django.contrib import messages 
 from django.contrib.messages import get_messages
@@ -281,7 +284,6 @@ def ProductCategories_view(request):
         }
         return render(request, 'store/category.html', context)
 
-
 def product_list_by_category(request, slug):
     try:
         category = get_object_or_404(Category, slug=slug)
@@ -295,12 +297,12 @@ def product_list_by_category(request, slug):
         if min_price and max_price:
             # Filter products based on size prices within the range
             products = products.filter(
-                productsizecolor__size__discount_price__gte=min_price,
-                productsizecolor__size__discount_price__lte=max_price
+                size__discount_price__gte=min_price,
+                size__discount_price__lte=max_price
             )
 
         if size_id:
-            products = products.filter(productsizecolor__size__id=size_id)
+            products = products.filter(size__size__size=size_id)
 
         products_with_ratings = [
             {
@@ -335,7 +337,7 @@ def product_list_by_category(request, slug):
     except ObjectDoesNotExist:
         messages.error(request, 'not found on the server')
         return redirect('store:index')
-   
+  
 
 def logout_view(request):
     logout(request)
@@ -655,39 +657,6 @@ def add_to_cart(request):
             return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
     return JsonResponse({'message': 'error processing your request'}, status=400)
 
-
-
-# def delete_cart(request, slug):
-#     product = get_object_or_404(Product, slug=slug)
-#     next_url = request.GET.get('next')
-
-#     if request.user.is_authenticated:
-#         cart = Cart.objects.filter(product=product, user=request.user, is_ordered=False)
-#         order = Order.objects.filter(user=request.user, is_ordered=False).first()
-        
-#         if order and order.product.filter(product=product).exists():
-#             cart.delete()
-#             messages.success(request, 'Deleted from cart')
-#         else:
-#             messages.error(request, 'You have already removed this item from the cart or no active order exists')
-        
-#     else:
-#         session_cart_id = request.session.get('cart_id')
-#         if session_cart_id:
-#             cart = Cart.objects.filter(product=product, cart_id=session_cart_id, is_ordered=False)
-#             if cart.exists():
-#                 cart.delete()
-#                 messages.success(request, 'Deleted from cart')
-#             else:
-#                 messages.error(request, 'Item not found in cart')
-#         else:
-#             messages.error(request, 'No active cart found in session')
-
-#     if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-#         return redirect(next_url)
-#     return redirect("store:index")
-
-
 @csrf_exempt
 def delete_cart(request):
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -719,41 +688,66 @@ def delete_cart(request):
 
 
 
-@login_required
-def verify_address(request):
-    # Fetch user's addresses
-    user_addresses = CustomersAddress.objects.filter(user=request.user)
+# @login_required
+# def verify_address_and_pay(request):
+#     # Fetch user's addresses
+#     user_addresses = CustomersAddress.objects.filter(user=request.user)
     
-    # Fetch current order details
-    orders = Order.objects.filter(user=request.user, is_ordered=False)
-    
-    total_order_cost = 0
-    total_delivery_cost = 0
-    total_cost_with_delivery = 0
-    order = None
-    order_items = []
-    coupon = None
+#     # Fetch current order details
+#     orders = Order.objects.filter(user=request.user, is_ordered=False)
+   
+#     total_order_cost = 0
+#     total_delivery_cost = 0
+#     total_cost_with_delivery = 0
+#     order = None
+#     order_items = []
+#     coupon = None
 
-    if orders.exists():
-        order = orders.first()
-        total_order_cost = order.get_total()  # Assuming get_total() method calculates total cost
-        total_delivery_cost = order.get_delivery_cost()  # Assuming get_delivery_cost() method calculates delivery cost
-        total_cost_with_delivery = total_order_cost + total_delivery_cost
-        order_items = order.product.all()  # Access the related products directly from the order
-        if order.coupon:
-            coupon = order.coupon
+#     if orders.exists():
+#         order = orders.first()
+#         total_order_cost = order.get_total()  # Assuming get_total() method calculates total cost
+#         total_delivery_cost = order.get_delivery_cost()  # Assuming get_delivery_cost() method calculates delivery cost
+#         total_cost_with_delivery = total_order_cost + total_delivery_cost
+#         order_items = order.product.all()  # Access the related products directly from the order
+#         if order.coupon:
+#             coupon = order.coupon
+#     context = {
+        
+#         'addresses': user_addresses,
+#         'order': order,
+#         'total_order_cost': total_order_cost,
+#         'total_delivery_cost': total_delivery_cost,
+#         'total_cost_with_delivery': total_cost_with_delivery,
+#         'order_items': order_items,
+#         'coupon': [coupon] if coupon else None,
+#         # 'payment': payment if payment else None
+#     }
+#     if request.method == 'POST':
+#         amount = request.POST['amount']
+#         email = request.POST['email']
+#         pk = settings.PAYSTACK_PUBLIC_KEY
 
-    context = {
-        'addresses': user_addresses,
-        'order': order,
-        'total_order_cost': total_order_cost,
-        'total_delivery_cost': total_delivery_cost,
-        'total_cost_with_delivery': total_cost_with_delivery,
-        'order_items': order_items,
-        'coupon': [coupon] if coupon else None,
-    }
+#     # Convert amount to float instead of int
+#         payment = Payment.objects.create(amount=float(amount), email=email, order=order, user=request.user)
+#         payment.save()
+#         context = {
+        
+#         'addresses': user_addresses,
+#         'order': order,
+#         'total_order_cost': total_order_cost,
+#         'total_delivery_cost': total_delivery_cost,
+#         'total_cost_with_delivery': total_cost_with_delivery,
+#         'order_items': order_items,
+#         'coupon': [coupon] if coupon else None,
+#         'payment':payment
+#     }
+        
+#         return render('store:check-user-address.html')
     
-    return render(request, 'store/check-user-address.html', context)
+#     return render(request, 'store/check-user-address.html', context)
+
+
+
 
 
 @method_decorator(login_required, name='dispatch')
@@ -868,12 +862,183 @@ def initiate_payment(request):
             'field_values': request.POST,
             'paystack_pub_key': pk,
             'amount_value': payment.amount_value(),
-            'order': order         
+            'order': order,        
         }
         
         return render(request, 'store/make-payment.html', context)
 
     return render(request, 'store/payment.html', {'order': order, 'cart': cart})
+
+# @login_required
+# def verify_address_and_pay(request):
+#     # Fetch user's addresses
+#     user_addresses = CustomersAddress.objects.filter(user=request.user)
+#     pk = settings.PAYSTACK_PUBLIC_KEY
+#     # Fetch current order details
+#     orders = Order.objects.filter(user=request.user, is_ordered=False)
+    
+#     total_order_cost = 0
+#     total_delivery_cost = 0
+#     total_cost_with_delivery = 0
+#     order = None
+#     order_items = []
+#     coupon = None
+#     payment = None  # Initialize payment as None
+
+#     if orders.exists():
+#         order = orders.first()
+#         total_order_cost = order.get_total()  # get_total() method calculates total cost
+#         total_delivery_cost = order.get_delivery_cost()  # get_delivery_cost() method calculates delivery cost
+#         total_cost_with_delivery = total_order_cost + total_delivery_cost
+#         order_items = order.product.all()  # Access the related products directly from the order
+#         if order.coupon:
+#             coupon = order.coupon
+
+#     if request.method == 'POST':
+#         amount = request.POST['amount']
+#         email = request.POST['email']
+#         ref_number = request.POST['ref']
+#         amount = int(total_cost_with_delivery * 100)  # Paystack expects the amount in kobo
+#         email = request.user.email
+
+#         headers = {
+#             "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
+#             "Content-Type": "application/json"
+#         }
+#         data = {
+#             "email": email,
+#             "amount": amount,
+#             "ref": ref_number,
+#         }
+#         url = "https://api.paystack.co/transaction/initialize"
+#         response = requests.post(url, headers=headers, data=json.dumps(data))
+#         response_data = response.json()
+
+#         if response_data['status']:
+#             payment = Payment.objects.create(amount=float(amount), email=email, order=order, user=request.user, ref=ref_number)
+#             payment.save()
+#             authorization_url = response_data['data']['authorization_url']
+#             print({'ref':ref_number})
+#             return redirect(authorization_url)
+#         else:
+#             # Handle error here
+#             context = {
+#                 'addresses': user_addresses,
+#                 'order': order,
+#                 'total_order_cost': total_order_cost,
+#                 'total_delivery_cost': total_delivery_cost,
+#                 'total_cost_with_delivery': total_cost_with_delivery,
+#                 'order_items': order_items,
+#                 'coupon': [coupon] if coupon else None,
+#                 'error': 'There was a problem initializing the payment. Please try again.',
+#             }
+#             return render(request, 'store/check-user-address.html', context)
+
+#     context = {
+#         'addresses': user_addresses,
+#         'order': order,
+#         'total_order_cost': total_order_cost,
+#         'total_delivery_cost': total_delivery_cost,
+#         'total_cost_with_delivery': total_cost_with_delivery,
+#         'order_items': order_items,
+#         'coupon': [coupon] if coupon else None,
+#         'paystack_pub_key': pk,
+#       # Check if payment is not None
+#     }
+#     return render(request, 'store/check-user-address.html', context)
+
+
+@login_required
+def verify_address_and_pay(request):
+    # Fetch user's addresses
+    user_addresses = CustomersAddress.objects.filter(user=request.user)
+    pk = settings.PAYSTACK_PUBLIC_KEY
+    # Fetch current order details
+    orders = Order.objects.filter(user=request.user, is_ordered=False)
+    
+    total_order_cost = 0
+    total_delivery_cost = 0
+    total_cost_with_delivery = 0
+    order = None
+    order_items = []
+    coupon = None
+    payment = None  # Initialize payment as None
+
+    if orders.exists():
+        order = orders.first()
+        total_order_cost = order.get_total()  # get_total() method calculates total cost
+        total_delivery_cost = order.get_delivery_cost()  # get_delivery_cost() method calculates delivery cost
+        total_cost_with_delivery = total_order_cost + total_delivery_cost
+        order_items = order.product.all()  # Access the related products directly from the order
+        if order.coupon:
+            coupon = order.coupon
+
+    if request.method == 'POST':
+        # Generate a unique reference number
+        ref_number = request.POST.get('ref', '') or generate_random_number()
+        amount = request.POST['amount']
+        email = request.POST['email']
+         # Create the Payment object immediately
+        payment = Payment.objects.create(
+                amount=float(amount),  # Store in naira
+                email=email,
+                order=order,
+                user=request.user,
+                ref=ref_number,
+                verified=False  # Initially not verified
+            )
+        payment.save()
+            
+        headers = {
+            "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "email": email,
+            "amount": amount,
+         
+        }
+        url = "https://api.paystack.co/transaction/initialize"
+        
+        # Log the data being sent to Paystack
+        print(f"Initializing Paystack transaction: {data}")
+        
+        response = requests.post(url, headers=headers, data=json.dumps(data))
+        response_data = response.json()
+
+        if response_data['status']:
+            # Log successful initialization
+            print(f"Paystack initialization successful: {response_data}")
+
+            authorization_url = response_data['data']['authorization_url']
+            return redirect(authorization_url)
+        else:
+            # Handle error here
+            print(f"Error initializing Paystack transaction: {response_data}")
+            context = {
+                'addresses': user_addresses,
+                'order': order,
+                'total_order_cost': total_order_cost,
+                'total_delivery_cost': total_delivery_cost,
+                'total_cost_with_delivery': total_cost_with_delivery,
+                'order_items': order_items,
+                'coupon': [coupon] if coupon else None,
+                'error': 'There was a problem initializing the payment. Please try again.',
+            }
+            return render(request, 'store/check-user-address.html', context)
+
+    context = {
+        'addresses': user_addresses,
+        'order': order,
+        'total_order_cost': total_order_cost,
+        'total_delivery_cost': total_delivery_cost,
+        'total_cost_with_delivery': total_cost_with_delivery,
+        'order_items': order_items,
+        'coupon': [coupon] if coupon else None,
+        'paystack_pub_key': pk,
+        'ref':generate_random_number(),
+    }
+    return render(request, 'store/check-user-address.html', context)
 
 
 def verify_payment(request, ref):
@@ -1140,6 +1305,12 @@ def product_detail(request, slug):
             color_quantities[color.name] = cart_color.quantity if cart_color else 0
 
     cart_quantity = cart.quantity if is_in_cart and cart else None
+    
+    size_discount_percentages = {}
+    for size in sizes:
+        if size.discount_price and size.price:
+            discount_percentage = ((size.price - size.discount_price) / size.price) * 100
+            size_discount_percentages[size.id] = discount_percentage
 
     context = {
         'product': product,
@@ -1158,6 +1329,7 @@ def product_detail(request, slug):
         'color_quantities': color_quantities,
         'quantity': cart_quantity,
         'sizes': sizes,  # Pass the sizes related to the specific product
+        'size_discount_percentages': size_discount_percentages,
     }
 
     return render(request, 'store/product_detail.html', context)
@@ -1403,234 +1575,6 @@ def wishlist_count(request):
 
 
 
-@csrf_exempt
-@require_POST
-def update_cart_color_and_qty(request):
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        slug = request.POST.get('slug')
-        size_id = request.POST.get('size')
-        color_id = request.POST.get('color')
-        quantity = int(request.POST.get('quantity', 1))
-        product = get_object_or_404(Product, slug=slug)
-        size = get_object_or_404(Size, id=size_id) if size_id else None
-        color = get_object_or_404(Color, id=color_id) if color_id else None
-
-        if request.user.is_authenticated:
-            cart_qs = Cart.objects.filter(
-                user=request.user,
-                product=product,
-                size=size,
-                color=color,
-                is_ordered=False
-            )
-
-            if cart_qs.exists():
-                cart_item = cart_qs.first()
-                cart_item.quantity = quantity
-                
-                cart_item.save()
-                messages.success(request, f"Updated {product.title} in cart")
-            else:
-                cart_item = Cart.objects.create(
-                    user=request.user,
-                    product=product,
-                    size=size,
-                    color=color,
-                    quantity=quantity,
-                    is_ordered=False
-                )
-                messages.success(request, f"{product.title} added to cart")
-                
-                cart_item.product.price = size.price
-                cart_item.product.discount_price = size.price
-                cart_item.save()
-            # Create or update the order
-            order, created = Order.objects.get_or_create(
-                user=request.user,
-                is_ordered=False,
-                defaults={
-                    'reference': f'order-{secrets.token_hex(8)}',
-                    'date': timezone.now()
-                }
-            )
-            if not order.product.filter(id=cart_item.id).exists():
-                order.product.add(cart_item)
-            order.save()
-
-            Wishlist.objects.filter(user=request.user, product=product).delete()
-
-            storage = get_messages(request)
-            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
-
-            cart_count = Cart.objects.filter(user=request.user, is_ordered=False).count()
-
-            return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
-        else:
-            session_cart_id = request.session.get('cart_id')
-            if not session_cart_id:
-                session_cart_id = str(uuid.uuid4())
-                request.session['cart_id'] = session_cart_id
-                request.session.modified = True
-
-            cart_qs = Cart.objects.filter(
-                cart_id=session_cart_id,
-                product=product,
-                size=size,
-                color=color,
-                is_ordered=False
-            )
-            if cart_qs.exists():
-                cart_item = cart_qs.first()
-                cart_item.quantity = quantity
-                cart_item.save()
-                messages.success(request, f"Updated {product.title} in cart")
-            else:
-                cart_item = Cart.objects.create(
-                    cart_id=session_cart_id,
-                    product=product,
-                    size=size,
-                    color=color,
-                    quantity=quantity,
-                    is_ordered=False
-                )
-                messages.success(request, f"{product.title} added to cart")
-
-            # Create or update the order
-            order, created = Order.objects.get_or_create(
-                cart_id=session_cart_id,
-                is_ordered=False,
-                defaults={
-                    'reference': f'order-{secrets.token_hex(8)}',
-                    'date': timezone.now()
-                }
-            )
-            if not order.product.filter(id=cart_item.id).exists():
-                order.product.add(cart_item)
-            order.save()
-
-            storage = get_messages(request)
-            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
-
-            cart_count = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False).count()
-
-            return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
-    return JsonResponse({'message': 'Error processing your request'}, status=400)
-
-# class UpdateCartQuantity(View):
-#     def post(self, request, *args, **kwargs):
-#         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-#             cart_item_id = int(request.POST.get('cart_item_id'))
-#             quantity = request.POST.get('quantity')         
-            
-#             try:
-#                 quantity = int(quantity)
-#                 if quantity <= 0:
-#                     return JsonResponse({'message': 'Invalid quantity'}, status=400)
-#             except (ValueError, TypeError):
-#                 return JsonResponse({'message': 'Invalid quantity'}, status=400)
-
-#             cart_item = get_object_or_404(Cart, id=cart_item_id, is_ordered=False)
-
-#             cart_item.quantity = quantity
-#             cart_item.save()
-
-#             if quantity < cart_item.product.minimum_order:
-#                 sub_total = cart_item.product.discount_price * quantity
-#             else:
-#                 sub_total = cart_item.product.wholesale_price * quantity
-
-#             if request.user.is_authenticated:
-#                 cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
-#             else:
-#                 session_cart_id = request.session.get('cart_id')
-#                 cart_items = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False)
-            
-#             cart_total = sum(
-#                 item.product.discount_price * item.quantity if item.quantity < item.product.minimum_order else item.product.wholesale_price * item.quantity
-#                 for item in cart_items
-#             )
-
-#             messages = [{'message': 'Cart updated successfully', 'tags': 'success'}]
-
-#             return JsonResponse({
-#                 'cart_item_id': cart_item_id,
-#                 'qty': quantity,
-#                 'sub_total': sub_total,
-#                 'cart_item_total': cart_total,
-#                 'messages': messages,
-#                 'total_with_delivery': '',
-#             })
-        
-#         return JsonResponse({'message': 'error'}, status=400)
-
-# class UpdateCartQuantity(View):
-    def post(self, request, *args, **kwargs):
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            cart_item_id = int(request.POST.get('cart_item_id'))
-            quantity = request.POST.get('quantity')
-            price = request.POST.get('price')
-
-            # Validate the quantity
-            try:
-                quantity = int(quantity)
-                if quantity <= 0:
-                    return JsonResponse({'message': 'Invalid quantity'}, status=400)
-            except (ValueError, TypeError):
-                return JsonResponse({'message': 'Invalid quantity'}, status=400)
-
-            # Fetch and update the cart item
-            cart_item = get_object_or_404(Cart, id=cart_item_id, is_ordered=False)
-            cart_item.quantity = quantity
-            cart_item.save()
-            cart_qty = Cart.objects.all()
-            # Calculate the subtotal for the updated item
-            if quantity < cart_item.product.minimum_order:
-                cart_item_total = cart_item.product.discount_price * quantity
-            else:
-                cart_item_total = cart_item.product.wholesale_price * quantity
-
-            # Calculate the updated total cart value
-            if request.user.is_authenticated:
-                cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
-            else:
-                session_cart_id = request.session.get('cart_id')
-                cart_items = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False)
-
-            cart_total = sum(
-                item.product.discount_price * item.quantity if item.quantity < item.product.minimum_order else item.product.wholesale_price * item.quantity
-                for item in cart_items
-            )
-
-            # Calculate the total price for all items in the cart
-            total_price = sum(
-                item.get_total_price() for item in cart_items
-            )
-
-            # Fetch the order and calculate the total with delivery
-            try:
-                if request.user.is_authenticated:
-                    order_qs = Order.objects.get(user=request.user, is_ordered=False)
-                else:
-                    session_cart_id = request.session.get('cart_id')
-                    order_qs = Order.objects.get(cart_id=session_cart_id, is_ordered=False)
-                
-                total_order_and_delivery = order_qs.get_total_with_delivery()
-                print(total_order_and_delivery)
-            except Order.DoesNotExist:
-                return JsonResponse({'message': 'Order does not exist'}, status=404)
-            return JsonResponse({
-                'cart_item_id': cart_item_id,
-                'qty': quantity,
-                'total_order_and_delivery': int(total_order_and_delivery),
-                'cart_item_total': cart_item_total,  # Ensure total cart value is included
-                'total_order': total_price,  # Include the total price for all items
-                'messages': [{'message': 'Cart updated successfully', 'tags': 'success'}],
-            })
-
-        return JsonResponse({'message': 'error'}, status=400)
-
-
-
 
 class UpdateCartQuantity(View):
     def post(self, request, *args, **kwargs):
@@ -1655,16 +1599,25 @@ class UpdateCartQuantity(View):
             if cart_item.size is None:
                 return JsonResponse({'message': 'Size not found for this cart item'}, status=400)
 
-            # Calculate size and product price
-            main_price = cart_item.size.price * quantity if not cart_item.size.discount_price else cart_item.size.discount_price * quantity
-            cart_item_total = main_price
-
-            # Calculate the total price for all items in the cart
+            # Calculate the total quantity of the same product in the cart
             if request.user.is_authenticated:
                 cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
             else:
                 cart_items = Cart.objects.filter(session_key=request.session.session_key, is_ordered=False)
 
+            product_total_quantity = cart_items.filter(product=cart_item.product).aggregate(total_qty=Sum('quantity'))['total_qty']
+            product_total_quantity = product_total_quantity if product_total_quantity is not None else 0
+
+            # Determine if the wholesale price should be used
+            if product_total_quantity >= cart_item.product.minimum_order:
+                price_per_unit = cart_item.size.wholesale_price
+            else:
+                price_per_unit = cart_item.size.discount_price if cart_item.size.discount_price else cart_item.size.price
+
+            # Calculate size and product price
+            cart_item_total = price_per_unit * quantity
+
+            # Calculate the total price for all items in the cart
             total_price = sum(item.get_total_price() for item in cart_items)
 
             # Fetch the order and calculate the total with delivery
@@ -1683,10 +1636,146 @@ class UpdateCartQuantity(View):
                 'total_order_and_delivery': int(total_order_and_delivery),
                 'cart_item_total': cart_item_total,
                 'total_order': total_price,
+                'product_total_quantity': product_total_quantity,
                 'messages': [{'message': 'Cart updated successfully', 'tags': 'success'}],
             })
 
         return JsonResponse({'message': 'error'}, status=400)
 
 
+@csrf_exempt
+@require_POST
+def update_cart_color_and_qty(request):
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+        return JsonResponse({'message': 'Error processing your request'}, status=400)
+    
+    try:
+        slug = request.POST.get('slug')
+        size_id = request.POST.get('size')
+        color_id = request.POST.get('color')
+        quantity = int(request.POST.get('quantity', 1))
 
+        product = get_object_or_404(Product, slug=slug)
+        size = get_object_or_404(Size, id=size_id) if size_id else None
+        color = get_object_or_404(Color, id=color_id) if color_id else None
+
+        if request.user.is_authenticated:
+            response_data = handle_authenticated_user(request, product, size, color, quantity)
+        else:
+            response_data = handle_unauthenticated_user(request, product, size, color, quantity)
+
+        return JsonResponse(response_data)
+
+    except Exception as e:
+        return JsonResponse({'message': f'Error: {str(e)}'}, status=400)
+
+def handle_authenticated_user(request, product, size, color, quantity):
+    with transaction.atomic():
+        cart_item, created = Cart.objects.update_or_create(
+            user=request.user,
+            product=product,
+            size=size,
+            color=color,
+            is_ordered=False,
+            defaults={'quantity': quantity}
+        )
+        if created:
+            messages.success(request, f"{product.title} added to cart")
+        else:
+            messages.success(request, f"Updated {product.title} in cart")
+        
+        adjust_cart_item_price(cart_item, product, size, quantity)
+        update_or_create_order(request, cart_item)
+        Wishlist.objects.filter(user=request.user, product=product).delete()
+
+        return prepare_response_data(request, cart_item)
+
+def handle_unauthenticated_user(request, product, size, color, quantity):
+    session_cart_id = request.session.get('cart_id')
+    if not session_cart_id:
+        session_cart_id = str(uuid.uuid4())
+        request.session['cart_id'] = session_cart_id
+        request.session.modified = True
+
+    with transaction.atomic():
+        cart_item, created = Cart.objects.update_or_create(
+            cart_id=session_cart_id,
+            product=product,
+            size=size,
+            color=color,
+            is_ordered=False,
+            defaults={'quantity': quantity}
+        )
+        if created:
+            messages.success(request, f"{product.title} added to cart")
+        else:
+            messages.success(request, f"Updated {product.title} in cart")
+
+        adjust_cart_item_price(cart_item, product, size, quantity)
+        update_or_create_order(request, cart_item, session_cart_id)
+        
+        return prepare_response_data(request, cart_item)
+
+def adjust_cart_item_price(cart_item, product, size, quantity):
+    total_quantity = Cart.objects.filter(
+        user=cart_item.user,
+        product=product,
+        is_ordered=False
+    ).aggregate(total_quantity=Sum('quantity'))['total_quantity']
+
+    if total_quantity >= product.minimum_order:
+        cart_item.price = size.wholesale_price
+    else:
+        cart_item.price = size.discount_price
+    cart_item.save()
+
+def update_or_create_order(request, cart_item, cart_id=None):
+    order, created = Order.objects.get_or_create(
+        user=request.user if request.user.is_authenticated else None,
+        cart_id=cart_id,
+        is_ordered=False,
+        defaults={
+            'reference': f'order-{secrets.token_hex(8)}',
+            'date': timezone.now()
+        }
+    )
+    if not order.product.filter(id=cart_item.id).exists():
+        order.product.add(cart_item)
+    order.save()
+
+def prepare_response_data(request, cart_item):
+    storage = get_messages(request)
+    response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
+
+    cart_count = Cart.objects.filter(
+        user=request.user if request.user.is_authenticated else None,
+        cart_id=request.session.get('cart_id'),
+        is_ordered=False
+    ).count()
+
+    cart_items = Cart.objects.filter(
+        user=request.user if request.user.is_authenticated else None,
+        cart_id=request.session.get('cart_id'),
+        is_ordered=False
+    )
+    cart_total = sum(
+        item.size.discount_price * item.quantity if item.quantity < item.product.minimum_order else item.size.wholesale_price * item.quantity
+        for item in cart_items
+    )
+
+    total_price = sum(item.get_total_price() for item in cart_items)
+
+    try:
+        order_qs = Order.objects.get(user=request.user, is_ordered=False)
+        total_order_and_delivery = order_qs.get_total_with_delivery()
+    except Order.DoesNotExist:
+        total_order_and_delivery = None
+
+    return {
+        'success': True,
+        'cart_count': cart_count,
+        'messages': response_messages,
+        'cart_total': cart_total,
+        'total_price': total_price,
+        'total_order_and_delivery': total_order_and_delivery,
+    }

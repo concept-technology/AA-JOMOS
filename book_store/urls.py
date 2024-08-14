@@ -43,7 +43,8 @@ urlpatterns = [
      
      path('refund-request', views.RequestRefund.as_view(), name='refund-request'),
      
-     path('verify-address', views.verify_address, name='verify-address'),
+     path('verify-address', views.verify_address_and_pay, name='verify-address'),
+
      
      path('address/edit/<int:pk>', views.Update_addressView, name='update-address'),
      

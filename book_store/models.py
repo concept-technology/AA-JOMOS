@@ -247,18 +247,17 @@ class Product(models.Model):
         return next_product
     
 class ProductSizeColor(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    size = models.ForeignKey(Size, on_delete=models.CASCADE)
-    color = models.ForeignKey(Color, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_colors')
+    size = models.ForeignKey(Size, on_delete=models.CASCADE, related_name='product_colors')
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, blank=True,null= True, related_name='product_colors')
 
     class Meta:
         unique_together = ('product', 'size', 'color')
         
 
     def __str__(self):
-        return f'{self.product.title} - {self.size.size} - {self.color.name}'
-
-       
+        return f'{self.product.title} - {self.size.size} - {self.color.name if self.color.name else None}'
+      
 # class Cart(models.Model):
 #     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', null=True, blank=True)
 #     product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='product')

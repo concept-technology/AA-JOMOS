@@ -13,11 +13,8 @@
 											<h6>welcome to paystack gateway,<br class="m-2">you are about to pay the sum of &#8358;{{ payment.amount|floatformat:2|intcomma }} for your order</h6>
 										</transaction>
 										<div>
-											
-											<button onclick="payWithPaystack()" class="btn btn-primary btn-primary mb-4">Pay</button>			
-													
-										</div>
-										
+											<button onclick="payWithPaystack()" class="btn btn-primary btn-primary mb-4">Pay</button>					
+										</div>										
 							</div><!-- End .form-box -->
 						</div><!-- End .container -->
 					</div><!-- End .login-page section-bg -->
@@ -37,37 +34,51 @@
     
     
 <script src="https://js.paystack.co/v1/inline.js"></script>
-
 <script>
-	function payWithPaystack() {
-		let currency = "NGN";
-		let plan = "";
-		let ref = "{{ payment.ref }}";
-		let amount = "{{ payment.amount }}";
-		let obj = {
-			key: "{{ paystack_pub_key }}",
-			email: "{{ payment.email }}",
-			amount: "{{ amount_value }}",
-			ref: ref,
-			callback: function (response) {
-				showLoadingIndicator()
-				window.location.href = "{% url 'store:verify_payment' payment.ref %}";
-			},
-		};
-		if (Boolean(currency)) {
-			obj.currency = currency.toUpperCase();
-		}
-		if (Boolean(plan)) {
-			obj.plan - plan;
-		}
+    // Helper function to generate a random reference code
+    function generateRef() {
+        let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let ref = '';
+        for (let i = 0; i < 16; i++) {
+            ref += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return ref;
+    }
 
-		var handler = PaystackPop.setup(obj);
-		handler.openIframe();
-	}
+    function payWithPaystack() {
+        let currency = "NGN";
+        let plan = "";
 
+        // Check if ref is provided, if not, generate one
+        let ref = "{{ ref }}" || generateRef();
 
+        // Format amount to Kobo
+        let amountValue = parseInt("{{ total_cost_with_delivery }}") * 100;
 
-	function showLoadingIndicator() {
+        let obj = {
+            key: "{{ paystack_pub_key }}",
+            email: "{{ request.user.email }}",
+            amount: amountValue,
+            ref: ref,
+            callback: function (response) {
+                showLoadingIndicator();
+                // Redirect to verify payment page
+                window.location.href = "{% url 'store:verify_payment' %}" + response.reference;
+            },
+        };
+
+        if (Boolean(currency)) {
+            obj.currency = currency.toUpperCase();
+        }
+        if (Boolean(plan)) {
+            obj.plan = plan;
+        }
+
+        var handler = PaystackPop.setup(obj);
+        handler.openIframe();
+    }
+
+    function showLoadingIndicator() {
         // Disable all buttons to prevent further clicks
         var buttons = document.querySelectorAll('button');
         buttons.forEach(function(button) {
@@ -96,37 +107,33 @@
         }
     }
 
-	
-		function verifyPayment(ref) {
-			// Show loading indicator
-			document.getElementById('loading-indicator').style.display = 'block';
-	
-			fetch(`/verify-payment/${ref}/`, {
-				method: 'GET',
-				headers: {
-					'X-Requested-With': 'XMLHttpRequest'
-				}
-			})
-			.then(response => response.json())
-			.then(data => {
-				// Hide loading indicator
-				document.getElementById('loading-indicator').style.display = 'none';
-	
-				if (data.status === 'success') {
-					// Redirect to success page
-					window.location.href = data.redirect_url;
-				} else {
-					alert(data.message);
-				}
-			})
-			.catch(error => {
-				console.error('Error:', error);
-				document.getElementById('loading-indicator').style.display = 'none';
-			});
-		}
+    function verifyPayment(ref) {
+        // Show loading indicator
+        document.getElementById('loading-indicator').style.display = 'block';
 
-	
+        fetch(`/verify-payment/${ref}/`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading indicator
+            document.getElementById('loading-indicator').style.display = 'none';
 
+            if (data.status === 'success') {
+                // Redirect to success page
+                window.location.href = data.redirect_url;
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('loading-indicator').style.display = 'none';
+        });
+    }
 </script>
 
 
