@@ -4,11 +4,7 @@
  {% block content %}  
  {% load custom_filters %}
  {% load star_rating %}
- 
- {% block title %}
-   A.A JOMOS | Home
- {% endblock title %}
-    
+   
         <main>           
           <div class="intro-section pt-3 pb-3 mb-2">
                 <div class="container">
@@ -710,7 +706,7 @@
             <div class="container">
                 <hr class="mt-5 mb-6">
             </div><!-- End .container -->
-
+            {% if top_selling_by_category %}
             <div class="container top">
                 <div class="heading heading-flex mb-3">
                     <div class="heading-left">
@@ -804,6 +800,7 @@
                     </div><!-- .End .tab-pane -->
               
                 </div><!-- End .tab-content -->
+                {%endif%}
             </div><!-- End .container -->
 
             <div class="container">
@@ -846,6 +843,11 @@
                     </div><!-- End .bg-white -->
                 </div><!-- End .cta -->
             </div><!-- End .container -->
+            {% block title %}
+            A.A JOMOS | Home
+       
+        {% endblock title %}
+        
         </main><!-- End .main -->
 
   

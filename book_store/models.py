@@ -431,8 +431,8 @@ class Payment(models.Model):
 class Coupon(models.Model):
     code = models.CharField(max_length=50)
     amount = models.IntegerField(default=0,)
-    valid_from = models.DateTimeField(default=timezone.now())
-    valid_to = models.DateTimeField(default=timezone.now(), blank=True, null=True)
+    valid_from = models.DateTimeField(default=timezone.now)
+    valid_to = models.DateTimeField(default=timezone.now, blank=True, null=True)
     active = models.BooleanField(default=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='' ,blank=True,null=True)
     is_used = models.BooleanField(default=False)

@@ -261,7 +261,7 @@ def ProductCategories_view(request):
         categories = Category.objects.all().order_by('title')
 
         # Implement pagination
-        paginator = Paginator(products, 10)  # Show 10 products per page
+        paginator = Paginator(products, 20)  # Show 20 products per page
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
         products_with_ratings = []
@@ -284,6 +284,7 @@ def ProductCategories_view(request):
         }
         return render(request, 'store/category.html', context)
 
+
 def product_list_by_category(request, slug):
     try:
         category = get_object_or_404(Category, slug=slug)
@@ -297,12 +298,12 @@ def product_list_by_category(request, slug):
         if min_price and max_price:
             # Filter products based on size prices within the range
             products = products.filter(
-                size__discount_price__gte=min_price,
-                size__discount_price__lte=max_price
+                product__size__discount_price__gte=min_price,
+                product__size__discount_price__lte=max_price
             )
 
         if size_id:
-            products = products.filter(size__size__size=size_id)
+            products = products.filter(size__size=size_id)
 
         products_with_ratings = [
             {
@@ -337,7 +338,7 @@ def product_list_by_category(request, slug):
     except ObjectDoesNotExist:
         messages.error(request, 'not found on the server')
         return redirect('store:index')
-  
+
 
 def logout_view(request):
     logout(request)
@@ -1214,41 +1215,41 @@ def order_summary(request):
     return render(request, 'store/order_summary.html', context)
 
 
-
+# search view query
 def search_view(request):
     query = request.GET.get('q')
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
     
-    results = Product.objects.all()
+    results = Product.objects.all().annotate(num_sizes=Count('size')).distinct()
     
     if query:
         results = results.filter(
             Q(title__icontains=query) | 
             Q(description__icontains=query) |
             Q(category__title__icontains=query)
-        )
+        ).annotate(num_sizes=Count('size')).distinct()
     
     if min_price:
         try:
             min_price = float(min_price)
-            results = results.filter(size__price__gte=min_price)
+            results = results.filter(size__price__gte=min_price).annotate(num_sizes=Count('size')).distinct()
         except ValueError:
-            pass  # Handle the case where min_price is not a valid number
+            pass
     
     if max_price:
         try:
             max_price = float(max_price)
-            results = results.filter(size__price__lte=max_price)
+            results = results.filter(size__price__lte=max_price).annotate(num_sizes=Count('size')).distinct()
         except ValueError:
-            pass  # Handle the case where max_price is not a valid number
-      # Create a dictionary to hold products and their sizes
+            pass
+
     products_with_sizes = []
     for product in results:
-        sizes = product.size.all()
-        ratings = product.average_rating
-        color = product.color.all()
-        products_with_sizes.append({'product': product,'color':color, 'ratings':ratings, 'sizes': sizes})
+        sizes = product.size.all().distinct()
+        ratings = product.average_rating()
+        color = product.color.all().distinct()
+        products_with_sizes.append({'product': product, 'color': color, 'ratings': ratings, 'sizes': sizes})
 
     context = {
         'query': query,
