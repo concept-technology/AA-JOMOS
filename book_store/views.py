@@ -1649,7 +1649,6 @@ class UpdateCartQuantity(View):
 def update_cart_color_and_qty(request):
     if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         return JsonResponse({'message': 'Error processing your request'}, status=400)
-    
     try:
         slug = request.POST.get('slug')
         size_id = request.POST.get('size')
