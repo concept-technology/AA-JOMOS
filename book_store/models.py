@@ -212,7 +212,7 @@ class Product(models.Model):
 
   
     def get_related_products(self):
-        return Product.objects.filter(category=self.category).exclude(id=self.id)[:4]  # Change the number of products to display as needed
+        return Product.objects.filter(category=self.category).exclude(id=self.id)[:5]  # Change the number of products to display as needed
 
     
    

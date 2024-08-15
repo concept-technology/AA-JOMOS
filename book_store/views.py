@@ -1232,14 +1232,14 @@ def search_view(request):
     if min_price:
         try:
             min_price = float(min_price)
-            results = results.filter(price__gte=min_price)
+            results = results.filter(size__price__gte=min_price)
         except ValueError:
             pass  # Handle the case where min_price is not a valid number
     
     if max_price:
         try:
             max_price = float(max_price)
-            results = results.filter(price__lte=max_price)
+            results = results.filter(size__price__lte=max_price)
         except ValueError:
             pass  # Handle the case where max_price is not a valid number
       # Create a dictionary to hold products and their sizes
@@ -1267,7 +1267,7 @@ def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug) if slug else form_slug 
     colors = product.color.all()  # Fetch only the colors associated with the product
     sizes = product.size.all()  # Fetch only the sizes associated with the product
-
+  
     if request.user.is_authenticated:
         in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
         is_in_cart = Cart.objects.filter(product=product, is_ordered=False, user=request.user).exists()

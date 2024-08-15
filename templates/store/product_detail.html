@@ -36,19 +36,19 @@
                                 </a>
                             </figure>
 
-                            {% if product.img_2 %}
+                            {% if  not product.img_2.url == '' %}
                             <figure class="product-separated-itemx">
                                 <img src="{{ product.img_2.url }}" alt="{{product.title}} image">
                             </figure>
                             {% endif %}
 
-                            {% if product.img_3 %}
+                            {% if not product.img_3.url == '' %}
                             <figure class="product-separated-itemx">
                                 <img src="{{ product.img_3.url }}" alt="{{product.title}} image">
                             </figure>
                             {% endif %}
 
-                            {% if product.img_4 %}
+                            {% if not product.img_4.url == '' %}
                             <figure class="product-separated-itemx">
                                 <img src="{{ product.img_4.url }}" alt="{{product.title}} image">
                             </figure>
@@ -91,7 +91,7 @@
 
                             <div class="product-details-action">           
                               
-                            <button class="toggle-wishlist btn-product wishlist btn" >pls you can select size and update quantity to add to cart</button>
+                            <button class="toggle-wishlist btn-product wishlist btn" > select size and update quantity to add to cart</button>
                                 <div class="details-action-wrapper">
                                     <button class="toggle-wishlist btn-product btn-wishlist btn" 
                                     data-add-url="{{ product.get_add_to_wishlist_url }}" 
@@ -112,13 +112,12 @@
                             {% endif %}
                             <div class="details-filter-row details-row-size">
                                 <div class="product-cat">
-                                    {% for size in product.size.all %}
-                                    
+                                    {% for size in product.size.all %}              
                                     {% if size %}                                        
                                     <div class="size-section">
                                         <div class="size-header">
-                                            <h3> size : <small>{{ size.size }}</small></h3>
-                                            <p>buy at the rate of &#8358; {{size.wholesale_price}} per piece when you order above {{product.minimum_order}}</p>
+                                            <h3><small>size: </small>{{ size.size }}</h3>
+                                            <p>buy at the rate of &#8358; {{size.wholesale_price|floatformat:2|intcomma}} per piece when you order above {{product.minimum_order}}</p>
                                             <div class="product-price">
                                                 <p class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</p>
                                                 <p class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</p>
@@ -277,6 +276,100 @@
                     </div><!-- End .col-md-6 -->
                 </div><!-- End .row -->
             </div><!-- End .product-details-top -->
+           
+           {% if related_products %}         
+            <h2 class="title text-center mb-4">You May Also Like</h2><!-- End .title text-center -->
+            <div class="owl-carousel owl-simple carousel-equal-height carousel-with-shadow" data-toggle="owl" 
+                data-owl-options='{
+                    "nav": false, 
+                    "dots": true,
+                    "margin": 20,
+                    "loop": false,
+                    "responsive": {
+                        "0": {
+                            "items":1
+                        },
+                        "480": {
+                            "items":2
+                        },
+                        "768": {
+                            "items":3
+                        },
+                        "992": {
+                            "items":4
+                        },
+                        "1200": {
+                            "items":4,
+                            "nav": true,
+                            "dots": false
+                        }
+                    }
+                }'>
+                
+                {% for product in related_products %}                  
+                <div class="product product-7">
+                    <figure class="product-media">
+                        <span class="product-label label-new">New</span>
+                        <a href="{{product.get_absolute_url}}">
+                            <img src="{{product.img_1.url}}" alt="{{product.title}} image" class="product-image">
+                        </a>
+
+                        <div class="product-action-vertical">
+                            <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
+                            <a href="popup/quickView.html" class="btn-product-icon btn-quickview" title="Quick view"><span>Quick view</span></a>
+                            <a href="#" class="btn-product-icon btn-compare" title="Compare"><span>Compare</span></a>
+                        </div><!-- End .product-action-vertical -->
+
+                        <div class="product-action">
+                            <button href="#" class="btn-product btn-cart"><span>{{product.title}}</span></button>
+                        </div><!-- End .product-action -->
+                    </figure><!-- End .product-media -->
+
+                    <div class="product-body">
+                        <div class="product-cat">
+                            <a href="#">{{product.category.title}}</a>
+                        </div><!-- End .product-cat -->
+                        <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{product.title}}</a></h3><!-- End .product-title -->
+                        <div class="product-price">		
+                            {% for size in product.size.all  %}		
+                            {% if forloop.counter == 1%}
+                            <span class="new-price">&#8358;{{size.discount_price|floatformat:2|intcomma}}</span>
+                            <span class="old-price">&#8358;{{size.price|floatformat:2|intcomma}}</span><br>
+                            <b class="m-2">{{size.size}}</b><br>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                       
+                        <div class="ratings-container">
+                            <style>
+                                #star-ratings {
+                                    font-size: 20px;
+                                    color: gold;
+                                }
+                            </style>
+                            <div id="star-ratings">
+                                <p id="average-rating">
+                                    {{ product.average_rating|floatformat:1 }}
+                                </p>
+                                {% star_rating product.average_rating %}
+                            </div>
+                            <span class="ratings-text">{{ product.count }}</span>
+                        </div><!-- End .ratings-container -->
+                        
+                        <div class="product-nav product-nav-dots">
+                            <a href="#" class="active" style="background: #cc9966;"><span class="sr-only">Color name</span></a>
+                            <a href="#" style="background: #7fc5ed;"><span class="sr-only">Color name</span></a>
+                            <a href="#" style="background: #e8c97a;"><span class="sr-only">Color name</span></a>
+                        </div><!-- End .product-nav -->
+                    </div><!-- End .product-body -->
+                </div><!-- End .product -->
+                {% endfor %}
+
+        
+          
+            </div><!-- End .owl-carosel -->
+           {% endif %}
+
         </div><!-- End .container -->
     </div><!-- End .page-content -->
 </main><!-- End .main -->

@@ -4,6 +4,11 @@
  {% block content %}  
  {% load custom_filters %}
  {% load star_rating %}
+ 
+ {% block title %}
+   A.A JOMOS | Home
+ {% endblock title %}
+    
         <main>           
           <div class="intro-section pt-3 pb-3 mb-2">
                 <div class="container">
@@ -33,7 +38,7 @@
                                     </figure><!-- End .slide-image -->
 
                                     <div class="intro-content">
-                                        <h3 class="intro-subtitle text-primary">welcome</h3><!-- End .h3 intro-subtitle -->
+                                        <h3 class="intro-subtitle text-primary">welcome to</h3><!-- End .h3 intro-subtitle -->
                                         <h1 class="intro-title">
                                             A.A JOMOS 
                                         </h1><!-- End .intro-title -->
@@ -151,13 +156,14 @@
                                     <!-- <h3 class="product-title"><a href="product.html">GoPro - HERO7 Black HD Waterproof Action</a></h3>End .product-title -->
                                   
                                     <h3 class="product-title"><a href="product.html">{{product.title}}</a></h3><!-- End .product-title -->
-                                    <div class="product-price">
-                                        {% if product.discount_price %}
-                                        <span class="new-price" id="new-price">&#8358;{{ product.discount_price|floatformat:2|intcomma }}</span>
-                                        <span class="old-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
-                                        {% else %}
-                                        <span class="new-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
+                                    <div class="product-price">                
+                                        {% for size in product.size.all  %}                     
+                                        {% if forloop.counter == 1 %}
+                                        <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
+                                        <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
                                         {% endif %}
+                                        {% endfor %}
+                                        <span class="out-text">{{product.get_stock_status}} in stock</span>
                                     </div><!-- End .product-price -->
         
                                     <div class="ratings-container">
@@ -235,13 +241,14 @@
                                         <a href="#">{{product.category.title}}</a>
                                     </div><!-- End .product-cat -->
                                     <h3 class="product-title"><a href="product.html">{{product.title}}</a></h3><!-- End .product-title -->
-                                    <div class="product-price">
-                                        {% if product.discount_price %}
-                                        <span class="new-price" id="new-price">&#8358;{{ product.discount_price|floatformat:2|intcomma }}</span>
-                                        <span class="old-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
-                                        {% else %}
-                                        <span class="new-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
+                                    <div class="product-price">                
+                                        {% for size in product.size.all  %}                     
+                                        {% if forloop.counter == 1 %}
+                                        <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
+                                        <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
                                         {% endif %}
+                                        {% endfor %}
+                                        <span class="out-text">{{product.get_stock_status}} in stock</span>
                                     </div><!-- End .product-price -->
         
                                     <div class="ratings-container">
@@ -305,17 +312,16 @@
                                         <a href="{{get_absolute_url}}">{{product.category.title}}</a>
                                     </div><!-- End .product-cat -->
                                     <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{product.title}}</a></h3><!-- End .product-title -->
-                                    <div class="product-price">
-                                        {% if product.discount_price %}
-                                        <span class="new-price" id="new-price">&#8358;{{ product.discount_price|floatformat:2|intcomma }}</span>
-                                        <span class="old-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
-                                        {% else %}
-                                        <span class="new-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
+                                    <div class="product-price">                
+                                        {% for size in product.size.all  %}                     
+                                        {% if forloop.counter == 1 %}
+                                        <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
+                                        <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
                                         {% endif %}
-
+                                        {% endfor %}
                                         <span class="out-text">{{product.get_stock_status}} in stock</span>
-
                                     </div><!-- End .product-price -->
+        
                                     <div class="ratings-container">
                                         <div c>
 
@@ -353,7 +359,7 @@
                                     </div><!-- End .cta-heading -->
                                     
                                     <div class="cta-text">
-                                        <p>Get <span class="text-dark font-weight-normal">FREE DELIVERY* & 5% rewards</span> on <br>every order with Above &#8358; 2000,000</p>
+                                        <p>Get <span class="text-dark font-weight-normal"> above 5% rewards</span> when <br>you order Above the minimum order for each product</p>
                                     </div><!-- End .cta-text -->
                                     <a href="{% url 'store:categories-list'%}" class="btn btn-primary btn-round"><span>Explore </span><i class="icon-long-arrow-right"></i></a>
                                 </div><!-- End .cta-content -->
@@ -376,7 +382,7 @@
                     {% for product in deal_of_the_day %}
                     <div class="row">
                         <div class="col-lg-6 deal-col">
-                            <div class="deal" style="background-image: url('static/assets/images/demos/demo-3/deal/bg-1.jpg');">
+                            <div class="deal" style="background-image: url('{{product.img_1.url}}');">
                                 <div class="deal-top">
                                     <h2>Deal of the Day.</h2>
                                     <h4>Limited quantities. </h4>
@@ -385,17 +391,7 @@
                                 <div class="deal-content">
                                     <h3 class="product-title"><a href="{{product.get_abolute_url}}">{{product.title}}</a></h3><!-- End .product-title -->
 
-                                    <div class="product-price">
-                                        {% if product.discount_price %}
-                                        <span class="new-price" id="new-price">&#8358;{{ product.discount_price|floatformat:2|intcomma }}</span>
-                                        <span class="old-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
-                                        {% else %}
-                                        <span class="new-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
-                                        {% endif %}
-
-                                        <span class="out-text">{{product.get_stock_status}} in stock</span>
-                                    </div><!-- End .product-price -->
-        
+             
                                     <a href="{{product.get_absolute_url}}" class="btn btn-link"><span>Shop Now</span><i class="icon-long-arrow-right"></i></a>
                                 </div><!-- End .deal-content -->
 
@@ -435,19 +431,18 @@
                                                     <a href="#">{{product.category.title}}</a>
                                                 </div><!-- End .product-cat -->
                                                 <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{product.title}}</a></h3><!-- End .product-title -->
-                                                <div class="product-price">
-                                                    {% if product.discount_price %}
-                                                    <span class="new-price" id="new-price">&#8358;{{ product.discount_price|floatformat:2|intcomma }}</span>
-                                                    <span class="old-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
-                                                    {% else %}
-                                                    <span class="new-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
+                                                <div class="product-price">                
+                                                    {% for size in product.size.all  %}                     
+                                                    {% if forloop.counter == 1 %}
+                                                    <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
+                                                    <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
                                                     {% endif %}
-            
+                                                    {% endfor %}
                                                     <span class="out-text">{{product.get_stock_status}} in stock</span>
                                                 </div><!-- End .product-price -->
                     
                                                 <div class="ratings-container">
-                                                    <div class="ratings">
+                                                    <div class="ratingsN">
                                                         <div id="star-ratings">
                                                             <p id="average-rating">
                                                                 {{ product.average_rating|floatformat:1 }}
@@ -596,14 +591,13 @@
                                                 <a href="#">{{product.category.title}}</a>
                                             </div><!-- End .product-cat -->
                                             <h3 class="product-title"><a href="product.html">{{product.title}}</a></h3><!-- End .product-title -->
-                                            <div class="product-price">
-                                                {% if product.discount_price %}
-                                                <span class="new-price" id="new-price">&#8358;{{ product.discount_price|floatformat:2|intcomma }}</span>
-                                                <span class="old-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
-                                                {% else %}
-                                                <span class="new-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
+                                            <div class="product-price">                
+                                                {% for size in product.size.all  %}                     
+                                                {% if forloop.counter == 1 %}
+                                                <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
+                                                <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
                                                 {% endif %}
-        
+                                                {% endfor %}
                                                 <span class="out-text">{{product.get_stock_status}} in stock</span>
                                             </div><!-- End .product-price -->
                 
@@ -671,14 +665,13 @@
                                                 <a href="#">{{product.category.title}}</a>
                                             </div><!-- End .product-cat -->
                                             <h3 class="product-title"><a href="product.html">{{product.title}}</a></h3><!-- End .product-title -->
-                                            <div class="product-price">
-                                                {% if product.discount_price %}
-                                                <span class="new-price" id="new-price">&#8358;{{ product.discount_price|floatformat:2|intcomma }}</span>
-                                                <span class="old-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
-                                                {% else %}
-                                                <span class="new-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
+                                            <div class="product-price">                
+                                                {% for size in product.size.all  %}                     
+                                                {% if forloop.counter == 1 %}
+                                                <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
+                                                <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
                                                 {% endif %}
-        
+                                                {% endfor %}
                                                 <span class="out-text">{{product.get_stock_status}} in stock</span>
                                             </div><!-- End .product-price -->
                 
@@ -784,14 +777,13 @@
                                         <a href="#">{{product.category.title}}</a>
                                     </div><!-- End .product-cat -->
                                     <h3 class="product-title"><a href="product.html">{{product.title}}</a></h3><!-- End .product-title -->
-                                    <div class="product-price">
-                                        {% if product.discount_price %}
-                                        <span class="new-price" id="new-price">&#8358;{{ product.discount_price|floatformat:2|intcomma }}</span>
-                                        <span class="old-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
-                                        {% else %}
-                                        <span class="new-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
+                                    <div class="product-price">                
+                                        {% for size in product.size.all  %}                     
+                                        {% if forloop.counter == 1 %}
+                                        <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
+                                        <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
                                         {% endif %}
-
+                                        {% endfor %}
                                         <span class="out-text">{{product.get_stock_status}} in stock</span>
                                     </div><!-- End .product-price -->
         

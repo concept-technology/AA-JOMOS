@@ -19,7 +19,7 @@
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="{% url 'store:index' %}">Home</a></li>
                         <li class="breadcrumb-item"><a href="">Shop</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">categories</li>
+                        <li class="breadcrumb-item active" aria-current="page">Search</li>
                     </ol>
                 </div>
             </nav>
@@ -116,15 +116,15 @@
                                                     <a href="{{product.get_absolute_url}}">{{item.title}}</a>
                                                 </div><!-- End .product-cat -->
                                                 <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{item.title}}</a></h3><!-- End .product-title -->
-                                                <div class="product-price">
-													
+                                                <div class="product-price">		
 													{% for size in item.sizes  %}		
                                                     {% if forloop.counter == 1%}
                                                     <span class="new-price">&#8358;{{size.discount_price|floatformat:2|intcomma}}</span>
                                                     <span class="old-price">&#8358;{{size.price|floatformat:2|intcomma}}</span>
+													<b>{{size.size}}</b>
                                                     {% endif %}
 													{% endfor %}
-                                                </div><!-- End .product-price -->
+                                                </div>
                                                 <div class="ratings-container">
                                                     <style>
                                                         #star-ratings {
