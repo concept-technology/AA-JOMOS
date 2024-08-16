@@ -131,7 +131,7 @@
                                     </a>
 
                                     <div class="product-action-vertical">
-                                        <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
+                                        <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
                                     </div><!-- End .product-action -->
 
                                     <div class="product-action product-action-dark">
@@ -218,7 +218,7 @@
                                     </a>
 
                                     <div class="product-action-vertical">
-                                        <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
+                                        <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
                                     </div><!-- End .product-action -->
 
                                     <div class="product-action product-action-dark">
@@ -290,14 +290,14 @@
                                     </a>
 
                                     <div class="product-action-vertical">
-                                        <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
+                                        <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
                                     </div><!-- End .product-action -->
 
                                     <div class="product-action product-action-dark">                                        
                                         {% if product.get_stock_status == 0 %}                                           
                                         <span class="product-label label-out">Out of Stock</span>
                                         {%else%}
-                                        <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
+                                        <a href="#" class="btn-product btn-cart" title="view product"><span>{{product.title}}</span></a>
                                         {% endif %}
                                         <a href="popup/quickView.html" class="btn-product btn-quickview" title="Quick view"><span>quick view</span></a>
                                     </div><!-- End .product-action -->
@@ -413,11 +413,11 @@
                                                 </a>
 
                                                 <div class="product-action-vertical">
-                                                    <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
+                                                    <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
                                                 </div><!-- End .product-action -->
 
                                                 <div class="product-action product-action-dark">
-                                                    <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
+                                                    <a href="#" class="btn-productx btn-cartx" title="view product"><span>{{product.title}}</span></a>
                                                     <a href="popup/quickView.html" class="btn-product btn-quickview" title="Quick view"><span>quick view</span></a>
                                                 </div><!-- End .product-action -->
                                             </figure><!-- End .product-media -->
@@ -467,11 +467,11 @@
                                                 </a>
 
                                                 <div class="product-action-vertical">
-                                                    <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
+                                                    <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
                                                 </div><!-- End .product-action -->
 
                                                 <div class="product-action product-action-dark">
-                                                    <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
+                                                    <a href="#" class="btn-productx btn-cartx" title=""><span>{{product.title}}</span></a>
                                                     <a href="popup/quickView.html" class="btn-product btn-quickview" title="Quick view"><span>quick view</span></a>
                                                 </div><!-- End .product-action -->
                                             </figure><!-- End .product-media -->
@@ -573,11 +573,11 @@
                                             </a>
 
                                             <div class="product-action-vertical">
-                                                <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
+                                                <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
                                             </div><!-- End .product-action -->
 
                                             <div class="product-action product-action-dark">
-                                                <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
+                                                <a href="" class="btn-productx "><span>{{product.title}}</span></a>
                                                 <a href="popup/quickView.html" class="btn-product btn-quickview" title="Quick view"><span>quick view</span></a>
                                             </div><!-- End .product-action -->
                                         </figure><!-- End .product-media -->
@@ -586,7 +586,7 @@
                                             <div class="product-cat">
                                                 <a href="#">{{product.category.title}}</a>
                                             </div><!-- End .product-cat -->
-                                            <h3 class="product-title"><a href="product.html">{{product.title}}</a></h3><!-- End .product-title -->
+                                            <h3 class="product-title"><a href="product.get_absolute_url">{{product.title}}</a></h3><!-- End .product-title -->
                                             <div class="product-price">                
                                                 {% for size in product.size.all  %}                     
                                                 {% if forloop.counter == 1 %}

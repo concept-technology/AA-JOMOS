@@ -389,7 +389,6 @@
                 url: url,
                 method: 'GET',
                 success: function(response) {
-                    alert(response.message);
                     if (response.in_wishlist) {
                         $('.toggle-wishlist[data-product-id="' + button.data('product-id') + '"]').text('Remove from Wishlist');
                     } else {

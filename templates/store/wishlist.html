@@ -12,8 +12,8 @@
     <nav aria-label="breadcrumb" class="breadcrumb-nav">
         <div class="container">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                <li class="breadcrumb-item"><a href="#">Shop</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'store:index' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'store:categories-list' %}">Shop</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Wishlist</li>
             </ol>
         </div><!-- End .container -->
@@ -25,7 +25,8 @@
                 <thead>
                     <tr>
                         <th>Product</th>
-                        <th>Price</th>
+                        <!-- <th>Price</th> -->
+                         <th></th>
                         <th>Stock Status</th>
                         <th></th>
                         <th></th>
@@ -69,7 +70,10 @@
                                 Remove from Wishlist
 
                     </button> -->
-                    <button class="btn-wishlist" data-product-id="{{ product.id }}">Remove from Wishlist</button>
+                    <a href="{{item.product.get_remove_from_wishlist_url}}">
+                        <button class="btn-wishlistx">Remove from Wishlist</button>
+                    </a>
+                    
 
                         </td>
                         {% else %}
@@ -103,12 +107,10 @@
   
         
         $(document).ready(function () {
- 
             function deleteFromCart(event) {
                 event.preventDefault();
                 let productSlug = $(this).data('slug');
                 console.log('Delete from cart triggered', { 'slug': productSlug });
-
                 $.ajax({
                     url: "{% url 'store:delete-from-cart' %}",
                     method: 'POST',
@@ -150,28 +152,15 @@
                     cancelButtonText: 'No, keep it'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $.ajax({
-                            url: `/remove-from-wishlist/${product_id}/`,  // Updated URL
-                            method: 'POST',
-                            data: {
-                                'csrfmiddlewaretoken': '{{ csrf_token }}',  // CSRF token
-                            },
-                            success: function(response) {
-                                Swal.fire(
-                                    'Removed!',
-                                    response.message,
-                                    'success'
-                                );
-                                button.text('Add to Wishlist');
-                            },
-                            error: function(xhr, status, error) {
-                                Swal.fire(
-                                    'Error!',
-                                    'There was a problem removing the item from your wishlist.',
-                                    'error'
-                                );
-                            }
+                        response.messages.forEach(function(message) {
+                            Swal.fire({
+                                text: message.message,
+                                icon: message.tags.includes('success') ? 'success' : 'error',
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
                         });
+            
                     }
                 });
             });

@@ -1396,12 +1396,17 @@ def next_product(request, slug):
 
 
 def toggle_wishlist(request, product_id):
+    next_url = request.GET.get('next')  # Define next_url early in the code
     product = get_object_or_404(Product, id=product_id)
     session_key = get_session_key(request) if not request.user.is_authenticated else None
-
+    cart = Cart.objects.filter(product=product)
     if request.user.is_authenticated:
+        if cart.exists:
+            message = "this item is already in cart"           
         wishlist_item, created = Wishlist.objects.get_or_create(user=request.user, product=product)
     else:
+        if cart.exists:
+            message = "this item is already in cart"
         wishlist_item, created = Wishlist.objects.get_or_create(session_key=session_key, product=product)
 
     if created:
@@ -1411,12 +1416,16 @@ def toggle_wishlist(request, product_id):
         wishlist_item.delete()
         message = "Removed from wishlist"
         in_wishlist = False
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
+    return redirect('store:wishlist')
 
     return JsonResponse({'message': message, 'in_wishlist': in_wishlist})
 
 
 def remove_from_wishlist(request, product_id):
     product = get_object_or_404(Product, id=product_id)
+    next_url = request.GET.get('next')  # Define next_url early in the code
     print(f"Attempting to remove product: {product.title}")
     if request.user.is_authenticated:
         affected_rows = Wishlist.objects.filter(user=request.user, product=product).delete()
@@ -1425,8 +1434,10 @@ def remove_from_wishlist(request, product_id):
         affected_rows = Wishlist.objects.filter(session_key=session_key, product=product).delete()
 
     print(f"Deleted rows: {affected_rows}")
-    
-    return JsonResponse({'message': "Removed from wishlist"})
+    messages.success(request, 'deleted')
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
+    return redirect('store:wishlist')
 
 def wishlist(request):
     if request.user.is_authenticated:
@@ -1656,6 +1667,7 @@ def handle_authenticated_user(request, product, size, color, quantity):
             defaults={'quantity': quantity}
         )
         if created:
+            Wishlist.objects.filter(product=product).delete()
             messages.success(request, f"{product.title} added to cart")
         else:
             messages.success(request, f"Updated {product.title} in cart")
@@ -1682,6 +1694,7 @@ def handle_unauthenticated_user(request, product, size, color, quantity):
         defaults={'quantity': quantity}
     )
     if created:
+        Wishlist.objects.filter(product=product).delete()
         messages.success(request, f"{product.title} added to cart")
     else:
         messages.success(request, f"Updated {product.title} in cart")

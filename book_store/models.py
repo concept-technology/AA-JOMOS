@@ -208,7 +208,7 @@ class Product(models.Model):
         return reverse("store:add-to-wishlist", kwargs={"product_id": self.id})
 
     def get_remove_from_wishlist_url(self):
-        return reverse("store:remove-from-wishlist", kwargs={"slug": self.slug})
+        return reverse("store:remove-from-wishlist", kwargs={"product_id": self.pk})
 
   
     def get_related_products(self):
