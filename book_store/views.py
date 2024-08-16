@@ -976,7 +976,6 @@ def verify_address_and_pay(request):
 
     if request.method == 'POST':
         # Generate a unique reference number
-        ref_number = request.POST.get('ref', '') or generate_random_number()
         amount = request.POST['amount']
         email = request.POST['email']
          # Create the Payment object immediately
@@ -985,7 +984,7 @@ def verify_address_and_pay(request):
                 email=email,
                 order=order,
                 user=request.user,
-                ref=ref_number,
+                ref=create_ref_code(),
                 verified=False  # Initially not verified
             )
         payment.save()
@@ -1052,7 +1051,7 @@ def verify_payment(request, ref):
             'Authorization': f'Bearer {paystack_secret_key}',
             'Content-Type': 'application/json',
         }
-        response = requests.get(verify_url, headers=headers, timeout=30)
+        response = requests.get(verify_url, headers=headers, timeout=60)
         if response.status_code == 200:
             data = response.json()
             paystack_amount = data['data']['amount'] / 100  # Convert kobo to naira
@@ -1644,30 +1643,7 @@ class UpdateCartQuantity(View):
         return JsonResponse({'message': 'error'}, status=400)
 
 
-@csrf_exempt
-@require_POST
-def update_cart_color_and_qty(request):
-    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
-        return JsonResponse({'message': 'Error processing your request'}, status=400)
-    try:
-        slug = request.POST.get('slug')
-        size_id = request.POST.get('size')
-        color_id = request.POST.get('color')
-        quantity = int(request.POST.get('quantity', 1))
 
-        product = get_object_or_404(Product, slug=slug)
-        size = get_object_or_404(Size, id=size_id) if size_id else None
-        color = get_object_or_404(Color, id=color_id) if color_id else None
-
-        if request.user.is_authenticated:
-            response_data = handle_authenticated_user(request, product, size, color, quantity)
-        else:
-            response_data = handle_unauthenticated_user(request, product, size, color, quantity)
-
-        return JsonResponse(response_data)
-
-    except Exception as e:
-        return JsonResponse({'message': f'Error: {str(e)}'}, status=400)
 
 def handle_authenticated_user(request, product, size, color, quantity):
     with transaction.atomic():
@@ -1693,28 +1669,27 @@ def handle_authenticated_user(request, product, size, color, quantity):
 def handle_unauthenticated_user(request, product, size, color, quantity):
     session_cart_id = request.session.get('cart_id')
     if not session_cart_id:
-        session_cart_id = str(uuid.uuid4())
-        request.session['cart_id'] = session_cart_id
-        request.session.modified = True
+            session_cart_id = str(uuid.uuid4())
+            request.session['cart_id'] = session_cart_id
+            request.session.modified = True
+    # with transaction.atomic():
+    cart_item, created = Cart.objects.update_or_create(
+        cart_id=session_cart_id,
+        product=product,
+        size=size,
+        color=color,
+        is_ordered=False,
+        defaults={'quantity': quantity}
+    )
+    if created:
+        messages.success(request, f"{product.title} added to cart")
+    else:
+        messages.success(request, f"Updated {product.title} in cart")
 
-    with transaction.atomic():
-        cart_item, created = Cart.objects.update_or_create(
-            cart_id=session_cart_id,
-            product=product,
-            size=size,
-            color=color,
-            is_ordered=False,
-            defaults={'quantity': quantity}
-        )
-        if created:
-            messages.success(request, f"{product.title} added to cart")
-        else:
-            messages.success(request, f"Updated {product.title} in cart")
-
-        adjust_cart_item_price(cart_item, product, size, quantity)
-        update_or_create_order(request, cart_item, session_cart_id)
-        
-        return prepare_response_data(request, cart_item)
+    adjust_cart_item_price(cart_item, product, size, quantity)
+    update_or_create_order(request, cart_item, session_cart_id)
+    
+    return prepare_response_data(request, cart_item)
 
 def adjust_cart_item_price(cart_item, product, size, quantity):
     total_quantity = Cart.objects.filter(
@@ -1779,3 +1754,30 @@ def prepare_response_data(request, cart_item):
         'total_price': total_price,
         'total_order_and_delivery': total_order_and_delivery,
     }
+
+
+
+@csrf_exempt
+@require_POST
+def update_cart_color_and_qty(request):
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+        return JsonResponse({'message': 'Error processing your request'}, status=400)
+    try:
+        slug = request.POST.get('slug')
+        size_id = request.POST.get('size')
+        color_id = request.POST.get('color')
+        quantity = int(request.POST.get('quantity', 1))
+
+        product = get_object_or_404(Product, slug=slug)
+        size = get_object_or_404(Size, id=size_id) if size_id else None
+        color = get_object_or_404(Color, id=color_id) if color_id else None
+
+        if request.user.is_authenticated:
+            response_data = handle_authenticated_user(request, product, size, color, quantity)
+        else:
+            response_data = handle_unauthenticated_user(request, product, size, color, quantity)
+
+        return JsonResponse(response_data)
+
+    except Exception as e:
+        return JsonResponse({'message': f'Error: {str(e)}'}, status=400)

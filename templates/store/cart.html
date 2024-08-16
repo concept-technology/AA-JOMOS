@@ -213,83 +213,43 @@
 
     <script>
 
-        $(document).ready(function() {
-            $('.quantity-input').change(function() {
-                var cartItemId = $(this).data('cart-item-id');
-                var quantity = $('.quantity-input[data-cart-item-id="' + cartItemId + '"]').val();
-
-                $.ajax({
-                    type: 'POST',
-                    url: '{% url "store:update_cart_quantity" %}',
-                    data: {
-                        'cart_item_id': cartItemId,
-                    
-                        'quantity': quantity,
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    success: function(response) {
-                        if (response.messages[0].tags == 'success') {
-                            var totalPrice = response.total_price;
-                            var cartTotal = response.cart_total;
-                            $('tr[data-cart-item-id="' + cartItemId + '"] .total-price').text(totalPrice);
-                            //$('#cart-total').text(cartTotal);
-                            $('#order-total-').text(`₦${response.total_order.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
-                            $('#cart-item-total-'+ cartItemId).text(`₦${response.cart_item_total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
-                            //$('#total_order_and_delivery').text(`₦${response.total_order_and_delivery.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
-                            $('#total-with-delivery').text(response.total_order_and_delivery)
-                            
-                            var totalWithDelivery = response.total_order_and_delivery;
-                            var formattedTotal = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(totalWithDelivery);
-                            $('#total-with-delivery').text(formattedTotal);
+            $(document).ready(function() {
+                $('.quantity-input').change(function() {
+                    var cartItemId = $(this).data('cart-item-id');
+                    var quantity = $('.quantity-input[data-cart-item-id="' + cartItemId + '"]').val();
+                        // Use AJAX for authenticated users
+                        $.ajax({
+                            type: 'POST',
+                            url: '{% url "store:update_cart_quantity" %}',
+                            data: {
+                                'cart_item_id': cartItemId,
+                                'quantity': quantity,
+                                'csrfmiddlewaretoken': '{{ csrf_token }}'
+                            },
+                            success: function(response) {
+                                if (response.messages && response.messages[0].tags == 'success') {
+                                    // Update cart item total price
+                                    $('#cart-item-total-' + cartItemId).text(`₦${response.cart_item_total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
     
-                            console.log(response);
-                        } else {
-                            console.log('Error updating cart');
-                        }
-                    }
+                                    // Update order total
+                                    $('#order-total-').text(`₦${response.total_order.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`);
+    
+                                    // Update total with delivery
+                                    var formattedTotal = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(response.total_order_and_delivery);
+                                    $('#total-with-delivery').text(formattedTotal);
+    
+                                    console.log(response);
+                                } else {
+                                    console.log('Error updating cart');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('AJAX Error: ' + status + error);
+                                location.reload()
+                            }
+                        });
+                  
                 });
-            });
-
- 
-
-       });    
-    
-
-       $(document).ready(function() {
-        $('.quantity-input').change(function() {
-            var cartItemId = $(this).data('cart-item-id');
-            var quantity = $(this).val();
-    
-            $.ajax({
-                type: 'POST',
-                url: '{% url "store:update_cart_quantity" %}',
-                data: {
-                    'cart_item_id': cartItemId,
-                    'quantity': quantity,
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                },
-                success: function(response) {
-                    if (response.messages[0].tags === 'success') {
-                        // Update the total price for the cart item
-                        //$('#total-price-' + cartItemId).text('₦' + response.total_price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
-                        $('#total-price-' + cartItemId).text(response.total_price);
-                        // Update the cart total
-                       // $('#cart-total').text('₦' + response.total_price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
-                        $('#cart-total').text( response.total_price);
-    
-                        console.log(response);
-                        //location.reload()
-                    } else {
-                        console.log('Error updating cart');
-                    }
-                },
-                error: function(response) {
-                    console.log('An error occurred. Please try again.');
-                }
-            });
-        });
-
-
         $('.delete-button').on('click', function() {
             var cartItemId = $(this).data('cart-item-id');
         
@@ -335,7 +295,10 @@
             });
         });       
     });   
-    </script>
+    
+
+
+</script>
 </main>
 
 {% endblock content %}

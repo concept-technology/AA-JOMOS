@@ -19,7 +19,7 @@ urlpatterns = [
     path('login', views.login, name='login'),
     path('update-cart-size/', views.update_cart_color_and_qty, name='update_cart_size'),
     
-# cart seection
+# cart section
      path('cart-count/', views.cart_count_view, name='cart-count'),    
      path('add-to-cart/',views.add_to_cart, name='add-to-cart'),
     #  path('add-to-cart/',views.AddToCartView.as_view(), name='add-to-cart'),

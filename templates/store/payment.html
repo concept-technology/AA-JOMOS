@@ -23,18 +23,15 @@
 
                                     
                                             <div class="summary">
-                                                <h3 class="summary-title">Confirm Your Order</h3><!-- End .summary-title -->
+                                                <h3 class="summary-title">Confirm Your Order  ref: {{order.reference}}</h3><!-- End .summary-title -->
         
                                                 <table class="table table-summary">
                                                     <thead>
                                                         <tr>
                                                             <th>S/No.</th>
-                                                            <th>Item(s)</th>
+                                                            <th>Item(s)</th>      
                                                             <th></th>
-                                                            <th></th>
-                                                            <th>amount</th>
-                                                        
-                                                    
+                                                            <th>amount</th>                                                   
                                                         </tr>
                                                     </thead>
         
@@ -45,11 +42,11 @@
                                                         <tr>
                                                         <td>{{forloop.counter}}</td>
 														<td>                                                            
-                                                                <img src="{{item.product.color.img.url}}" width="50" class="m-1">
+                                                                <img src="{{item.color.img.url}}" width="50" class="m-1">
                                                             </td>
                                                             <td>{{ item.product.title }}</td>
                                                                                                                   
-                                                            <td >  * {{ order.quantity }}</td>
+                                                            <td >  * {{ item.quantity }}</td>
                                                             <td>&#8358;{{ item.get_price_tag|floatformat:2|intcomma}}</td>
                                                             {%endfor%}
                                                           
@@ -62,7 +59,6 @@
                                                         </tr>
                                                         <tr class="summary-total">
                                                             <td>Grand Total: &#8358; {{order.get_total_with_delivery|floatformat:2|intcomma}}</td>
-                                                            <td></td>
                                                             <input type="hidden" name="amount" value="{{order.get_total_with_delivery}}"/>
                                                             <input type="hidden" value="{{user.email}}" name="email" />
              		
