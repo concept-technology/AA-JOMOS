@@ -548,7 +548,6 @@ class CustomerRating(models.Model):
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     review = models.TextField(max_length=500, blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
-
     class Meta:
         unique_together = ('user', 'product')
 
