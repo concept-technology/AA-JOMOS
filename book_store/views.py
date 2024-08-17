@@ -863,7 +863,8 @@ def initiate_payment(request):
             'field_values': request.POST,
             'paystack_pub_key': pk,
             'amount_value': payment.amount_value(),
-            'order': order,        
+            'order': order,
+            'cart':cart,       
         }
         
         return render(request, 'store/make-payment.html', context)

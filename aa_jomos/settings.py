@@ -109,23 +109,23 @@ ALLOWED_HOSTS = []
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-    
-else:        
-    # Database documentation https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-    None
-DATABASES = {
+    DATABASES = {
     'default': dj_database_url.config(
         # Replace this value with your local database's connection string.
         default=DATABASE_URL,
         conn_max_age=600
     )
 }
-# DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'NAME': BASE_DIR / 'db.sqlite3',
-#         }
-#     }
+    
+else:        
+    # Database documentation https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
+    DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 
 
 # Password validation
