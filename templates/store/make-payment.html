@@ -2,98 +2,82 @@
 {{block.super}}
 {% load humanize %}
 {% block content %}
-<div class="container newsletter-popup-container">
-	<div class="row justify-content-center">
-		<div class="col-10">
-				<div class="col-xl-3-5col col-lg-7 banner-content-wrap">
-					<div class="login-page bg-image pt-8 pb-8 pt-md-12 pb-md-12 pt-lg-17 pb-lg-17" style="background-image: url('assets/images/backgrounds/login-bg.jpg')">
-						<div class="container row">
-							<div class="form-box">
-								<script src="https://js.paystack.co/v1/inline.js"></script>
-<script>
-    $(document).ready(function() {
-        // Trigger SweetAlert when the page loads
-        Swal.fire({
-            title: `You are about to pay the sum of ₦ {{payment.amount}} for your order`,
-            text: "You won't be able to revert this order",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, pay'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                payWithPaystack();
-            }
-        });
+<div class="container row justify-content-center">
+    <div class="form-box col-12 col-md-8 col-lg-6">
+        <script src="https://js.paystack.co/v1/inline.js"></script>
+        <script>
+            $(document).ready(function() {
+                // Trigger SweetAlert when the page loads
+                Swal.fire({
+                    title: `You are about to pay the sum of ₦ {{payment.amount}} for your order`,
+                    text: "You won't be able to revert this order",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, pay'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        payWithPaystack();
+                    }
+                });
 
-        function payWithPaystack() {
-            let currency = "NGN";
-            let plan = "";
-            let ref = "{{ payment.ref }}";
-            let amount = "{{ payment.amount }}";
-            let obj = {
-                key: "{{ paystack_pub_key }}",
-                email: "{{ payment.email }}",
-                amount: "{{ amount_value }}",
-                ref: ref,
-                callback: function(response) {
-                    showLoadingIndicator();
-				window.location.href = "{% url 'store:verify_payment' payment.ref %}"
-                },
-            };
-            if (Boolean(currency)) {
-                obj.currency = currency.toUpperCase();
-            }
-            if (Boolean(plan)) {
-                obj.plan = plan;
-            }
+                function payWithPaystack() {
+                    let currency = "NGN";
+                    let plan = "";
+                    let ref = "{{ payment.ref }}";
+                    let amount = "{{ payment.amount }}";
+                    let obj = {
+                        key: "{{ paystack_pub_key }}",
+                        email: "{{ payment.email }}",
+                        amount: "{{ amount_value }}",
+                        ref: ref,
+                        callback: function(response) {
+                            showLoadingIndicator();
+                            window.location.href = "{% url 'store:verify_payment' payment.ref %}";
+                        },
+                    };
+                    if (Boolean(currency)) {
+                        obj.currency = currency.toUpperCase();
+                    }
+                    if (Boolean(plan)) {
+                        obj.plan = plan;
+                    }
 
-            var handler = PaystackPop.setup(obj);
-            handler.openIframe();
-        }
+                    var handler = PaystackPop.setup(obj);
+                    handler.openIframe();
+                }
 
-        function showLoadingIndicator() {
-            // Disable all buttons to prevent further clicks
-            var buttons = document.querySelectorAll('button');
-            buttons.forEach(function(button) {
-                button.disabled = true;
+                function showLoadingIndicator() {
+                    // Disable all buttons to prevent further clicks
+                    var buttons = document.querySelectorAll('button');
+                    buttons.forEach(function(button) {
+                        button.disabled = true;
+                    });
+
+                    // Show loading indicator (you can customize this based on your UI)
+                    var loader = document.getElementById('loading-indicator');
+                    if (loader) {
+                        loader.style.display = 'block';
+                    }
+                }
+
+                function hideLoadingIndicator() {
+                    // Enable all buttons
+                    var buttons = document.querySelectorAll('button');
+                    buttons.forEach(function(button) {
+                        button.disabled = false;
+                    });
+
+                    // Hide loading indicator
+                    var loader = document.getElementById('loading-indicator');
+                    if (loader) {
+                        loader.style.display = 'none';
+                    }
+                }
+
             });
-
-            // Show loading indicator (you can customize this based on your UI)
-            var loader = document.getElementById('loading-indicator');
-            if (loader) {
-                loader.style.display = 'block';
-            }
-        }
-
-        function hideLoadingIndicator() {
-            // Enable all buttons
-            var buttons = document.querySelectorAll('button');
-            buttons.forEach(function(button) {
-                button.disabled = false;
-            });
-
-            // Hide loading indicator
-            var loader = document.getElementById('loading-indicator');
-            if (loader) {
-                loader.style.display = 'none';
-            }
-        }
-
-    });
-</script>										
-							</div><!-- End .form-box -->
-						</div><!-- End .container -->
-					</div><!-- End .login-page section-bg -->
-				</div>
-			
-			</div>
-		</div>
-	</div>
-</div>
-
+        </script>
+    </div><!-- End .form-box -->
+</div><!-- End .container -->
 {% endblock content %}
-
-
-this is my html template
