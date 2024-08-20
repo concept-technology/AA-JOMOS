@@ -151,7 +151,7 @@
                                     </div><!-- End .product-cat -->
                                     <!-- <h3 class="product-title"><a href="product.html">GoPro - HERO7 Black HD Waterproof Action</a></h3>End .product-title -->
                                   
-                                    <h3 class="product-title"><a href="product.html">{{product.title}}</a></h3><!-- End .product-title -->
+                                    <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{product.title}}</a></h3><!-- End .product-title -->
                                     <div class="product-price">                
                                         {% for size in product.size.all  %}                     
                                         {% if forloop.counter == 1 %}
