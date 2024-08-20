@@ -1045,7 +1045,6 @@ def verify_address_and_pay(request):
 def verify_payment(request, ref):
     try:
         order = Order.objects.get(is_ordered=False, user=request.user)
-        stock = Stock.objects.filter(product=order.product.all().get('product'))
         payment = Payment.objects.get(ref=ref)
         paystack_secret_key = settings.PAYSTACK_SECRET_KEY
         verify_url = f'https://api.paystack.co/transaction/verify/{ref}'
