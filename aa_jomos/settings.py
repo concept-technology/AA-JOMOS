@@ -103,29 +103,6 @@ WSGI_APPLICATION = 'aa_jomos.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# DATABASE_URL = os.environ.get('DATABASE_URL',default='postgresql://aa_jomos_user:QJcYkSUwbxlsHiVgSMevStIJXk9fT91M@dpg-cqvuk4tds78s73ftd610-a.oregon-postgres.render.com/aa_jomos')
-# ALLOWED_HOSTS = []
-
-# RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-# if RENDER_EXTERNAL_HOSTNAME:
-#     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-#     DATABASES = {
-#     'default': dj_database_url.config(
-#         # Replace this value with your local database's connection string.
-#         default=DATABASE_URL,
-#         conn_max_age=600
-#     )
-# }
-    
-# else:        
-    # Database documentation https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-    # DATABASES = {
-    #         'default': {
-    #             'ENGINE': 'django.db.backends.sqlite3',
-    #             'NAME': BASE_DIR / 'db.sqlite3',
-    #         }
-    #     }
 
 DATABASES = {
     'default': {
