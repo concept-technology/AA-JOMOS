@@ -115,15 +115,7 @@ class Category(models.Model):
 
     
 
-class Features(models.Model):
-    feature1 =  models.CharField(max_length=255, blank=True,null=True)
-    feature2 =  models.CharField(max_length=255,blank=True,null=True)
-    feature3 =  models.CharField(max_length=255,blank=True,null=True)
-    feature4 =  models.CharField(max_length=255,blank=True,null=True)
-    feature5 =  models.CharField(max_length=255,blank=True,null=True)
-    def __str__(self) -> str:
-        return self.feature1
-    
+
  
 class Size(models.Model):
     size = models.CharField(max_length=10, unique=True)
@@ -151,6 +143,27 @@ class Product(models.Model):
     title = models.CharField(max_length=255)
     description= models.TextField(max_length=1000)
     additional_information= models.TextField(max_length=1000, default='')
+    feature1 =  models.CharField(max_length=255, blank=True,null=True)
+    feature2 =  models.CharField(max_length=255,blank=True,null=True)
+    feature3 =  models.CharField(max_length=255,blank=True,null=True)
+    feature4 =  models.CharField(max_length=255,blank=True,null=True)
+    feature5 =  models.CharField(max_length=255,blank=True,null=True)
+    feature6 =  models.CharField(max_length=255,blank=True,null=True)
+    feature7 =  models.CharField(max_length=255,blank=True,null=True)
+    feature8 =  models.CharField(max_length=255,blank=True,null=True)
+    feature8 =  models.CharField(max_length=255,blank=True,null=True)
+    feature10 =  models.CharField(max_length=255,blank=True,null=True)
+    specification1 =  models.CharField(max_length=255,blank=True,null=True)
+    specification2 =  models.CharField(max_length=255,blank=True,null=True)
+    specification3 =  models.CharField(max_length=255,blank=True,null=True)
+    specification4 =  models.CharField(max_length=255,blank=True,null=True)
+    specification5 =  models.CharField(max_length=255,blank=True,null=True)
+    specification6 =  models.CharField(max_length=255,blank=True,null=True)
+    specification7 =  models.CharField(max_length=255,blank=True,null=True)
+    specification8 =  models.CharField(max_length=255,blank=True,null=True)
+    specification9 =  models.CharField(max_length=255,blank=True,null=True)
+    specification10 =  models.CharField(max_length=255,blank=True,null=True)
+    
     size = models.ManyToManyField(Size, related_name='products', through='ProductSizeColor') 
     img_1  = models.ImageField(upload_to='static/media/img', default='img')
     img_2  = models.ImageField(upload_to='static/media/img', default='img', blank=True, null=True)
@@ -158,7 +171,6 @@ class Product(models.Model):
     img_4  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
     color = models.ManyToManyField(Color, through='ProductSizeColor')
     label = models.CharField(choices=label_choices, max_length=255, default='', blank=True)
-    features = models.ForeignKey(Features, on_delete=models.CASCADE, blank=True,null=True)
     category = models.ForeignKey(Category, default='', on_delete=models.CASCADE)
     gender= models.CharField(max_length=10, choices=gender_choices, default='female', blank=True, null=True)
     display_on_home_page =models.BooleanField(default=False)
