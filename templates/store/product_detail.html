@@ -112,8 +112,8 @@
                             {% endif %}
                             <div class="details-filter-row details-row-size">
                                 <div class="product-cat">
-                                    {% for size in product.size.all %}              
-                                    {% if size %}                                        
+                                    {% for size in product.size.all %}
+                                    {% if size %}
                                     <div class="size-section">
                                         <div class="size-header">
                                             <h3><small>size: </small>{{ size.size }}</h3>
@@ -133,8 +133,11 @@
                                                     <div class="product-cat">
                                                         <span>{{ product_color.color.name }}</span>
                                                     </div>
-                                                    <div class="quantity-section" style="width: 50px;">
-                                                        <input type="number" min="0" max="{{ product_color.color.quantity }}" class="quantity" data-size="{{ size.id }}" data-color="{{ product_color.color.id }}" placeholder="quantity" >
+                                                    <div class="quantity-section d-flex align-items-center">
+                                                        <!-- <button class="minus-btn btn btn-secondary" data-size="{{ size.id }}" data-color="{{ product_color.color.id }}">-</button> -->
+                                                        <input type="number" min="0" max="{{ product_color.color.quantity }}" class="quantity text-center" data-size="{{ size.id }}" data-color="{{ product_color.color.id }}" value="0" style="width: 60px;">
+                                                        <button class="quantity-btn plus-btn btn btn-product" data-size="{{ size.id }}" data-color="{{ product_color.color.id }}" data-action="increase">add to cart</button>
+                                                        <!-- <button class=" btn quantity btn-product btn-cart" data-size="{{ size.id }}" data-color="{{ product_color.color.id }}"></button> -->
                                                     </div>
                                                 </div>
                                             </div>
@@ -142,11 +145,11 @@
                                         </div>
                                     </div>
                                     {% else %}
-                                    <H3>out of stock</H3>
+                                    <h3>Out of Stock</h3>
                                     {% endif %}
-
                                     {% endfor %}
-                                </div><!-- End .product-cat -->
+                                </div>
+                                
                             </div>
                             
                             <div class="product-details-footer">
@@ -195,26 +198,46 @@
                                             <div class="product-desc-content">
                                                 <p>{{ product.additional_information }}</p>
                             
-                                                {% if product.features %}
+                                                {% if product. %}
                                                 <h3>Features</h3>
                                                 <ul>
-                                                    {% if product.features.feature1 %}
-                                                    <li>{{ product.features.feature1 }}</li>
+                                                    {% if product.feature1 %}
+                                                    <li>{{ product.feature1 }}</li>
                                                     {% endif %}
-                                                    {% if product.features.feature2 %}
-                                                    <li>{{ product.features.feature2 }}</li>
+                                                    {% if product.feature2 %}
+                                                    <li>{{ product.feature2 }}</li>
                                                     {% endif %}
-                                                    {% if product.features.feature3 %}
-                                                    <li>{{ product.features.feature3 }}</li>
+                                                    {% if product.feature3 %}
+                                                    <li>{{ product.feature3 }}</li>
                                                     {% endif %}
-                                                    {% if product.features.feature4 %}
-                                                    <li>{{ product.features.feature4 }}</li>
+                                                    {% if product.feature4 %}
+                                                    <li>{{ product.feature4 }}</li>
                                                     {% endif %}
-                                                    {% if product.features.feature5 %}
-                                                    <li>{{ product.features.feature5 }}</li>
+                                                    {% if product.feature5 %}
+                                                    <li>{{ product.feature5 }}</li>
+                                                    {% endif %}
+                                                    {% endif %}
+                                                    {% if product.feature5 %}
+                                                    <li>{{ product.feature5 }}</li>
+                                                    {% endif %} 
+                                                    {% if product.feature7 %}
+                                                    <li>{{ product.feature7 }}</li>
+                                                    {% endif %}
+
+                                             
+                                                    {% if product.feature8 %}
+                                                    <li>{{ product.feature8 }}</li>
+                                                    {% endif %}
+                                               
+                                                    {% if product.feature9 %}
+                                                    <li>{{ product.feature9 }}</li>
+                                                    {% endif %}
+                                              
+                                                    {% if product.feature10 %}
+                                                    <li>{{ product.feature10 }}</li>
                                                     {% endif %}
                                                 </ul>
-                                                {% endif %}
+                                             
                                             </div><!-- End .product-desc-content -->
                                         </div><!-- End .card-body -->
                                     </div><!-- End .card-body -->
@@ -398,42 +421,81 @@
             });
         });
     });
-
-
-
-        
-        $(document).ready(function() {
-            $('.quantity').on('change', function() {
-                const size = $(this).data('size');
-                const color = $(this).data('color');
-                const quantity = $(this).val();
-                const slug = '{{ product.slug }}';
+    $(document).ready(function() {
+        // Handle plus and minus button clicks
+        $('.quantity-btn').on('click', function() {
+            const action = $(this).data('action');
+            const quantityInput = $(this).siblings('.quantity');
+            let quantity = parseInt(quantityInput.val());
+            const maxQuantity = parseInt(quantityInput.attr('max'));
+            const size = $(this).data('size');
+            const color = $(this).data('color');
+            const slug = '{{ product.slug }}';
     
-                $.ajax({
-                    type: 'POST',
-                    url: '{% url "store:update_cart_size"  %}',
-                    data: {
-                        'slug': slug,
-                        'size': size,
-                        'color': color,
-                        'quantity': quantity,
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            console.log('Cart updated successfully');
-                        } else {
-                            alert('Failed to update cart');
-                        }
+            // Increase or decrease the quantity
+            if (action === 'increase' && quantity < maxQuantity) {
+                quantity += 1;
+            } else if (action === 'decrease' && quantity > 0) {
+                quantity -= 1;
+            }
+    
+            // Update the input field value
+            quantityInput.val(quantity);
+    
+            // Trigger the AJAX request to update the cart
+            $.ajax({
+                type: 'POST',
+                url: '{% url "store:update_cart_size"  %}',
+                data: {
+                    'slug': slug,
+                    'size': size,
+                    'color': color,
+                    'quantity': quantity,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        console.log('Cart updated successfully');
+                    } else {
+                        alert('Failed to update cart');
                     }
-                });
+                },
+                error: function(xhr) {
+                    alert('An error occurred while updating the cart: ' + xhr.responseText);
+                }
             });
-    
-    
-    
-            
         });
     
+        // Handle direct input field change
+        $('.quantity').on('change', function() {
+            const quantity = $(this).val();
+            const size = $(this).data('size');
+            const color = $(this).data('color');
+            const slug = '{{ product.slug }}'
+            $.ajax({
+                type: 'POST',
+                url: '{% url "store:update_cart_size"  %}',
+                data: {
+                    'slug': slug,
+                    'size': size,
+                    'color': color,
+                    'quantity': quantity,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        console.log('Cart updated successfully');
+                    } else {
+                        alert('Failed to update cart');
+                    }
+                },
+                error: function(xhr) {
+                    console.log('An error occurred while updating the cart: ' + xhr.responseText);
+                }
+            });
+        });
+    });
+                
 </script>
    
 

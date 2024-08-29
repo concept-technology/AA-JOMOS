@@ -103,9 +103,9 @@ class Category(models.Model):
     img  = models.ImageField(upload_to='static/media/img', default='img', blank=True,null=True)
     
     
-    def save(self, *args, **kwargs):
-        self.slug = self.slug 
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     self.slug = self.slug 
+    #     super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f'{self.title}'
@@ -483,7 +483,13 @@ class Order(models.Model):
     abuja_location = models.ForeignKey(AbujaLocation, on_delete=models.SET_NULL, blank=True, null=True)
     cart_id = models.UUIDField(null=True, blank=True)
     session_key = models.CharField(max_length=40, null=True, blank=True)
-    
+    invoice_number = models.CharField(max_length=50, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # Generate invoice number if not set
+        if not self.invoice_number:
+            self.invoice_number = f"INV-{uuid.uuid4().hex[:8].upper()}"
+        super(Order, self).save(*args, **kwargs)
     def __str__(self):
         user =self.user
         session_key = self.session_key

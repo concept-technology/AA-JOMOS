@@ -1046,6 +1046,7 @@ def verify_payment(request, ref):
     try:
         order = Order.objects.get(is_ordered=False, user=request.user)
         payment = Payment.objects.get(ref=ref)
+        address = CustomersAddress.objects.get(user=request.user)
         paystack_secret_key = settings.PAYSTACK_SECRET_KEY
         verify_url = f'https://api.paystack.co/transaction/verify/{ref}'
         headers = {
@@ -1061,7 +1062,6 @@ def verify_payment(request, ref):
             if paystack_amount == expected_amount and data['data']['status'] == 'success':
                 payment.verified = True
                 payment.save()
-
                 # Mark order products as ordered
                 order_products = order.product.all()
                 order_products.update(is_ordered=True)
@@ -1081,8 +1081,11 @@ def verify_payment(request, ref):
                     # Add more fields as needed
                 )
                 invoice.save()
-                # Optionally, you can save additional invoice details here
-                
+                # save additional invoice details
+                order.invoice_number =  invoice.invoice_number
+                order.Payment.ref = payment.ref
+                order.save()
+                order.shipping_address =address
                 return render(request,'store/success.html', {'invoice': invoice, 'order': order, 'payment': payment})
             else:
                 return render(request, 'store/payment_not_successful.html')
@@ -1682,9 +1685,9 @@ def handle_authenticated_user(request, product, size, color, quantity):
 def handle_unauthenticated_user(request, product, size, color, quantity):
     session_cart_id = request.session.get('cart_id')
     if not session_cart_id:
-            session_cart_id = str(uuid.uuid4())
-            request.session['cart_id'] = session_cart_id
-            request.session.modified = True
+        session_cart_id = str(uuid.uuid4())
+        request.session['cart_id'] = session_cart_id
+        request.session.modified = True
     # with transaction.atomic():
     cart_item, created = Cart.objects.update_or_create(
         cart_id=session_cart_id,
@@ -1709,7 +1712,8 @@ def adjust_cart_item_price(cart_item, product, size, quantity):
     total_quantity = Cart.objects.filter(
         user=cart_item.user,
         product=product,
-        is_ordered=False
+        is_ordered=False,
+        quantity=quantity
     ).aggregate(total_quantity=Sum('quantity'))['total_quantity']
 
     if total_quantity >= product.minimum_order:
@@ -1720,7 +1724,7 @@ def adjust_cart_item_price(cart_item, product, size, quantity):
 
 def update_or_create_order(request, cart_item, cart_id=None):
     order, created = Order.objects.get_or_create(
-        user=request.user if request.user.is_authenticated else None,
+        user=request.user,
         cart_id=cart_id,
         is_ordered=False,
         defaults={
@@ -1795,3 +1799,4 @@ def update_cart_color_and_qty(request):
 
     except Exception as e:
         return JsonResponse({'message': f'Error: {str(e)}'}, status=400)
+
