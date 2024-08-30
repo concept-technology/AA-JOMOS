@@ -421,6 +421,7 @@
             });
         });
     });
+
     $(document).ready(function() {
         // Handle plus and minus button clicks
         $('.quantity-btn').on('click', function() {
@@ -431,6 +432,7 @@
             const size = $(this).data('size');
             const color = $(this).data('color');
             const slug = '{{ product.slug }}';
+            const csrfToken = '{{ csrf_token }}';
     
             // Increase or decrease the quantity
             if (action === 'increase' && quantity < maxQuantity) {
@@ -451,27 +453,39 @@
                     'size': size,
                     'color': color,
                     'quantity': quantity,
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    'csrfmiddlewaretoken': csrfToken
                 },
                 success: function(response) {
                     if (response.success) {
-                        console.log('Cart updated successfully');
+                        console.log('Cart updated successfully', response);
+                        // Update the UI elements if needed, like cart total, etc.
                     } else {
-                        alert('Failed to update cart');
+                        console.log('Failed to update cart', response);
+                        alert('Failed to update cart: ' + response.message);
                     }
                 },
                 error: function(xhr) {
-                    alert('An error occurred while updating the cart: ' + xhr.responseText);
+                    console.log('An error occurred while updating the cart:', xhr.responseText);
+                    alert('An error occurred while updating the cart.');
                 }
             });
         });
     
         // Handle direct input field change
         $('.quantity').on('change', function() {
-            const quantity = $(this).val();
+            let quantity = parseInt($(this).val());
             const size = $(this).data('size');
             const color = $(this).data('color');
-            const slug = '{{ product.slug }}'
+            const slug = '{{ product.slug }}';
+            const csrfToken = '{{ csrf_token }}';
+    
+            // Prevent invalid quantity values
+            if (isNaN(quantity) || quantity <= 0) {
+                quantity = 1;
+                $(this).val(quantity);
+            }
+    
+            // Trigger the AJAX request to update the cart
             $.ajax({
                 type: 'POST',
                 url: '{% url "store:update_cart_size"  %}',
@@ -480,22 +494,24 @@
                     'size': size,
                     'color': color,
                     'quantity': quantity,
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    'csrfmiddlewaretoken': csrfToken
                 },
                 success: function(response) {
                     if (response.success) {
-                        console.log('Cart updated successfully');
+                        console.log('Cart updated successfully', response);
                     } else {
-                        alert('Failed to update cart');
+                        console.log('Failed to update cart', response);
+                        alert('Failed to update cart: ' + response.message);
                     }
                 },
                 error: function(xhr) {
-                    console.log('An error occurred while updating the cart: ' + xhr.responseText);
+                    console.log('An error occurred while updating the cart:', xhr.responseText);
+                    alert('An error occurred while updating the cart.');
                 }
             });
         });
     });
-                
+                    
 </script>
    
 

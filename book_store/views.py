@@ -407,9 +407,9 @@ class CartView(View):
                     session_cart_id = str(uuid.uuid4())
                     request.session['cart_id'] = session_cart_id
 
-                cart_items = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False)
-                order = Order.objects.filter(cart_id=session_cart_id, is_ordered=False).first()
-
+                cart_items = Cart.objects.filter(session_key=session_cart_id, is_ordered=False)
+                order = Order.objects.filter(session_key=session_cart_id, is_ordered=False).first()
+                print('amount',cart_items.count())
             coupons = Coupon.objects.filter(active=True)
             locations = AbujaLocation.objects.all()
             
@@ -434,9 +434,7 @@ class CartView(View):
                 'total_with_delivery': order.get_total_with_delivery() if order else 0,
                 # 'minimum_order':max_value,
             }
-
             return render(request, 'store/cart.html', context)
-
         except ObjectDoesNotExist:
             messages.error(request, 'You do not have an active order.')
             return redirect('store:categories')
@@ -567,7 +565,7 @@ def cart_count_view(request):
     else:
         session_cart_id = request.session.get('cart_id', None)
         if session_cart_id:
-            cart_count = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False).count()
+            cart_count = Cart.objects.filter(session_key=session_cart_id, is_ordered=False).count()
         else:
             cart_count = 0
     return JsonResponse({'cart_count': cart_count})
@@ -625,7 +623,7 @@ def add_to_cart(request):
                 session_cart_id = str(uuid.uuid4())
                 request.session['cart_id'] = session_cart_id
                 request.session.modified = True
-                logger.info(f"New session cart_id created: {session_cart_id}")
+                print(f"New session cart_id created: {session_cart_id}")
             
             cart_qs = Cart.objects.filter(cart_id=session_cart_id, product=product, is_ordered=False)
             if cart_qs.exists():
@@ -1618,16 +1616,20 @@ class UpdateCartQuantity(View):
             if request.user.is_authenticated:
                 cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
             else:
-                cart_items = Cart.objects.filter(session_key=request.session.session_key, is_ordered=False)
+                session_cart_id = request.session.get('cart_id', None)           
+                if not session_cart_id:
+                    session_cart_id = str(uuid.uuid4())
+                    request.session['cart_id'] = session_cart_id
+                    request.session.modified = True
+                cart_items = Cart.objects.filter(session_key=session_cart_id, is_ordered=False)
+                product_total_quantity = cart_items.filter(product=cart_item.product).aggregate(total_qty=Sum('quantity'))['total_qty']
+                product_total_quantity = product_total_quantity if product_total_quantity is not None else 0
 
-            product_total_quantity = cart_items.filter(product=cart_item.product).aggregate(total_qty=Sum('quantity'))['total_qty']
-            product_total_quantity = product_total_quantity if product_total_quantity is not None else 0
-
-            # Determine if the wholesale price should be used
-            if product_total_quantity >= cart_item.product.minimum_order:
-                price_per_unit = cart_item.size.wholesale_price
-            else:
-                price_per_unit = cart_item.size.discount_price if cart_item.size.discount_price else cart_item.size.price
+                # Determine if the wholesale price should be used
+                if product_total_quantity >= cart_item.product.minimum_order:
+                    price_per_unit = cart_item.size.wholesale_price
+                else:
+                    price_per_unit = cart_item.size.discount_price if cart_item.size.discount_price else cart_item.size.price
 
             # Calculate size and product price
             cart_item_total = price_per_unit * quantity
@@ -1640,7 +1642,7 @@ class UpdateCartQuantity(View):
                 if request.user.is_authenticated:
                     order_qs = Order.objects.get(user=request.user, is_ordered=False)
                 else:
-                    order_qs = Order.objects.get(session_key=request.session.session_key, is_ordered=False)
+                    order_qs = Order.objects.get(session_key=session_cart_id, is_ordered=False)
                 total_order_and_delivery = order_qs.get_total_with_delivery()
             except Order.DoesNotExist:
                 return JsonResponse({'message': 'Order does not exist'}, status=404)
@@ -1682,31 +1684,56 @@ def handle_authenticated_user(request, product, size, color, quantity):
 
         return prepare_response_data(request, cart_item)
 
-def handle_unauthenticated_user(request, product, size, color, quantity):
-    session_cart_id = request.session.get('cart_id')
-    if not session_cart_id:
-        session_cart_id = str(uuid.uuid4())
-        request.session['cart_id'] = session_cart_id
-        request.session.modified = True
-    # with transaction.atomic():
-    cart_item, created = Cart.objects.update_or_create(
-        cart_id=session_cart_id,
-        product=product,
-        size=size,
-        color=color,
-        is_ordered=False,
-        defaults={'quantity': quantity}
-    )
-    if created:
-        Wishlist.objects.filter(product=product).delete()
-        messages.success(request, f"{product.title} added to cart")
-    else:
-        messages.success(request, f"Updated {product.title} in cart")
+import logging
 
-    adjust_cart_item_price(cart_item, product, size, quantity)
-    update_or_create_order(request, cart_item, session_cart_id)
-    
-    return prepare_response_data(request, cart_item)
+logger = logging.getLogger(__name__)
+
+
+def handle_unauthenticated_user(request, product, size, color, quantity):
+    try:
+        # Ensure session exists
+        if not request.session.session_key:
+            print("Session key missing, creating session.")
+            request.session.create()
+        
+        session_cart_id = request.session.get('cart_id', None)
+
+        # Check if session_cart_id exists or generate a new one
+        if not session_cart_id:
+            session_cart_id = str(uuid.uuid4())
+            request.session['cart_id'] = session_cart_id
+            request.session.modified = True
+            print(f"New session_cart_id created: {session_cart_id}")
+        else:
+            print(f"Using existing session_cart_id: {session_cart_id}")
+
+        print(f"Session Key: {request.session.session_key}, Cart ID: {session_cart_id}")
+
+        # Try creating or updating the cart item
+        cart_item, created = Cart.objects.update_or_create(
+            session_key=session_cart_id,
+            product=product,
+            size=size,
+            color=color,
+            is_ordered=False,
+            defaults={'quantity': quantity}
+        )
+
+        if created:
+            print(f"Cart item created for anonymous user: {cart_item.id}")
+        else:
+            print(f"Cart item updated for anonymous user: {cart_item.id}")
+
+        adjust_cart_item_price(cart_item, product, size, quantity)
+        update_or_create_order(request, cart_item, session_cart_id)
+
+        return prepare_response_data(request, cart_item)
+
+    except Exception as e:
+        logger.error(f"Error creating/updating cart item: {str(e)}")
+        return {'message': f'Error: {str(e)}'}
+
+
 
 def adjust_cart_item_price(cart_item, product, size, quantity):
     total_quantity = Cart.objects.filter(
@@ -1722,64 +1749,79 @@ def adjust_cart_item_price(cart_item, product, size, quantity):
         cart_item.price = size.discount_price
     cart_item.save()
 
+
 def update_or_create_order(request, cart_item, cart_id=None):
-    order, created = Order.objects.get_or_create(
-        user=request.user,
-        cart_id=cart_id,
-        is_ordered=False,
-        defaults={
-            'reference': f'order-{secrets.token_hex(8)}',
-            'date': timezone.now()
-        }
-    )
+    if request.user.is_authenticated:
+        order, created = Order.objects.get_or_create(
+            user=request.user,
+            is_ordered=False,
+            defaults={
+                'reference': f'order-{secrets.token_hex(8)}',
+                'date': timezone.now()
+            }
+        )
+    else:
+        order, created = Order.objects.get_or_create(
+            session_key=cart_id,
+            is_ordered=False,
+            defaults={
+                'reference': f'order-{secrets.token_hex(8)}',
+                'date': timezone.now()
+            }
+        )
+    
     if not order.product.filter(id=cart_item.id).exists():
         order.product.add(cart_item)
     order.save()
 
+
+
+
+
 def prepare_response_data(request, cart_item):
-    storage = get_messages(request)
-    response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
-
-    cart_count = Cart.objects.filter(
-        user=request.user if request.user.is_authenticated else None,
-        cart_id=request.session.get('cart_id'),
-        is_ordered=False
-    ).count()
-
-    cart_items = Cart.objects.filter(
-        user=request.user if request.user.is_authenticated else None,
-        cart_id=request.session.get('cart_id'),
-        is_ordered=False
-    )
-    cart_total = sum(
-        item.size.discount_price * item.quantity if item.quantity < item.product.minimum_order else item.size.wholesale_price * item.quantity
-        for item in cart_items
-    )
-
-    total_price = sum(item.get_total_price() for item in cart_items)
-
     try:
-        order_qs = Order.objects.get(user=request.user, is_ordered=False)
-        total_order_and_delivery = order_qs.get_total_with_delivery()
-    except Order.DoesNotExist:
+        session_cart_id = request.session.get('cart_id')
+        print(f"Preparing response data for cart ID: {session_cart_id}")
+
+        cart_items = Cart.objects.filter(
+            session_key=session_cart_id if not request.user.is_authenticated else None,
+            user=request.user if request.user.is_authenticated else None,
+            is_ordered=False
+        )
+
+        cart_total = sum(item.get_total_price() for item in cart_items)
         total_order_and_delivery = None
 
-    return {
-        'success': True,
-        'cart_count': cart_count,
-        'messages': response_messages,
-        'cart_total': cart_total,
-        'total_price': total_price,
-        'total_order_and_delivery': total_order_and_delivery,
-    }
+        try:
+            if request.user.is_authenticated:
+                order = Order.objects.get(user=request.user, is_ordered=False)
+            else:
+                order = Order.objects.get(session_key=session_cart_id, is_ordered=False)
+            
+            total_order_and_delivery = order.get_total_with_delivery()
+        except Order.DoesNotExist:
+            total_order_and_delivery = None
 
+        print(f"Cart Total: {cart_total}, Total Order + Delivery: {total_order_and_delivery}")
 
+        return {
+            'success': True,
+            'cart_total': float(cart_total),
+            'total_order_and_delivery': float(total_order_and_delivery) if total_order_and_delivery else None,
+            'cart_item_id': cart_item.id,
+            'messages': [{'message': 'Cart updated successfully', 'tags': 'success'}]
+        }
+
+    except Exception as e:
+        logger.error(f"Error preparing response data: {str(e)}")
+        return {'message': f'Error: {str(e)}'}
 
 @csrf_exempt
 @require_POST
 def update_cart_color_and_qty(request):
     if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
-        return JsonResponse({'message': 'Error processing your request'}, status=400)
+        return JsonResponse({'message': 'Invalid request'}, status=400)
+
     try:
         slug = request.POST.get('slug')
         size_id = request.POST.get('size')
@@ -1790,13 +1832,19 @@ def update_cart_color_and_qty(request):
         size = get_object_or_404(Size, id=size_id) if size_id else None
         color = get_object_or_404(Color, id=color_id) if color_id else None
 
+        print(f"Product: {product}, Size: {size}, Color: {color}, Quantity: {quantity}")
+
         if request.user.is_authenticated:
+            print("Authenticated user detected.")
+        # Log whether the user is authenticated
             response_data = handle_authenticated_user(request, product, size, color, quantity)
         else:
+            print("Anonymous user detected.")
             response_data = handle_unauthenticated_user(request, product, size, color, quantity)
-
-        return JsonResponse(response_data)
+        # Ensure the response is serializable
+        return JsonResponse(response_data, safe=False)
 
     except Exception as e:
+        logger.error(f"Error updating cart: {str(e)}")
         return JsonResponse({'message': f'Error: {str(e)}'}, status=400)
 
