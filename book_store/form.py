@@ -82,24 +82,68 @@ class RefundRequestForm(forms.Form):
         }
     )),max_length=1000)
     
-   
+
+
+state_choices= (
+    ('Abia', 'Abia'),
+    ('Adamawa','Adamawa'),
+    ('Akwa Ibom','Akwa Ibom'),
+    ('Anambra','Anambra'),
+    ('Bauchi', 'Bauchi'),
+    ('Bayelsa', 'Bayelsa'),
+    ('Benue', 'Benue'),
+    ('Borno', 'Borno'),
+    ('Cross River','Cross River'),
+    ('Delta', 'Delta'),
+    ('Ebonyi', 'Ebonyi'),
+    ('Edo', 'Edo'),
+    ('Ekiti', 'Ekiti'),
+    ('Enugu','Enugu'),
+    ('Gombe', 'Gombe'),
+    ('Imo', 'Imo'),
+    ('Jigawa', 'Jigawa'),
+    ('Kaduna', 'Kaduna'),
+    ('Kano', 'Kano'),
+    ('Katsina', 'Katsina'),
+    ('Kebbi', 'Kebbi'),
+    ('Kogi', 'Kogi'),
+    ('Kwara', 'Kwara'),
+    ('Lagos', 'Lagos'),
+    ('Nasarawa', 'Nasarawa'),
+    ('Niger', 'Niger'),
+    ('Ogun', 'Ogun'),
+    ('Ondo', 'Ondo'),
+    ('Osun', 'Osun'),
+    ('Oyo', 'Oyo'),
+    ('Plateau','Plateau'),
+    ('Rivers', 'Rivers'),
+    ('Sokoto', 'Sokoto'),
+    ('Taraba', 'Taraba'),
+    ('Yobe', 'Yobe'),
+    ('Zamfara', 'Zamfara'),
+    ('FCT', 'Federal Capital Territory (FCT)')
+)
+     
+
 class AddressForm(forms.ModelForm):
     class Meta:
         model = CustomersAddress
-        fields = ['street_address','apartment', 'apartment','town', 'state', 'telephone', 'zip_code', 'country','message']   
+        fields = ['street_address', 'apartment', 'town', 'state', 'telephone', 'zip_code', 'country', 'message']   
         widgets = {
-            'street': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Street Address'}),
-            'city': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'City'}),
-            'town': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'town'}),
-            'zip_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'town'}),
-            'state': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'town'}),
+            'street_address': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Street Address'}),
+            'apartment': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nearby landmark'}),
+            'town': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Town'}),
+            'zip_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Zip Code'}),
+            'state': forms.Select(attrs={'class': 'form-control'}),
             'telephone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '08099999999'}),
-            'apartment': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'nearby land mark'}),
-            'street_address': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'no. 1234, street name'}),
-            'message': forms.Textarea(attrs={'class': 'form-control','placeholder':'do you have any message about your delivery, (optional)'}),
-            'country': forms.TextInput(attrs={'class': 'form-control',}),
+            'country': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Country'}),
+            'message': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Do you have any message about your delivery? (optional)'}),
         }
-        
+
+    def __init__(self, *args, **kwargs):
+        super(AddressForm, self).__init__(*args, **kwargs)
+        self.fields['state'].choices = [(state['state'], state['state']) for state in AbujaLocation.objects.values('state').distinct()]
+       
 class CartUpdateForm(forms.Form):
     pk  = forms.IntegerField()
     size = forms.CharField(max_length=15)

@@ -501,7 +501,7 @@ state_choices= (
     ('Taraba', 'Taraba'),
     ('Yobe', 'Yobe'),
     ('Zamfara', 'Zamfara'),
-    ('FCT', 'Federal Capital Territory (FCT)')
+    ('FCT', 'Federal Capital Territory FCT')
 )
    
 
@@ -514,7 +514,7 @@ class AbujaLocation(models.Model):
     delivery_days = models.IntegerField(default=2)
     
     def __str__(self):
-        return self.location
+        return f"{self.state, } {self.town}"
  
 class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='' ,null=True, blank=True)

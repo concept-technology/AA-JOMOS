@@ -118,23 +118,23 @@ WSGI_APPLICATION = 'aa_jomos.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'aa_jomos_database',
-#         'USER': 'root',
-#         'PASSWORD': 'Tamara1!',
-#         'HOST': 'aa-jomos-database.c7y2yuoqejxn.eu-north-1.rds.amazonaws.com',
-#         'PORT': '5432',
-#         }
-#     }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-     }
- }
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'aa_jomos_database',
+        'USER': 'root',
+        'PASSWORD': 'Tamara1!',
+        'HOST': 'aa-jomos-database.c7y2yuoqejxn.eu-north-1.rds.amazonaws.com',
+        'PORT': '5432',
+        }
+    }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#      }
+#  }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -311,19 +311,19 @@ ACCOUNT_FORMS = {
 PAYSTACK_PUBLIC_KEY = env('PAYSTACK_PUBLIC_KEY')
 PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY')
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'console': {
+#             'level': 'DEBUG',
+#             'class': 'logging.StreamHandler',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console'],
+#             'level': 'DEBUG',
+#         },
+#     },
+# }
