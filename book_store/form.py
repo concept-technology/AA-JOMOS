@@ -10,13 +10,13 @@ from .models import *
 class AbujaLocationForm(forms.ModelForm):
     class Meta:
         model = AbujaLocation
-        fields = ['location']
+        fields = ['pick_up_location']
 
     def __init__(self, *args, **kwargs):
         super(AbujaLocationForm, self).__init__(*args, **kwargs)
         locations = AbujaLocation.objects.all()
         location_choices = [(location.id, location.location) for location in locations]
-        self.fields['location'].widget = forms.Select(choices=location_choices, attrs={'class': 'form-control'})
+        self.fields['pick_up_location'].widget = forms.Select(choices=location_choices, attrs={'class': 'form-control'})
        
 payment_choices= (
     ('paypal', 'paypal'),
@@ -99,6 +99,7 @@ class AddressForm(forms.ModelForm):
             'message': forms.Textarea(attrs={'class': 'form-control','placeholder':'do you have any message about your delivery, (optional)'}),
             'country': forms.TextInput(attrs={'class': 'form-control',}),
         }
+        
 class CartUpdateForm(forms.Form):
     pk  = forms.IntegerField()
     size = forms.CharField(max_length=15)

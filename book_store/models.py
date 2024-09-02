@@ -14,6 +14,11 @@ from django.db.models import Avg
 from django.urls import reverse
 from django.db.models import F, OuterRef, Subquery
 from django.db.models import Avg, Count, Sum
+
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+
 category_choices = (
         ('new', 'new'),
         ('featured', 'featured'),
@@ -40,8 +45,9 @@ gender_choices =(
     ('Male', 'male'),
     ('Female', 'female'),
 )
+from django.contrib.auth.models import AbstractUser
 
-
+#   
 class SizeManager(models.Manager):
     def get_top_discounted_sizes(self, limit=3):
         return self.annotate(
@@ -458,10 +464,54 @@ del_status = (
     ('delivered', 'delivered'),
 )      
 
+state_choices= (
+    ('Abia', 'Abia'),
+    ('Adamawa','Adamawa'),
+    ('Akwa Ibom','Akwa Ibom'),
+    ('Anambra','Anambra'),
+    ('Bauchi', 'Bauchi'),
+    ('Bayelsa', 'Bayelsa'),
+    ('Benue', 'Benue'),
+    ('Borno', 'Borno'),
+    ('Cross River','Cross River'),
+    ('Delta', 'Delta'),
+    ('Ebonyi', 'Ebonyi'),
+    ('Edo', 'Edo'),
+    ('Ekiti', 'Ekiti'),
+    ('Enugu','Enugu'),
+    ('Gombe', 'Gombe'),
+    ('Imo', 'Imo'),
+    ('Jigawa', 'Jigawa'),
+    ('Kaduna', 'Kaduna'),
+    ('Kano', 'Kano'),
+    ('Katsina', 'Katsina'),
+    ('Kebbi', 'Kebbi'),
+    ('Kogi', 'Kogi'),
+    ('Kwara', 'Kwara'),
+    ('Lagos', 'Lagos'),
+    ('Nasarawa', 'Nasarawa'),
+    ('Niger', 'Niger'),
+    ('Ogun', 'Ogun'),
+    ('Ondo', 'Ondo'),
+    ('Osun', 'Osun'),
+    ('Oyo', 'Oyo'),
+    ('Plateau','Plateau'),
+    ('Rivers', 'Rivers'),
+    ('Sokoto', 'Sokoto'),
+    ('Taraba', 'Taraba'),
+    ('Yobe', 'Yobe'),
+    ('Zamfara', 'Zamfara'),
+    ('FCT', 'Federal Capital Territory (FCT)')
+)
+   
+
 class AbujaLocation(models.Model):
-    location = models.CharField(max_length=255)
+    state = models.CharField(max_length=50, default='', choices=state_choices)
+    city = models.CharField(max_length=100, default=''),
+    town = models.CharField(max_length=50, default='')
+    pick_up_location = models.CharField(max_length=255, null=True, blank=True)
     delivery_cost = models.DecimalField(max_digits=10, decimal_places=2, default=1000)
-    days = models.IntegerField(default=2)
+    delivery_days = models.IntegerField(default=2)
     
     def __str__(self):
         return self.location

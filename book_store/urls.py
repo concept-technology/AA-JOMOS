@@ -21,7 +21,7 @@ urlpatterns = [
     
 # cart section
      path('cart-count/', views.cart_count_view, name='cart-count'),    
-     path('add-to-cart/',views.add_to_cart, name='add-to-cart'),
+    #  path('add-to-cart/',views.add_to_cart, name='add-to-cart'),
     #  path('add-to-cart/',views.AddToCartView.as_view(), name='add-to-cart'),
      path('delete-from-cart/',views.delete_cart, name='delete-from-cart'),
      path('update-cart/', views.UpdateCartQuantity.as_view(), name='update_cart_quantity'),
@@ -70,9 +70,9 @@ urlpatterns = [
     path('wishlist-count/', views.wishlist_count, name='wishlist-count'),
     path('wishlist/', views.wishlist, name='wishlist'),
     
-    path('rate/product/<str:slug>', views.rate_product, name='rate_product')    
-    
-    
+    path('rate/product/<str:slug>', views.rate_product, name='rate_product'),   
+  path('accounts/confirm-email/<str:key>/', views.CustomConfirmEmailView.as_view(), name='account_confirm_email'),
+   
   # Other URL patterns...
 ]
 

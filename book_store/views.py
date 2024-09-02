@@ -38,8 +38,40 @@ from django.contrib.messages import get_messages
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.db.models import Avg, Count
+from django.core.mail import send_mail
 
+from allauth.account.views import ConfirmEmailView
+from allauth.account.models import EmailConfirmationHMAC, EmailConfirmation
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.http import Http404
 
+class CustomConfirmEmailView(ConfirmEmailView):
+    template_name = "account/custom_email_confirm.html"  # Specify the custom template
+
+    def get_object(self, queryset=None):
+        """ Retrieve the confirmation object using either EmailConfirmation or EmailConfirmationHMAC """
+        key = self.kwargs['key']
+        try:
+            # Try to retrieve confirmation using HMAC
+            obj = EmailConfirmationHMAC.from_key(key)
+            if obj:
+                return obj
+            # If not found, use EmailConfirmation model
+            obj = EmailConfirmation.objects.get(key=key.lower())
+            return obj
+        except EmailConfirmation.DoesNotExist:
+            raise Http404("Email confirmation link expired or invalid.")
+
+    def get(self, request, *args, **kwargs):
+        try:
+            confirmation = self.get_object()
+            confirmation.confirm(request)  # Confirm and verify the email
+            # Redirect to login or a success page
+            return redirect(reverse('account_login'))  # Replace with your desired URL
+        except Http404:
+            # Redirect to an appropriate page if the link is invalid or expired
+            return redirect(reverse('account_email_verification_sent'))
 
 # get or create session key
 def get_session_key(request):
@@ -222,9 +254,6 @@ def generate_random_number(digits=10):
 def create_ref_code():#generate order reference code
     return ''.join(random.choices(string.ascii_lowercase + string.digits,k=15))
 
-
-
-from django.db.models import Sum
 
 def contact_view(request):
     return render(request, 'store/contact.html')
@@ -454,7 +483,6 @@ class CartView(View):
 
             coupon_form = CouponForm(request.POST)
             location_form = AbujaLocationForm(request.POST)
-
             if coupon_form.is_valid():
                 coupon_code = coupon_form.cleaned_data['code']
                 try:
@@ -465,13 +493,13 @@ class CartView(View):
                 except Coupon.DoesNotExist:
                     messages.error(request, 'Invalid coupon code.')
 
-            if location_form.is_valid():
-                location_id = location_form.cleaned_data['location']
-                abuja_location = AbujaLocation.objects.get(id=location_id)
-                order.abuja_location = abuja_location
-                order.save()
-                messages.success(request, 'Delivery location updated successfully.')
-
+            # if location_form.is_valid():
+            #     location_id = location_form.cleaned_data['location']
+            #     abuja_location = AbujaLocation.objects.get(id=location_id)
+            #     order.abuja_location = abuja_location
+            #     order.save()
+            #     messages.success(request, 'Delivery location updated successfully.')
+                
             if request.user.is_authenticated:
                 cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
             else:
@@ -573,88 +601,6 @@ def cart_count_view(request):
 
 logger = logging.getLogger(__name__)
 
-@csrf_exempt
-@require_POST
-def add_to_cart(request):
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        slug = request.POST.get('slug')      
-        product = get_object_or_404(Product, slug=slug)
-        quantity = int(request.POST.get('quantity', 1))  # Default quantity to 1 if not provided
-
-        if request.user.is_authenticated:
-            cart_qs = Cart.objects.filter(user=request.user, product=product, is_ordered=False)
-
-            if cart_qs.exists():
-                cart_item = cart_qs.first()
-                messages.error(request, f"{product.title} is already added to cart")
-            else:
-                cart_item = Cart.objects.create(
-                    user=request.user,
-                    product=product,
-                    quantity=quantity,
-                    is_ordered=False
-                )
-                messages.success(request, f"{product.title} is added to cart")
-
-            # Create or update the order
-            order, created = Order.objects.get_or_create(
-                user=request.user,
-                is_ordered=False,
-                defaults={
-                    'reference': f'order-{secrets.token_hex(8)}',
-                    'date': timezone.now()
-                }
-            )
-            if not order.product.filter(id=cart_item.id).exists():
-                order.product.add(cart_item)
-            order.save()
-
-            Wishlist.objects.filter(user=request.user, product=product).delete()
-
-            storage = get_messages(request)
-            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
-
-            cart_count = Cart.objects.filter(user=request.user, is_ordered=False).count()
-
-            return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
-        else:
-            session_cart_id = request.session.get('cart_id')
-            if not session_cart_id:
-                session_cart_id = str(uuid.uuid4())
-                request.session['cart_id'] = session_cart_id
-                request.session.modified = True
-                print(f"New session cart_id created: {session_cart_id}")
-            
-            cart_qs = Cart.objects.filter(cart_id=session_cart_id, product=product, is_ordered=False)
-            if cart_qs.exists():
-                cart_item = cart_qs.first()
-                cart_item.quantity += quantity  # Update the quantity
-            else:
-                cart_item = Cart.objects.create(cart_id=session_cart_id, product=product, is_ordered=False, quantity=quantity)
-            cart_item.save()
-            messages.success(request, f"{product.title} is added to cart")
-
-            # Create or update the order
-            order, created = Order.objects.get_or_create(
-                cart_id=session_cart_id,
-                is_ordered=False,
-                defaults={
-                    'reference': f'order-{secrets.token_hex(8)}',
-                    'date': timezone.now()
-                }
-            )
-
-            if not order.product.filter(id=cart_item.id).exists():
-                order.product.add(cart_item)
-            order.save()
-
-            storage = get_messages(request)
-            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
-
-            cart_count = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False).count()
-
-            return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
-    return JsonResponse({'message': 'error processing your request'}, status=400)
 
 @csrf_exempt
 def delete_cart(request):
@@ -758,13 +704,14 @@ class CheckoutView(View):
             order = Order.objects.get(user=self.request.user, is_ordered=False)
             cart = Cart.objects.filter(user=self.request.user, is_ordered=False)
             address = CustomersAddress.objects.filter(user=self.request.user)
-            
+            states = AbujaLocation.objects.all()
             if not cart.exists():
                 messages.warning(self.request, 'Your cart is empty.')
                 return redirect('store:cart')
 
             context = {
                 'coupon': coupon,
+                'state':states,
                 'order': {
                     'form': form,
                     'order': order,
@@ -795,7 +742,7 @@ class CheckoutView(View):
                 state = form.cleaned_data.get('state')
                 country = form.cleaned_data.get('country')
                 zip_code = form.cleaned_data.get('zip_code')
-                
+                delivery_location = AbujaLocation.objects.get(state=state, city=town)
                 billing_address = CustomersAddress.objects.create(
                     user=self.request.user,
                     order=order,
@@ -1501,6 +1448,14 @@ class UpdateCartQuantity(View):
             # Calculate the total quantity of the same product in the cart
             if request.user.is_authenticated:
                 cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
+                product_total_quantity = cart_items.filter(product=cart_item.product).aggregate(total_qty=Sum('quantity'))['total_qty']
+                product_total_quantity = product_total_quantity if product_total_quantity is not None else 0
+                # Determine if the wholesale price should be used
+                if product_total_quantity >= cart_item.product.minimum_order:
+                    price_per_unit = cart_item.size.wholesale_price
+                else:
+                    price_per_unit = cart_item.size.discount_price if cart_item.size.discount_price else cart_item.size.price
+                
             else:
                 session_cart_id = request.session.get('cart_id', None)           
                 if not session_cart_id:

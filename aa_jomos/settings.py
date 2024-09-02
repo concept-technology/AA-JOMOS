@@ -4,6 +4,7 @@ from pathlib import Path
 import environ
 import dj_database_url
 
+# AUTH_USER_MODEL = 'users.CustomUser'
 # LOGGING = {
 #     'version': 1,
 #     'disable_existing_loggers': False,
@@ -210,7 +211,8 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 # Application definition
-
+ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = '/profile/'  # Example redirect for authenticated users
+ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = '/login/'  # Example redirect for anonymous users
 
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 LOGIN_REDIRECT_URL = 'store:index'
@@ -218,17 +220,29 @@ LOGOUT_REDIRECT_URL = 'store:index'
 SIGNUP_REDIRECT_URL = 'store:index'
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_LOGOUT_ON_GET = True
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_EMAIL_CONFIRMATION_HMAC = True
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True  # Auto-login after email confirmation
+# ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1  # Example: 1 day until the confirmation link expires
 
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'andrewsamuelcloud@gmail.com'
-EMAIL_HOST_PASSWORD = '6319@gmail.coM'  # or App Password if 2-Step Verification is enabled
-DEFAULT_FROM_EMAIL = 'andrewsamuelcloud@gmail.com'
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+# Default email address to use for various automated correspondence
+DEFAULT_FROM_EMAIL = 'info@conceptechsolution.com'
+
+
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+
+
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_USERNAME_REQUIRED = False
+
 
 AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID') 
 AWS_ACCESS_KEY_ID = 'AKIAUBKFCNZRUXD6ZRVE'
@@ -297,3 +311,19 @@ ACCOUNT_FORMS = {
 PAYSTACK_PUBLIC_KEY = env('PAYSTACK_PUBLIC_KEY')
 PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY')
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}

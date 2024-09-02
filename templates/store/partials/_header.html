@@ -110,12 +110,16 @@
                                     <div class="demo-list">
                                         {% get_categories as categories %}
                                         {% for category in categories %}
+                                        
+                                        {% if category %}                     
                                         <div class="demo-item">
                                             <a href="{% url 'store:product_list_by_category' category.slug %}">
                                             <span class="demo-bg" style="background-image: url({{category.img.url}});"></span>
                                             <span class="demo-title">{{category.title}}</span>
                                             </a>
                                         </div><!-- End .demo-item -->
+                                        {% endif %}
+
                                       {% endfor %}
                                     </div><!-- End .demo-list -->
                                     <div class="megamenu-action text-center">
