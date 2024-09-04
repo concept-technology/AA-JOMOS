@@ -122,7 +122,7 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
     
-DATABASE_URL = env('DATABASE_URL')
+DATABASE_URL = os.environ.get('DATABASE_URL', default='postgresql://aa_jomos_database_web_server_user:9Zzvw8HG6A5x6VyeYXoE0jjJdXPlvUIY@dpg-crceosd2ng1s739rvaa0-a.oregon-postgres.render.com/aa_jomos_database_web_server')
 
 DATABASES = {
         'default': dj_database_url.config(
