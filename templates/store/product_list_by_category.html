@@ -221,7 +221,7 @@
                     console.log('Add to cart triggered', { 'slug': productSlug });
                 
                     $.ajax({
-                        url: "{% url 'store:add-to-cart' %}",
+                        url: "./'store:add-to-cart'",
                         method: 'POST',
                         data: {
                             slug: productSlug,
