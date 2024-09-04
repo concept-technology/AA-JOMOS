@@ -27,7 +27,7 @@
                     <li>
                         <a href="#">Links</a>
                         <ul>
-                            {% if user.is_authenticated %}
+                            {% if request.user.is_authenticated %}
                             <li><a href="{% url 'store:dash-board'%}"><i class="icon-user"></i> hello {{user}}</a></li>
                             {% else %}             
                             <li><a href="{% url 'account_login' %}" ><i class="icon-user"></i>Login</a></li>
