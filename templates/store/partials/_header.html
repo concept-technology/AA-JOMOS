@@ -139,30 +139,21 @@
                                                 <div class="col-md-6">
                                                     <div class="menu-title">Shop with sidebar</div><!-- End .menu-title -->
                                                     <ul>
-                                                        <li><a href="">Shop List</a></li>
+                                                        <li><a href="{% url 'admin:index' %}">Admin</a></li>
                                                        <li><a href=""><span>Shop Market<span class="tip tip-new">New</span></span></a></li>
                                                     </ul>
 
-                                                    <div class="menu-title">Shop no sidebar</div><!-- End .menu-title -->
-                                                    <ul>
-                                                        <li><a href=""><span>Shop Boxed No Sidebar<span class="tip tip-hot">Hot</span></span></a></li>
-                                                        <li><a href="">Shop Fullwidth No Sidebar</a></li>
-                                                    </ul>
+                                                 
                                                 </div><!-- End .col-md-6 -->
 
                                                 <div class="col-md-6">
-                                                    <div class="menu-title">Product Category</div><!-- End .menu-title -->
+                                                    <div class="menu-title">Product Category</div><!-- End .menu-title --> 
+                                                    <div class="menu-title">Pages</div><!-- End .menu-title -->
                                                     <ul>
-                                                        <li><a href="">Product Category Boxed</a></li>
-                                                        <li><a href=""><span>Product Category Fullwidth<span class="tip tip-new">New</span></span></a></li>
-                                                    </ul>
-                                                    <div class="menu-title">Shop Pages</div><!-- End .menu-title -->
-                                                    <ul>
-                                                        <li><a href="{% url 'store:cart' %}">Cart</a></li>
-                                                        
+                                                        <li><a href="{% url 'store:cart' %}">Cart</a></li>     
                                                         <li><a href="{% url 'store:wishlist' %}">Wishlist</a></li>
                                                         <li><a href="{% url 'store:dash-board' %}">My Account</a></li>
-                                                        <li><a href="{% url 'admin:index' %}">admin</a></li>
+                                                        <li><a href="{% url 'admin:index' %}" target="blank">admin</a></li>
                                                     
                                                     </ul>
                                                 </div><!-- End .col-md-6 -->
@@ -190,12 +181,9 @@
 
                             <ul>
                                 <li>
-                                    <a href="about" class="sf-with-ul">About</a>
 
                                     <ul>
-                                        <li><a href="">About 01</a></li>
-                                        <li><a href="">About 02</a></li>
-                                        <li><a href="{% url 'admin:index' %}">admin</a></li>
+                                        <li><a href="{% url 'admin:index' %}" target="_blank">admin</a></li>
                                     </ul>
                                 </li>
                             
