@@ -113,7 +113,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'aa_jomos.wsgi.application'
 
-DEBUG= False
+DEBUG= env('DEBUG')
 
 # https://docs.djangoproject.com/en/3.0/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = ['*']
