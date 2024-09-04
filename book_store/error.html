@@ -172,3 +172,20 @@ def transfer_cart_from_session_to_user(sender, request, user, **kwargs):
     session_cart_items.delete()
     del request.session['cart_id']
     request.session.modified = True
+
+
+    
+# Database
+# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'aa_jomos_database',
+#         'USER': 'root',
+#         'PASSWORD': 'Tamara1!',
+#         'HOST': 'aa-jomos-database.c7y2yuoqejxn.eu-north-1.rds.amazonaws.com',
+#         'PORT': '5432',
+#         }
+#     }

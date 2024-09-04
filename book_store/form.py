@@ -15,7 +15,7 @@ class AbujaLocationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(AbujaLocationForm, self).__init__(*args, **kwargs)
         locations = AbujaLocation.objects.all()
-        location_choices = [(location.id, location.location) for location in locations]
+        location_choices = [(location.id, location.state) for location in locations]
         self.fields['pick_up_location'].widget = forms.Select(choices=location_choices, attrs={'class': 'form-control'})
        
 payment_choices= (
