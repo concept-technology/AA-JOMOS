@@ -40,7 +40,7 @@ env = environ.Env(
 # SECRET_KEY = 'django-insecure-=13zeu+im=zl5$+k=)6@y65hkbn1458jlcf^cqtc%t4e$r2*2z'
 SECRET_KEY =os.environ.get('SECRET_KEY', default='django-insecure-=13zeu+im=zl5$+k=)6@y65hkbn1458jlcf^cqtc%t4e$r2*2z')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', default=True)
+DEBUG = env('DEBUG',)
 
 
 INSTALLED_APPS = [
@@ -121,24 +121,23 @@ ALLOWED_HOSTS = ['*']
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-    DEBUG= False
     
-    DATABASE_URL = env('DATABASE_URL')
+DATABASE_URL = env('DATABASE_URL')
 
-    DATABASES = {
+DATABASES = {
         'default': dj_database_url.config(
             # Replace this value with your local database's connection string.
             default=DATABASE_URL,
             conn_max_age=600
         )
     }
-else:
-    DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-    }
+# else:
+#     DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+#     }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
