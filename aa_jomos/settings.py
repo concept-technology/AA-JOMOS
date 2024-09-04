@@ -118,24 +118,26 @@ WSGI_APPLICATION = 'aa_jomos.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'aa_jomos_database',
-        'USER': 'root',
-        'PASSWORD': 'Tamara1!',
-        'HOST': 'aa-jomos-database.c7y2yuoqejxn.eu-north-1.rds.amazonaws.com',
-        'PORT': '5432',
-        }
-    }
-
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#      }
-#  }
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'aa_jomos_database',
+#         'USER': 'root',
+#         'PASSWORD': 'Tamara1!',
+#         'HOST': 'aa-jomos-database.c7y2yuoqejxn.eu-north-1.rds.amazonaws.com',
+#         'PORT': '5432',
+#         }
+#     }
 
+DATABASE_URL = env('DATABASE_URL')
+
+DATABASES = {
+    'default': dj_database_url.config(
+        # Replace this value with your local database's connection string.
+        default=DATABASE_URL,
+        conn_max_age=600
+    )
+}
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
@@ -207,9 +209,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = ['*']
 
-# RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-# if RENDER_EXTERNAL_HOSTNAME:
-    # ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+
 # Application definition
 ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = '/profile/'  # Example redirect for authenticated users
 ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = '/login/'  # Example redirect for anonymous users
@@ -233,7 +237,7 @@ EMAIL_USE_SSL = False
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 # Default email address to use for various automated correspondence
-DEFAULT_FROM_EMAIL = 'info@conceptechsolution.com'
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
 
 ACCOUNT_EMAIL_REQUIRED = True
