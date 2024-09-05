@@ -79,8 +79,8 @@
                             {% for item in sizes %}              
                             <div class="product-price">
                                 {% if forloop.counter == 1 %}
-                                <span class="new-price" id="new-price">&#8358;{{ item.discount_price|floatformat:2|intcomma }}</span>
-                                <span class="old-price">&#8358;{{ item.price|floatformat:2|intcomma }}</span>
+                                <span class="new-price" id="new-price">&#8358;{{ item.wholesale_price|floatformat:2|intcomma }} - </span>
+                                <span class="new-price">&#8358;{{ item.price|floatformat:2|intcomma }}</span>
                                 {% endif %}
                             </div><!-- End .product-price -->
                             {% endfor %}
@@ -91,7 +91,6 @@
 
                             <div class="product-details-action">           
                               
-                            <button class="toggle-wishlist btn-product wishlist btn" > select size and update quantity to add to cart</button>
                                 <div class="details-action-wrapper">
                                     <button class="toggle-wishlist btn-product btn-wishlist btn" 
                                     data-add-url="{{ product.get_add_to_wishlist_url }}" 
@@ -198,7 +197,7 @@
                                             <div class="product-desc-content">
                                                 <p>{{ product.additional_information }}</p>
                             
-                                                {% if product. %}
+                                            
                                                 <h3>Features</h3>
                                                 <ul>
                                                     {% if product.feature1 %}
@@ -215,7 +214,6 @@
                                                     {% endif %}
                                                     {% if product.feature5 %}
                                                     <li>{{ product.feature5 }}</li>
-                                                    {% endif %}
                                                     {% endif %}
                                                     {% if product.feature5 %}
                                                     <li>{{ product.feature5 }}</li>
@@ -235,6 +233,39 @@
                                               
                                                     {% if product.feature10 %}
                                                     <li>{{ product.feature10 }}</li>
+                                                    {% endif %}
+                                                    <br>
+                                                    <h>SPECIFICATION</h>
+                                                    
+                                                    {% if product.specification1 %}
+                                                        <li>{{product.specification1}}</li>
+                                                    {% endif %}
+                                                        {% if product.specification2 %}
+                                                        <li>{{product.specification2}}</li>
+                                                    {% endif %}
+                                                    {% if product.specification3 %}
+                                                        <li>{{product.specification3}}</li>
+                                                    {% endif %}
+                                                    {% if product.specification4 %}
+                                                        <li>{{product.specification4}}</li>
+                                                    {% endif %}
+                                                    {% if product.specification5 %}
+                                                        <li>{{product.specification5}}</li>
+                                                    {% endif %}
+                                                    {% if product.specification5 %}
+                                                        <li>{{product.specification6}}</li>
+                                                    {% endif %}
+                                                    {% if product.specification7 %}
+                                                        <li>{{product.specification7}}</li>
+                                                    {% endif %}
+                                                    {% if product.specification8 %}
+                                                        <li>{{product.specification8}}</li>
+                                                    {% endif %}
+                                                    {% if product.specification9 %}
+                                                        <li>{{product.specification9}}</li>
+                                                    {% endif %}
+                                                    {% if product.specification10 %}
+                                                        <li>{{product.specification10}}</li>
                                                     {% endif %}
                                                 </ul>
                                              

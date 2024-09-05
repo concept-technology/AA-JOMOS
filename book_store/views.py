@@ -691,6 +691,10 @@ def delete_cart(request):
     
 #     return render(request, 'store/check-user-address.html', context)
 
+def load_cities(request):
+    state = request.GET.get('state')  # Get state from the AJAX request
+    cities = AbujaLocation.objects.filter(state=state).values('city')  # Query cities based on state
+    return JsonResponse(list(cities), safe=False)  # Return as JSON  return JsonResponse(list(cities), safe=False)
 
 
 
@@ -699,24 +703,29 @@ def delete_cart(request):
 class CheckoutView(View):
     def get(self, *args, **kwargs):
         form = AddressForm(self.request.POST or None)
-        coupon = Coupon.objects.filter(active=True)      
+        coupon = Coupon.objects.filter(active=True)
+        
+        # Debugging: Print the states
+        states = AbujaLocation.objects.all()
+        print(states)  # Check if states are being fetched correctly
+
         try:
             order = Order.objects.get(user=self.request.user, is_ordered=False)
             cart = Cart.objects.filter(user=self.request.user, is_ordered=False)
             address = CustomersAddress.objects.filter(user=self.request.user)
-            states = AbujaLocation.objects.all()
+
             if not cart.exists():
                 messages.warning(self.request, 'Your cart is empty.')
                 return redirect('store:cart')
 
             context = {
                 'coupon': coupon,
-                'state':states,
+                'states': states,
                 'order': {
                     'form': form,
                     'order': order,
                     'cart': cart,
-                    'coupon': CouponForm()
+                    'coupon_form': CouponForm(),
                 }
             }
 
@@ -728,7 +737,7 @@ class CheckoutView(View):
         except Order.DoesNotExist:
             messages.error(self.request, 'You do not have an active order')
             return redirect('store:categories')
-
+    
     def post(self, *args, **kwargs):
         form = AddressForm(self.request.POST or None)
         

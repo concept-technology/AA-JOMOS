@@ -514,7 +514,7 @@ class AbujaLocation(models.Model):
     delivery_days = models.IntegerField(default=2)
     
     def __str__(self):
-        return f"{self.state, } {self.town}"
+        return f"{self.state, }"
  
 class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='' ,null=True, blank=True)

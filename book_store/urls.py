@@ -72,7 +72,7 @@ urlpatterns = [
     
     path('rate/product/<str:slug>', views.rate_product, name='rate_product'),   
   path('accounts/confirm-email/<str:key>/', views.CustomConfirmEmailView.as_view(), name='account_confirm_email'),
-   
+   path('load-cities/', views.load_cities, name='load_cities')
   # Other URL patterns...
 ]
 
