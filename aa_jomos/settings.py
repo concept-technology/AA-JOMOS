@@ -74,7 +74,8 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'requests',
     'xhtml2pdf',
-    'environ'
+    'environ',
+    'delivery',
     # 'jet_django',
 ]
 
@@ -124,20 +125,21 @@ if RENDER_EXTERNAL_HOSTNAME:
     
 DATABASE_URL = os.environ.get('DATABASE_URL', default='postgresql://aa_jomos_database_web_server_user:9Zzvw8HG6A5x6VyeYXoE0jjJdXPlvUIY@dpg-crceosd2ng1s739rvaa0-a.oregon-postgres.render.com/aa_jomos_database_web_server')
 
+# DATABASES = {
+#         'default': dj_database_url.config(
+#             # Replace this value with your local database's connection string.
+#             default=DATABASE_URL,
+#             conn_max_age=600
+#         )
+#     }
+
+
 DATABASES = {
-        'default': dj_database_url.config(
-            # Replace this value with your local database's connection string.
-            default=DATABASE_URL,
-            conn_max_age=600
-        )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-# else:
-#     DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-#     }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

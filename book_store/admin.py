@@ -204,8 +204,7 @@ class OrderAdmin(admin.ModelAdmin):
 
 admin.site.register(Order, OrderAdmin)
  
-    
-    
+
 class CategoryAdmin(admin.ModelAdmin):
     def image_tag(self, obj):
         return format_html('<img src="{}" style="max-width:50px; max-height:100px"/>'.format(obj.img.url))
@@ -246,6 +245,6 @@ admin.site.register(Inventory, InventAdmin)
 admin.site.register(Size)
 admin.site.register(Stock)
 admin.site.register(Invoice)
-admin.site.register(AbujaLocation)
+
 admin.site.register(Wishlist)
 actions = [make_accept_refund]

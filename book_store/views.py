@@ -8,6 +8,9 @@ from django.shortcuts import render
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+
+from delivery.deliveryform import AddressForm
+from delivery.models import DeliveryLocations
 from .models import *
 from django.views.generic import DetailView, ListView,View
 from django.db.models import Q
@@ -425,7 +428,7 @@ class CartView(View):
     def get(self, request, *args, **kwargs):
         try:
             coupon_form = CouponForm()
-            location_form = AbujaLocationForm()
+            location_form = DeliveryLocations()
 
             if request.user.is_authenticated:
                 cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
@@ -440,7 +443,7 @@ class CartView(View):
                 order = Order.objects.filter(session_key=session_cart_id, is_ordered=False).first()
                 print('amount',cart_items.count())
             coupons = Coupon.objects.filter(active=True)
-            locations = AbujaLocation.objects.all()
+            locations = DeliveryLocations.objects.all()
             
             
             # Create a dictionary to hold color quantities for each cart item
@@ -482,7 +485,7 @@ class CartView(View):
                 order = Order.objects.filter(cart_id=session_cart_id, is_ordered=False).first()
 
             coupon_form = CouponForm(request.POST)
-            location_form = AbujaLocationForm(request.POST)
+            location_form = DeliveryLocations(request.POST)
             if coupon_form.is_valid():
                 coupon_code = coupon_form.cleaned_data['code']
                 try:
@@ -515,7 +518,7 @@ class CartView(View):
                 }
 
             coupons = Coupon.objects.filter(active=True)
-            locations = AbujaLocation.objects.all()
+            locations = DeliveryLocations.objects.all()
             context = {
                 'coupon_form': coupon_form,
                 'location_form': location_form,
@@ -693,7 +696,7 @@ def delete_cart(request):
 
 def load_cities(request):
     state = request.GET.get('state')  # Get state from the AJAX request
-    cities = AbujaLocation.objects.filter(state=state).values('city')  # Query cities based on state
+    cities = DeliveryLocations.objects.filter(state=state).values('town_name')  # Query cities based on state
     return JsonResponse(list(cities), safe=False)  # Return as JSON  return JsonResponse(list(cities), safe=False)
 
 
@@ -706,7 +709,7 @@ class CheckoutView(View):
         coupon = Coupon.objects.filter(active=True)
         
         # Debugging: Print the states
-        states = AbujaLocation.objects.all()
+        states = DeliveryLocations.objects.all()
         print(states)  # Check if states are being fetched correctly
 
         try:
@@ -737,11 +740,9 @@ class CheckoutView(View):
         except Order.DoesNotExist:
             messages.error(self.request, 'You do not have an active order')
             return redirect('store:categories')
-    
     def post(self, *args, **kwargs):
-        form = AddressForm(self.request.POST or None)
-        
         try:
+            form = AddressForm(self.request.POST or None)
             order = Order.objects.get(user=self.request.user, is_ordered=False)
             
             if form.is_valid():
@@ -751,7 +752,11 @@ class CheckoutView(View):
                 state = form.cleaned_data.get('state')
                 country = form.cleaned_data.get('country')
                 zip_code = form.cleaned_data.get('zip_code')
-                delivery_location = AbujaLocation.objects.get(state=state, city=town)
+
+                # Get delivery cost based on state and town
+                delivery_location = DeliveryLocations.objects.get(state=state, town_name=town)
+                
+                # Create a billing address
                 billing_address = CustomersAddress.objects.create(
                     user=self.request.user,
                     order=order,
@@ -763,13 +768,21 @@ class CheckoutView(View):
                     zip_code=zip_code,
                 )
                 
+                # Update the order with the new shipping address and delivery location
                 order.shipping_address = billing_address
-                order.save()
+                order.delivery_location = delivery_location  # Set delivery location
+                order.save()  # Save the order with the updated delivery location
+
+                # Calculate the total with delivery
+                total_with_delivery = order.get_total_with_delivery()  # Use the method to calculate total
+                order.total_price = total_with_delivery  # Update the order total price
+                order.save()  # Save again after updating the total price with delivery
+
                 return redirect('store:initiate_payment')
             
             messages.warning(self.request, 'Order failed')
             return redirect('store:cart')
-                  
+                
         except ObjectDoesNotExist:
             messages.error(self.request, 'You do not have an active order')
             return redirect('store:categories')
@@ -1037,7 +1050,6 @@ def verify_payment(request, ref):
                 invoice.save()
                 # save additional invoice details
                 order.invoice_number =  invoice.invoice_number
-                order.Payment.ref = payment.ref
                 order.save()
                 order.shipping_address =address
                 return render(request,'store/success.html', {'invoice': invoice, 'order': order, 'payment': payment})

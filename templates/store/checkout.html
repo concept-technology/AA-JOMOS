@@ -54,14 +54,14 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <label>Town / City *</label>
-									<select id="id_town" name="town" class="form-control">
-										<!-- Options will be populated by AJAX -->
-									</select>
+                                    <select id="id_town" name="town" class="form-control">
+                                        <option value="">Select City</option>
+                                    </select>
                                 </div><!-- End .col-sm-6 -->
 
                                 <div class="col-sm-6">
                                     <label>State</label>
-                                    <select id="state-select" name="{{ order.form.state.name }}" class="form-control">
+                                    <select id="state-select" name="state" class="form-control">
                                         {% for value, display in order.form.state.field.choices %}
                                             <option value="{{ value }}">{{ display }}</option>
                                         {% endfor %}
@@ -137,26 +137,36 @@
 
 <button id="scroll-top" title="Back to Top"><i class="icon-arrow-up"></i></button>
 
-<!-- Include jQuery if not already included -->
 <script>
     $(document).ready(function() {
         $('#state-select').change(function() {
             var state = $(this).val();
-            $.ajax({
-                url: '{% url "store:load_cities" %}',  // URL for the AJAX view
-                data: {
-                    'state': state
-                },
-                success: function(data) {
-                    var $citySelect = $('#id_town');
-                    $citySelect.empty();  // Clear existing options
-                    $.each(data, function(index, city) {
-                        $citySelect.append(new Option(city.city, city.city));
-                    });
-                }
-            });
+            if (state) {
+                $.ajax({
+                    url: '{% url "store:load_cities" %}',  // URL for the AJAX view
+                    data: {
+                        'state': state
+                    },
+                    success: function(data) {
+                        var $citySelect = $('#id_town');
+                        $citySelect.empty();  // Clear existing options
+                        $citySelect.append(new Option("Select City", "")); // Add a default option
+
+                        // Populate new options
+                        $.each(data, function(index, city) {
+                            $citySelect.append(new Option(city.town_name, city.town_name));
+                        });
+                    },
+                    error: function() {
+                        alert('Error loading cities. Please try again.');
+                    }
+                });
+            } else {
+                $('#id_town').empty().append(new Option("Select City", ""));
+            }
         });
     });
+
 </script>
 
 {% endblock content %}

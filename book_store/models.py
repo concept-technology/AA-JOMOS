@@ -17,7 +17,7 @@ from django.db.models import Avg, Count, Sum
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-
+from delivery.models import DeliveryLocations
 
 category_choices = (
         ('new', 'new'),
@@ -464,57 +464,7 @@ del_status = (
     ('delivered', 'delivered'),
 )      
 
-state_choices= (
-    ('Abia', 'Abia'),
-    ('Adamawa','Adamawa'),
-    ('Akwa Ibom','Akwa Ibom'),
-    ('Anambra','Anambra'),
-    ('Bauchi', 'Bauchi'),
-    ('Bayelsa', 'Bayelsa'),
-    ('Benue', 'Benue'),
-    ('Borno', 'Borno'),
-    ('Cross River','Cross River'),
-    ('Delta', 'Delta'),
-    ('Ebonyi', 'Ebonyi'),
-    ('Edo', 'Edo'),
-    ('Ekiti', 'Ekiti'),
-    ('Enugu','Enugu'),
-    ('Gombe', 'Gombe'),
-    ('Imo', 'Imo'),
-    ('Jigawa', 'Jigawa'),
-    ('Kaduna', 'Kaduna'),
-    ('Kano', 'Kano'),
-    ('Katsina', 'Katsina'),
-    ('Kebbi', 'Kebbi'),
-    ('Kogi', 'Kogi'),
-    ('Kwara', 'Kwara'),
-    ('Lagos', 'Lagos'),
-    ('Nasarawa', 'Nasarawa'),
-    ('Niger', 'Niger'),
-    ('Ogun', 'Ogun'),
-    ('Ondo', 'Ondo'),
-    ('Osun', 'Osun'),
-    ('Oyo', 'Oyo'),
-    ('Plateau','Plateau'),
-    ('Rivers', 'Rivers'),
-    ('Sokoto', 'Sokoto'),
-    ('Taraba', 'Taraba'),
-    ('Yobe', 'Yobe'),
-    ('Zamfara', 'Zamfara'),
-    ('FCT', 'Federal Capital Territory FCT')
-)
-   
 
-class AbujaLocation(models.Model):
-    state = models.CharField(max_length=50, default='', choices=state_choices)
-    city = models.CharField(max_length=100, default=''),
-    town = models.CharField(max_length=50, default='')
-    pick_up_location = models.CharField(max_length=255, null=True, blank=True)
-    delivery_cost = models.DecimalField(max_digits=10, decimal_places=2, default=1000)
-    delivery_days = models.IntegerField(default=2)
-    
-    def __str__(self):
-        return f"{self.state, }"
  
 class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='' ,null=True, blank=True)
@@ -530,7 +480,7 @@ class Order(models.Model):
     refund_granted = models.BooleanField(default=False)
     date = models.DateTimeField(default=timezone.datetime.now())
     delivery_status = models.CharField(max_length=255, default='Processing',choices=del_status)
-    abuja_location = models.ForeignKey(AbujaLocation, on_delete=models.SET_NULL, blank=True, null=True)
+    delivery_location = models.ForeignKey(DeliveryLocations, on_delete=models.SET_NULL, blank=True, null=True)
     cart_id = models.UUIDField(null=True, blank=True)
     session_key = models.CharField(max_length=40, null=True, blank=True)
     invoice_number = models.CharField(max_length=50, blank=True, null=True)
@@ -583,8 +533,8 @@ class Order(models.Model):
     
  
     def get_delivery_cost(self):# calculates the delivery cost
-        if self.abuja_location:
-            return self.abuja_location.delivery_cost
+        if self.delivery_location:
+            return self.delivery_location.delivery_cost
         return 0
 
     def get_total_with_delivery(self):
@@ -637,16 +587,9 @@ class Wishlist(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     session_key = models.CharField(max_length=40, null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    added_at = models.DateTimeField(auto_now_add=True)
-  
-  
-   
-  
+    added_at = models.DateTimeField(auto_now_add=True) 
     class Meta:
         unique_together = ('user', 'product', 'session_key')
-        
-        
-
     def __str__(self):
         return f"{self.user or self.session_key} - {self.product.title}"
     
