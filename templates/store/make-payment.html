@@ -34,7 +34,7 @@
                         ref: ref,
                         callback: function(response) {
                             showLoadingIndicator();
-                            window.location.href = "{% url 'store:verify_payment' payment.ref %}";
+                            window.location.href = "{% url 'paystack:verify_payment' payment.ref %}";
                         },
                     };
                     if (Boolean(currency)) {

@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     'xhtml2pdf',
     'environ',
     'delivery',
+    'paystack_api'
     # 'jet_django',
 ]
 

@@ -63,6 +63,7 @@
                                     <label>State</label>
                                     <select id="state-select" name="state" class="form-control">
                                         {% for value, display in order.form.state.field.choices %}
+                                            <option value="">select state</option>
                                             <option value="{{ value }}">{{ display }}</option>
                                         {% endfor %}
                                     </select>
