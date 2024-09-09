@@ -49,6 +49,12 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.http import Http404
 
+class StoreConfig(AppConfig):
+    name = 'book_store'
+    def ready(self):
+        import book_store.signals
+        print("Signals imported and ready.")
+
 class CustomConfirmEmailView(ConfirmEmailView):
     template_name = "account/custom_email_confirm.html"  # Specify the custom template
 
@@ -82,12 +88,6 @@ def get_session_key(request):
         request.session.create()
     return request.session.session_key
 
-# receives signal from the session
-class StoreConfig(AppConfig):
-    name = 'my_store'
-
-    def ready(self):
-        import store.signals
 
 # next_url = request.GET.get('next')  # Define next_url early in the code
 #     messages.success(request, 'Coupon is applied')
@@ -700,22 +700,22 @@ def load_cities(request):
     return JsonResponse(list(cities), safe=False)  # Return as JSON  return JsonResponse(list(cities), safe=False)
 
 
-
-
 @method_decorator(login_required, name='dispatch')
 class CheckoutView(View):
     def get(self, *args, **kwargs):
-        form = AddressForm(self.request.POST or None)
+        # Check if the user has an existing address
+        try:
+            address = CustomersAddress.objects.get(user=self.request.user)
+            form = AddressForm(instance=address)  # Pre-populate form with the existing address
+        except CustomersAddress.DoesNotExist:
+            form = AddressForm()  # If no existing address, present a blank form
+
         coupon = Coupon.objects.filter(active=True)
-        
-        # Debugging: Print the states
         states = DeliveryLocations.objects.all()
-        print(states)  # Check if states are being fetched correctly
 
         try:
             order = Order.objects.get(user=self.request.user, is_ordered=False)
             cart = Cart.objects.filter(user=self.request.user, is_ordered=False)
-            address = CustomersAddress.objects.filter(user=self.request.user)
 
             if not cart.exists():
                 messages.warning(self.request, 'Your cart is empty.')
@@ -724,22 +724,18 @@ class CheckoutView(View):
             context = {
                 'coupon': coupon,
                 'states': states,
-                'order': {
-                    'form': form,
-                    'order': order,
-                    'cart': cart,
-                    'coupon_form': CouponForm(),
-                }
+                'form': form,
+                'order': order,
+                'cart': cart,
+                'coupon_form': CouponForm(),
             }
 
-            if address.exists():
-                return redirect('store:verify-address')
-            
             return render(self.request, 'store/checkout.html', context)
         
         except Order.DoesNotExist:
             messages.error(self.request, 'You do not have an active order')
-            return redirect('store:categories')
+            return redirect('store:categories-list')
+
     def post(self, *args, **kwargs):
         try:
             form = AddressForm(self.request.POST or None)
@@ -754,22 +750,23 @@ class CheckoutView(View):
                 zip_code = form.cleaned_data.get('zip_code')
 
                 # Get delivery cost based on state and town
-                delivery_location = DeliveryLocations.objects.get(state=state, town_name=town)
+                delivery_location = get_object_or_404(DeliveryLocations, state=state, town_name=town)
                 
-                # Create a billing address
-                billing_address = CustomersAddress.objects.create(
+                # Check if the user already has an address
+                address, created = CustomersAddress.objects.update_or_create(
                     user=self.request.user,
-                    order=order,
-                    street_address=street_address,
-                    apartment=apartment,
-                    town=town,
-                    state=state,
-                    country=country,
-                    zip_code=zip_code,
+                    defaults={
+                        'street_address': street_address,
+                        'apartment': apartment,
+                        'town': town,
+                        'state': state,
+                        'country': country,
+                        'zip_code': zip_code,
+                    }
                 )
-                
+
                 # Update the order with the new shipping address and delivery location
-                order.shipping_address = billing_address
+                order.shipping_address = address
                 order.delivery_location = delivery_location  # Set delivery location
                 order.save()  # Save the order with the updated delivery location
 
@@ -790,25 +787,27 @@ class CheckoutView(View):
 # next_url = request.GET.get('next')  # Define next_url early in the code
  
 
-def Update_addressView(request,pk):
+def Update_addressView(request, pk):
     next_url = request.GET.get('next')  # Define next_url early in the code
     
-    address = CustomersAddress.objects.get(user=request.user,pk=pk)
+    # Fetch the address using get_object_or_404 to ensure it exists
+    address = get_object_or_404(CustomersAddress, user=request.user, pk=pk)
     if request.method == 'POST':
+        order = Order.objects.get(user=request.user, is_ordered=False)
         form = AddressForm(request.POST, instance=address)
         if form.is_valid():
-            form.save()
+            updated_address = form.save(commit=False)  # Save the form but don't commit yet
+            updated_address.user = request.user  # Ensure the address is linked to the user
+            updated_address.save()  # Now save the instance
+            order.delivery_location = updated_address
+            order.save()
             messages.success(request, 'Your address has been updated.')
-            # if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
             return redirect('store:verify-address')
-            # messages.error(request, 'error updating your address')
-            # return redirect('store:index')
     else:
         form = AddressForm(instance=address)
     
     context = {
         'form': form,
-        'address': address
     }
     return render(request, 'store/update_address.html', context)
 
@@ -1141,15 +1140,16 @@ def search_view(request):
     
     return render(request, 'store/search_results.html', context)
 
-
-
+@transaction.atomic
 @ensure_csrf_cookie
 def product_detail(request, slug):
     form_slug = request.POST.get('product_slug') 
     product = get_object_or_404(Product, slug=slug) if slug else form_slug 
     colors = product.color.all()  # Fetch only the colors associated with the product
     sizes = product.size.all()  # Fetch only the sizes associated with the product
-  
+    # size_color = ProductSizeColor.objects.filter(product=product).values('size', 'color').distinct()
+    size_color = ProductSizeColor.objects.filter(product=product).select_related('size', 'color')
+    
     if request.user.is_authenticated:
         in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
         is_in_cart = Cart.objects.filter(product=product, is_ordered=False, user=request.user).exists()
@@ -1204,14 +1204,11 @@ def product_detail(request, slug):
         'all_user_rating': all_user_rating,
         'is_in_cart': is_in_cart,
         'next_product': next_product,
-        'csrf_token': request.META.get('CSRF_COOKIE'),
+   
         'related_products': related_products,
         'in_wishlist': in_wishlist,
-        'colors': colors,
-        'color_quantities': color_quantities,
-        'quantity': cart_quantity,
-        'sizes': sizes,  # Pass the sizes related to the specific product
         'size_discount_percentages': size_discount_percentages,
+        'size_colors':size_color,
     }
 
     return render(request, 'store/product_detail.html', context)

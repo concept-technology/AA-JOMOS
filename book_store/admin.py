@@ -3,7 +3,6 @@ from django.shortcuts import render
 from django.utils.html import format_html
 from prompt_toolkit import HTML
 from.models import *
-from .models  import  Payment
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.urls import path
@@ -18,101 +17,13 @@ from  django.shortcuts import get_object_or_404
 from io import BytesIO
 from pdf2image import convert_from_path
 
-class OrderAdmin(admin.ModelAdmin):
-    list_display = ['user', 'items', 'shipping_address', 'total_price', 'reference', 'is_ordered', 'is_delivered', 'is_received', 'is_refund_request', 'refund_granted', 'view_invoice_button', 'download_invoice_button', 'send_invoice_button']
-    readonly_fields = ('user',)
-    list_filter = ['is_ordered','is_delivered', 'is_received', 'is_refund_request']
-    list_display_links = ['user','items', 'shipping_address']
-    search_fields = ['user__username', 'reference']
 
-    # Add buttons to view, download, and send the invoice
-    def view_invoice_button(self, obj):
-        return format_html('<a class="button" href="{}">View Invoice</a>', reverse('admin:view_invoice', args=[obj.id]))
-    view_invoice_button.short_description = 'Invoice Action'
-
-    def download_invoice_button(self, obj):
-        return format_html('<a class="button" href="{}">Download Invoice</a>', reverse('admin:download_invoice', args=[obj.id]))
-    download_invoice_button.short_description = 'Download Invoice'
-
-    def send_invoice_button(self, obj):
-        return format_html('<a class="button" href="{}">Send Invoice</a>', reverse('admin:send_invoice', args=[obj.id]))
-    send_invoice_button.short_description = 'Send Invoice'
-
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('<int:order_id>/view-invoice/', self.admin_site.admin_view(self.view_invoice), name='view_invoice'),
-            path('<int:order_id>/send-invoice/', self.admin_site.admin_view(self.send_invoice), name='send_invoice'),
-            path('<int:order_id>/download-invoice/', self.admin_site.admin_view(self.download_invoice), name='download_invoice'),
-        ]
-        return custom_urls + urls
-
-    # Render the invoice in HTML format
-    def view_invoice(self, request, order_id):
-        try:
-            order = Order.objects.get(id=order_id)
-            invoice = get_object_or_404(Invoice, order=order)
-            context = {'order': order, 'invoice': invoice}
-            return render(request, 'store/invoice_template.html', context)
-        except Order.DoesNotExist:
-            self.message_user(request, "Order does not exist.", level=messages.ERROR)
-            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-    # Send the invoice via email
-    def send_invoice(self, request, order_id):
-        try:
-            order = Order.objects.get(id=order_id)
-            subject = f'Invoice for Order {order.id}'
-            message = render_to_string('store/invoice_template.html', {'order': order})
-            email = EmailMessage(subject, message, 'andrewsamuelcloud@gmail.com', [order.user.email])
-            email.content_subtype = 'html'
-            email.send()
-
-            self.message_user(request, f"Invoice for order {order.id} sent successfully.")
-        except Order.DoesNotExist:
-            self.message_user(request, "Order does not exist.", level=messages.ERROR)
-        except Exception as e:
-            self.message_user(request, f"Error sending invoice: {e}", level=messages.ERROR)
-
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-    # Download the invoice as a PDF
-    def download_invoice(self, request, order_id):
-        try:
-            order = Order.objects.get(id=order_id)
-            context = {'order': order}
-            html = render_to_string('store/invoice_template.html', context)
-
-            response = HttpResponse(content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="invoice_{order.reference}.pdf"'
-
-            result = io.BytesIO()
-            pisa_status = pisa.CreatePDF(io.BytesIO(html.encode('UTF-8')), dest=result)
-
-            if pisa_status.err:
-                return HttpResponse('We had some errors <pre>' + html + '</pre>')
-
-            response.write(result.getvalue())
-            return response
-        except Order.DoesNotExist:
-            self.message_user(request, "Order does not exist.", level=messages.ERROR)
-            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-
-
-
-
-
-class  PaymentAdmin(admin.ModelAdmin):
-    list_display  = ["user","ref",'amount', "verified", "date_created"]
-
-admin.site.register(Payment, PaymentAdmin)
 
 
 class ProductAdmin(admin.ModelAdmin):
     def image_tag(self, obj):
         return format_html('<img src="{}" style="max-width:50px; max-height:100px"/>'.format(obj.img_1.url))
-    list_display = ['title', 'image_tag',]
+    list_display = ['title', 'image_tag', 'total_stock']
     image_tag.short_description = 'Image'
     
 
@@ -127,7 +38,7 @@ class make_accept_refund(admin.ModelAdmin, ):
 
 
 make_accept_refund.short_description = 'update refund granted'
-
+# order admin
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['user', 'items', 'shipping_address', 'total_price', 'reference', 'is_ordered', 'is_delivered', 'is_received', 'is_refund_request', 'refund_granted', 'view_invoice_button', 'download_invoice_button', 'send_invoice_button']
     readonly_fields = ('user',)
@@ -173,36 +84,39 @@ class OrderAdmin(admin.ModelAdmin):
 
     
     
-    # Send the invoice via email
+
     def send_invoice(self, request, order_id):
         try:
             order = Order.objects.get(id=order_id)
-            subject = f'Invoice for Order {order.id}'
-            message = render_to_string('store/invoice_template.html', {'order': order})
-            email = EmailMessage(subject, message, 'andrewsamuelcloud@gmail.com', [order.user.email])
+            invoice = get_object_or_404(Invoice, order=order)
+            subject = f'Invoice for Order {order.reference}'
+            message = render_to_string('store/send_invoice.html', {'order': order, 'invoice':invoice})      
+            email = EmailMessage(
+                subject,
+                message,
+                to=[order.user.email]  # No need to specify 'from_email'
+            )
+            
             email.content_subtype = 'html'
             email.send()
-
-            self.message_user(request, f"Invoice for order {order.id} sent successfully.")
+            self.message_user(request, f"Invoice for order {order.reference} sent successfully.")
         except Order.DoesNotExist:
             self.message_user(request, "Order does not exist.", level=messages.ERROR)
         except Exception as e:
             self.message_user(request, f"Error sending invoice: {e}", level=messages.ERROR)
 
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-    
+        
     
     # Download the invoice as a PDF
     def download_invoice(self, request, order_id):
         try:
             order = Order.objects.get(id=order_id)
-            context = {'order': order}
+            invoice = get_object_or_404(Invoice, order=order)
+            context = {'order': order,'invoice':invoice}
             html = render_to_string('store/invoice_template.html', context)
-
             response = HttpResponse(content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="invoice_{order.reference}.pdf"'
-
             result = io.BytesIO()
             pisa_status = pisa.CreatePDF(io.BytesIO(html.encode('UTF-8')), dest=result)
 

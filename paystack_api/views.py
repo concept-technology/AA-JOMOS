@@ -2,11 +2,13 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.shortcuts import render
 import requests
-
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from aa_jomos import settings
 from book_store.models import Cart, CustomersAddress, Invoice, Order, Payment
 from book_store.views import create_ref_code, generate_random_number
-
+from django.db.models import F
 # Create your views here.
 
 def initiate_payment(request):
@@ -36,6 +38,7 @@ def initiate_payment(request):
     return render(request, 'store/payment.html', {'order': order, 'cart': cart})
 
 
+
 def verify_payment(request, ref):
     try:
         order = Order.objects.get(is_ordered=False, user=request.user)
@@ -56,6 +59,23 @@ def verify_payment(request, ref):
             if paystack_amount == expected_amount and data['data']['status'] == 'success':
                 payment.verified = True
                 payment.save()
+
+                
+                # Update stock and quantity sold for each product in the order
+                for order_product in order.product.all():
+                    product_size = order_product.size
+                    product_color = order_product.color
+                    quantity = order_product.quantity
+                    product = order_product.product
+                    # Update stock in Color model
+                    product_color.stock = F('stock') - quantity
+                    product_color.save()
+                    # Update quantity sold in Size model
+                    product_size.quantity_sold = F('quantity_sold') + quantity
+                    product.quantity_sold = F('quantity_sold') + quantity
+                    product.save()
+                    product_size.save()
+
                 # Mark order products as ordered
                 order_products = order.product.all()
                 order_products.update(is_ordered=True)
@@ -63,7 +83,7 @@ def verify_payment(request, ref):
                 # Update order status and create invoice
                 order.is_ordered = True
                 order.payment = payment
-                order.reference = create_ref_code() #create a reference code
+                order.reference = create_ref_code()  # create a reference code
                 order.save()
 
                 # Create invoice
@@ -71,17 +91,36 @@ def verify_payment(request, ref):
                     invoice_number=generate_random_number(),  # function for generating invoice numbers
                     order=order,
                     payment=payment,
-                    issued_at = timezone.datetime.now()
+                    issued_at=timezone.datetime.now()
                     # Add more fields as needed
                 )
                 invoice.save()
-                # save additional invoice details
-                order.invoice_number =  invoice.invoice_number
+
+                # Save additional invoice details
+                order.invoice_number = invoice.invoice_number
+                order.shipping_address = address
                 order.save()
-                order.shipping_address =address
-                return render(request,'store/success.html', {'invoice': invoice, 'order': order, 'payment': payment})
+
+                # Prepare and send the success email
+                subject = 'Payment Successful'
+                html_message = render_to_string('emails/payment_success.html', {'invoice': invoice, 'order': order, 'payment': payment})
+                plain_message = strip_tags(html_message)
+                from_email = settings.DEFAULT_FROM_EMAIL
+                to_email = request.user.email
+
+                send_mail(subject, plain_message, from_email, [to_email], html_message=html_message)
+
+                return render(request, 'store/success.html', {'invoice': invoice, 'order': order, 'payment': payment})
             else:
-                return render(request, 'store/payment_not_successful.html')
+                # Prepare and send the failure email
+                subject = 'Payment Not Successful'
+                message = 'Your payment could not be processed. Please try again or contact support.'
+                from_email = settings.DEFAULT_FROM_EMAIL
+                to_email = request.user.email
+
+                send_mail(subject, message, from_email, [to_email])
+
+                return render(request, 'emails/payment_not_successful.html')
 
         else:
             print(f"Failed to verify payment. Status code: {response.status_code}, Paystack response: {response.text}")

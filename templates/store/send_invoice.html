@@ -1,0 +1,131 @@
+{% load humanize %}
+<!-- store/invoice_template.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AA jomos Invoice #{{ invoice.invoice_number }}</title>
+    <style>
+        /* Styling for the invoice */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+        .invoice-container {
+            width: 98%;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .invoice-header h1 {
+            margin: 0;
+            font-size: 28px;
+            color: #333333;
+        }
+        .invoice-header p {
+            margin: 5px 0;
+            color: #666666;
+        }
+        .invoice-details {
+            margin-bottom: 20px;
+        }
+        .invoice-details p {
+            margin: 4px 0;
+        }
+        .invoice-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .invoice-items th {
+            background-color: #f2f2f2;
+            text-align: left;
+            padding: 10px;
+            font-weight: bold;
+        }
+        .invoice-items td {
+            border: 1px solid #dddddd;
+            padding: 10px;
+        }
+        .invoice-summary {
+            text-align: left;
+            margin-top: 20px;
+        }
+        .invoice-summary p {
+            margin: 4px 0;
+        }
+        .total-amount {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333333;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <div class="invoice-header">
+            <h1>A.A jomos Nigeria limited</h1>
+                <h2>Order invoice</h2>
+            <p><strong>Invoice Number:</strong> {{ invoice.invoice_number }}</p>
+            <p><strong>Payment Reference:</strong> {{ order.reference }}</p>
+            <p><strong>Order Number:</strong> {{ order.id }}</p>
+        <p><strong>Order reference:</strong> {{ order.reference }}</p>
+        </div>
+        <div class="invoice-details">
+            <p><strong>Customer:</strong> {{ order.user.username }}</p>
+            <p><strong>Shipping Address:</strong> {{ order.shipping_address }}</p>
+            <p><strong>Date:</strong> {{ order.date|date:"F j, Y" }}</p>
+        </div>
+
+        <table class="invoice-items">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Color</th>
+                    <th>Size</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.product.all %}
+                <tr>
+                    <td>{{ item.product.title }}</td>
+                    <td>{{ item.color.name }}</td> 
+                    <td>{{ item.size.size }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>
+                        {% if item.quantity >= item.size.wholesale_threshold %}
+                            {{ item.size.wholesale_price|floatformat:2|intcomma }}
+                        {% else %}
+                            {% if item.size.discount_price %}
+                                {{ item.size.discount_price|floatformat:2|intcomma }}
+                            {% else %}
+                                {{ item.size.price|floatformat:2|intcomma }}
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>{{ item.get_total_price|floatformat:2|intcomma }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="invoice-summary">
+            <p class="total-amount">sub total: &#8358;{{ order.total_price|floatformat:2 }}</p>
+            <p class="total-amount">Delivery:&#8358; {{ order.get_delivery_cost|floatformat:2 }}</p>
+            <p class="total-amount">Total: &#8358;{{ order.get_total_with_delivery|floatformat:2 }}</p>
+        </div>
+
+    </div>
+</body>
+</html>

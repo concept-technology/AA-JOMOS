@@ -113,10 +113,10 @@
                                             <div class="product-body">
 												
 												<h3 class="product-title"><a href="{{product.get_absolute_url}}">{{item.product.title}}</a></h3>
-												{% if item.total_stock == 0 %}
+												{% if item.product.total_stock == 0 %}
 													<p href="{{product.get_absolute_url}}">out of stock</p>
 															{% else %}
-															<b href="{{product.get_absolute_url}}">{{item.total_stock}} in stock</b>
+															<span href="{{product.get_absolute_url}}" class="old-price">{{ item.product.total_stock|floatformat:2|intcomma }} in stock</span>
 													{% endif %}
                                                 <div class="product-price">
 													{% for size in item.sizes %}													

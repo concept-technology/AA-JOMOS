@@ -6,6 +6,11 @@
 {% load humanize %}
 {{block.super}}
 <main>
+    <style>
+        .quantity {
+            display: none;  /* Hide the quantity input field by default */
+        }
+    </style>
     <nav aria-label="breadcrumb" class="breadcrumb-nav border-0 mb-0">
         <div class="container d-flex align-items-center">
             <ol class="breadcrumb">
@@ -107,50 +112,45 @@
                                     <!-- <a href="#" class="btn-product btn-compare" title="Compare"><span>Add to Compare</span></a> -->
                                 </div><!-- End .details-action-wrapper -->
                             </div><!-- End .product-details-action -->
-                            {% if product.size %}           
-                            {% endif %}
-                            <div class="details-filter-row details-row-size">
-                                <div class="product-cat">
-                                    {% for size in product.size.all %}
-                                    {% if size %}
-                                    <div class="size-section">
-                                        <div class="size-header">
-                                            <h3><small>size: </small>{{ size.size }}</h3>
-                                            <p>buy at the rate of &#8358; {{size.wholesale_price|floatformat:2|intcomma}} per piece when you order above {{product.minimum_order}}</p>
-                                            <div class="product-price">
-                                                <p class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</p>
-                                                <p class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="color-section d-flex flex-wrap">
-                                            {% for product_color in size.product_colors.all %}
-                                            <div class="color-item d-flex align-items-center mb-3">
-                                                <div class="color-img">
-                                                    <img src="{{ product_color.color.img.url }}" width="50px" height="55px">
-                                                </div>
-                                                <div class="color-details ml-3">
-                                                    <div class="product-cat">
-                                                        <span>{{ product_color.color.name }}</span>
-                                                    </div>
-                                                    <div class="quantity-section d-flex align-items-center">
-                                                        <!-- <button class="minus-btn btn btn-secondary" data-size="{{ size.id }}" data-color="{{ product_color.color.id }}">-</button> -->
-                                                        <input type="number" min="0" max="{{ product_color.color.quantity }}" class="quantity text-center" data-size="{{ size.id }}" data-color="{{ product_color.color.id }}" value="0" style="width: 60px;">
-                                                        <button class="quantity-btn plus-btn btn btn-product" data-size="{{ size.id }}" data-color="{{ product_color.color.id }}" data-action="increase">add to cart</button>
-                                                        <!-- <button class=" btn quantity btn-product btn-cart" data-size="{{ size.id }}" data-color="{{ product_color.color.id }}"></button> -->
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                    {% else %}
-                                    <h3>Out of Stock</h3>
-                                    {% endif %}
-                                    {% endfor %}
-                                </div>
-                                
-                            </div>
-                            
+                 <div class="details-filter-row details-row-size">
+    <div class="product-cat">
+        <!-- Loop over sizes directly -->
+        <div class="details-filter-row details-row-size">
+            <div class="product-cat">
+            <!-- Loop over distinct size-color combinations for the product -->
+{% for size_color in size_colors.all %}
+<div class="size-section">
+    <div class="size-header">
+        <h6 style="color: #cc9966;"><small>Size: </small>{{ size_color.size.size }}</h6> <!-- Check if 'size' field exists -->
+        <div class="product-price">
+            <p class="new-price" id="new-price">&#8358;{{ size_color.size.discount_price|floatformat:2|intcomma }}</p>
+            <p class="old-price">&#8358;{{ size_color.size.price|floatformat:2|intcomma }}</p>
+        </div>
+    </div>
+    <!-- Loop over the colors associated with the specific size -->
+    <div class="color-section d-flex flex-wrap">
+        <div class="color-item d-flex align-items-center mb-3">
+            <div class="color-img">
+                <img src="{{ size_color.color.img.url }}" width="50px" height="55px">
+            </div>
+            <div class="color-details ml-3">
+                <div class="product-cat">
+                    <span>color: {{ size_color.color.name }}</span>
+                </div>
+                <div class="quantity-section d-flex align-items-center">
+                    <input type="number" min="1" max="{{ size_color.quantity }}" class="quantity text-center" data-size="{{ size_color.size.id }}" data-color="{{ size_color.color.id }}" value="0" style="width: 60px;">
+                    <button class="quantity-btn plus-btn btn btn-product" data-size="{{ size_color.size.id }}" data-color="{{ size_color.color.id }}" data-action="increase">Add to cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+            </div>
+        </div>    
+    </div>
+</div>
+
                             <div class="product-details-footer">
                                 <div class="product-cat">
                                     <span>Category:</span>
@@ -465,11 +465,19 @@
             const slug = '{{ product.slug }}';
             const csrfToken = '{{ csrf_token }}';
     
+            // Show the input field when the button is clicked
+            quantityInput.css('display', 'block');
+    
             // Increase or decrease the quantity
             if (action === 'increase' && quantity < maxQuantity) {
                 quantity += 1;
-            } else if (action === 'decrease' && quantity > 0) {
+            } else if (action === 'decrease' && quantity > 1) {
                 quantity -= 1;
+            }
+    
+            // Prevent exceeding max quantity
+            if (quantity > maxQuantity) {
+                quantity = maxQuantity;
             }
     
             // Update the input field value
@@ -489,7 +497,7 @@
                 success: function(response) {
                     if (response.success) {
                         console.log('Cart updated successfully', response);
-                        // Update the UI elements if needed, like cart total, etc.
+                        // Optionally, update cart totals, etc.
                     } else {
                         console.log('Failed to update cart', response);
                         alert('Failed to update cart: ' + response.message);
@@ -505,6 +513,7 @@
         // Handle direct input field change
         $('.quantity').on('change', function() {
             let quantity = parseInt($(this).val());
+            const maxQuantity = parseInt($(this).attr('max'));
             const size = $(this).data('size');
             const color = $(this).data('color');
             const slug = '{{ product.slug }}';
@@ -514,6 +523,12 @@
             if (isNaN(quantity) || quantity <= 0) {
                 quantity = 1;
                 $(this).val(quantity);
+            }
+    
+            // Prevent exceeding max quantity
+            if (quantity > maxQuantity) {
+                quantity = maxQuantity;
+                $(this).val(quantity); // Update the input field with the max quantity
             }
     
             // Trigger the AJAX request to update the cart
@@ -542,7 +557,7 @@
             });
         });
     });
-                    
+    
 </script>
    
 

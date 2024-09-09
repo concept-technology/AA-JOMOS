@@ -12,7 +12,8 @@ urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
     path('ratings/', include('star_ratings.urls', namespace='ratings')),
-    path('oder/', include("paystack_api.urls")),
+    path('', include("paystack_api.urls")),
+    path('delivery', include('delivery.urls'))
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # http://localhost:8000/jet_api/register/

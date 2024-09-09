@@ -145,7 +145,7 @@
                                         <td>Subtotal:</td>
                                         <td id="order-total-"> &#8358;{{order.get_total|floatformat:2|intcomma}}</td>
                                     </tr>
-         
+                                   
                                     {% if coupon_form %}
                                         <tr>
                                             <td>
@@ -161,15 +161,23 @@
                                             </td>
                                         </tr>
                                     {% endif %}
+                                    <tr class="summary-subtotal">
+                                        <td>delivery:</td>
+                                        
+                                        {% if oder.get_delivery_cost %}
+                                        <td>{{order.get_delivery_cost}}</td>
+                                            {% else %}
+                                        <td>not yet available</td>
+                                        {% endif %}
+                                            
+                                    </tr>
                                     <tr class="summary-total">
                                         <td>Total:</td>
                                         <td id="total-with-delivery">
-                                            {% if total_with_delivery %}
-                                                &#8358;{{ total_with_delivery|floatformat:2|intcomma }}
-                                            {% else %}
+                                          
+                                          
                                                 &#8358;{{ order.get_total|floatformat:2|intcomma }}
-                                            {% endif %} 
-                                        </td>
+                                       
                                     </tr>
                                 </tbody>
                             </table>                 

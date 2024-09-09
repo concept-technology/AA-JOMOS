@@ -19,7 +19,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from delivery.models import DeliveryLocations
 from paystack_api.models import Payment
-
+from django.core.exceptions import ValidationError
 category_choices = (
         ('new', 'new'),
         ('featured', 'featured'),
@@ -122,6 +122,14 @@ class Category(models.Model):
 
     
 
+class Color(models.Model):
+    name = models.CharField(max_length=50)
+    img  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
+    stock = models.IntegerField(default =1,blank=True, null=True) 
+    is_available = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
 
  
 class Size(models.Model):
@@ -129,21 +137,12 @@ class Size(models.Model):
     price = models.IntegerField(default=0, blank=True,null=True)
     discount_price = models.IntegerField(default=0)
     wholesale_price = models.IntegerField(default=0)
-    quantity = models.IntegerField(default=1)
     objects = SizeManager()
- 
+    product_colors = models.ManyToManyField(Color, through='ProductSizeColor', related_name='size_colors')
     def __str__(self) -> str:
         return self.size
 
-class Color(models.Model):
-    name = models.CharField(max_length=50)
-    img  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
-    quantity = models.IntegerField(default =1,blank=True, null=True) 
-    is_available = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.name
-
+    
 
 
 class Product(models.Model):
@@ -194,7 +193,9 @@ class Product(models.Model):
     def is_on_sale(self):
         return self.discount_price > 0
     
-    
+    @property
+    def total_stock(self):
+        return self.color.aggregate(total_stock=Sum('stock'))['total_stock'] or 0
     @staticmethod
     def get_products_on_sale():
         return Product.objects.filter(label='sale')  # Filter products with discount price
@@ -266,67 +267,16 @@ class Product(models.Model):
         return next_product
     
 class ProductSizeColor(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_colors')
-    size = models.ForeignKey(Size, on_delete=models.CASCADE, related_name='product_colors')
-    color = models.ForeignKey(Color, on_delete=models.CASCADE, blank=True,null= True, related_name='product_colors')
-
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_size_colors')
+    size = models.ForeignKey(Size, on_delete=models.CASCADE, related_name='size_product_colors')
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='color_product_colors', default='')
     class Meta:
         unique_together = ('product', 'size', 'color')
         
 
     def __str__(self):
         return f'{self.product.title} - {self.size.size} - {self.color.name if self.color.name else None}'
-      
-# class Cart(models.Model):
-#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', null=True, blank=True)
-#     product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='product')
-#     quantity = models.IntegerField(default =1) 
-#     is_ordered = models.BooleanField(default=False)  
-#     is_in_cart = models.BooleanField(default=False)
-#     cart_id = models.UUIDField(default=uuid.uuid4,)
-#     session_key = models.CharField(max_length=40, null=True, blank=True)
-#     size = models.ForeignKey(Size, on_delete=models.CASCADE, blank=True, null=True)
-#     color = models.ForeignKey(Color, on_delete=models.CASCADE, blank=True, null=True)
-#     def get_discount_price(self):
-#         return self.quantity * self.product.discount_price
-
-    
-#     def get_normal_price(self):
-#         return self.quantity * self.product.price
-            
-#     def get_amount_saved(self):
-#         return self.get_normal_price() - self.get_discount_price()
-    
-#     def get_price_tag(self):
-#         discount_price = self.product.discount_price
-#         normal_price = self.product.price
-#         if discount_price:
-#             return discount_price
-#         return normal_price
-
-   
-#     def get_total_price(self):
-#         if self.get_discount_price():
-#             return self.get_discount_price()
-#         return self.get_normal_price()
-        
-#     def add_quantity(self):
-#         qty = self.quantity
-#         qty +=1
-#         return qty
-    
-#     def __str__(self):
-#         price = self.product.price
-#         dis_count_price = self.product.discount_price
-#         title = self.product.title
-#         if not dis_count_price:
-#             return f"item: {title}, price: {price}, quantity: {self.quantity}, color:{self.color.name}, size {self.size.size}"        
-#         return f"item:{title} price: {dis_count_price}, quantity: {self.quantity}, color: {self.color.name if self.color else None}, size {self.size.size}"
-            
-
-#     def get_title(self):
-#         return self.product.title
-
+ 
 
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
@@ -410,7 +360,7 @@ class CustomersAddress(models.Model):
     # payment_option = models.CharField(max_length=255, choices=payment_choices, blank=True,null=True)
    
     def __str__(self):
-       return f"{self.user.username}:   address is {self.street_address}" 
+       return f"{self.street_address}, {self.apartment}, {self.telephone}, {self.state}, {self.zip_code}" 
    
     def get_absolute_url(self):
         return reverse("store:update-address", kwargs={"pk": self.pk})

@@ -45,13 +45,24 @@
                             <h2 class="checkout-title">Billing Details</h2><!-- End .checkout-title -->
                             
                             <label>Country *</label>
-                            {{ order.form.country }}
+                            {{ form.country }}
 
                             <label>Street address *</label>
-                            {{ order.form.street_address }}
-                            {{ order.form.apartment }}
+                            {{ form.street_address }}
+                            {{ form.apartment }}
 
                             <div class="row">
+
+                                <div class="col-sm-6">
+                                    <label>State</label>
+                                    <select id="state-select" name="state" class="form-control">
+                                        {% for value, display in form.state.field.choices %}
+                                            <option value="">select state</option>
+                                            <option value="{{ value }}">{{ display }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
                                 <div class="col-sm-6">
                                     <label>Town / City *</label>
                                     <select id="id_town" name="town" class="form-control">
@@ -59,31 +70,23 @@
                                     </select>
                                 </div><!-- End .col-sm-6 -->
 
-                                <div class="col-sm-6">
-                                    <label>State</label>
-                                    <select id="state-select" name="state" class="form-control">
-                                        {% for value, display in order.form.state.field.choices %}
-                                            <option value="">select state</option>
-                                            <option value="{{ value }}">{{ display }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
+                             
                             </div><!-- End .row -->
 
                             <div class="row">
                                 <div class="col-sm-6">
                                     <label>Postcode / ZIP *</label>
-                                    {{ order.form.zip_code }}
+                                    {{ form.zip_code }}
                                 </div><!-- End .col-sm-6 -->
 
                                 <div class="col-sm-6">
                                     <label>Phone *</label>
-                                    {{ order.form.telephone }}
+                                    {{ form.telephone }}
                                 </div><!-- End .col-sm-6 -->
                             </div><!-- End .row -->
 
                             <label>Order notes (optional)</label>
-                            {{ order.form.message }}
+                            {{ form.message }}
                         </div><!-- End .col-lg-9 -->
 
                         <aside class="col-lg-3">
@@ -99,7 +102,7 @@
                                     </thead>
 
                                     <tbody>
-                                        {% for item in order.cart %}
+                                        {% for item in cart %}
                                         <tr>
                                             <td><a href="#">{{ item.product.title }} {{ item.quantity }} pcs *</a></td>
                                             <td>&#8358;{{ item.get_price_tag|floatformat:2|intcomma }}</td>
@@ -108,17 +111,17 @@
                                         
                                         <tr class="summary-subtotal">
                                             <td>Subtotal:</td>
-                                            <td>{{ order.order.get_total|floatformat:2|intcomma }}</td>
+                                            <td>{{ order.get_total|floatformat:2|intcomma }}</td>
                                         </tr><!-- End .summary-subtotal -->
                                         
                                         <tr>
                                             <td>Delivery:</td>
-                                            <td>&#8358;{{ order.order.get_delivery_cost|floatformat:2|intcomma }}</td>
+                                            <td > &#8358;<span id="delivery_cost"></span></td>
                                         </tr>
                                         
                                         <tr class="summary-total">
                                             <td>Total:</td>
-                                            <td>&#8358;{{ order.order.get_total_with_delivery|floatformat:2|intcomma }}</td>
+                                            &#8358;<td id="total_with_delivery"></td>
                                         </tr><!-- End .summary-total -->
                                     </tbody>
                                 </table><!-- End .table table-summary -->
@@ -168,6 +171,39 @@
         });
     });
 
+
+
+
+
+
+    $(document).ready(function() {
+        $('#state-select, #id_town').change(function() {
+            var state = $('#state-select').val();
+            var town = $('#id_town').val();
+    
+            if (state && town) {
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'delivery:update_delivery_cost' %}",
+                    data: {
+                        'state': state,
+                        'town': town,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#total_with_delivery').text(response.total_with_delivery);
+                            $('#delivery_cost').text(response.delivery_cost);
+                        } else {
+                            alert(response.error);
+                        }
+                    }
+                });
+            }
+        });
+    });
+    
+    
 </script>
 
 {% endblock content %}
