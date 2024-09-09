@@ -321,10 +321,11 @@ class Cart(models.Model):
         return self.quantity
 
     def __str__(self):
-        price = self.size.discount_price if self.size.discount_price else self.size.price
-        # discount_price = self.size.discount_price if self.size else "N/A"
-        title = self.product.title
-        return f"item: {title}, price: {price }, quantity: {self.quantity}, color: {self.color.name if self.color else None}, size {self.size.size if self.size else None}"
+        if self.size:  # Check if size is not None
+            price = self.size.discount_price if self.size.discount_price else self.size.price
+        else:
+            price = "No size available"  # Handle the case where size is None
+        return f"{self.product.title} - {price}"
 
     def get_title(self):
         return self.product.title

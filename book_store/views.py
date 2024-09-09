@@ -389,7 +389,6 @@ def login(request):
 
 
 def home_view(request):
-    new_arrivals = Product.objects.filter(label='new')
     top_products = Product.objects.get_top_products()
     featured_products = Product.get_featured_products()
     top_rated_products = Product.get_top_rated_products()

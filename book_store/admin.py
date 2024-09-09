@@ -40,10 +40,10 @@ class make_accept_refund(admin.ModelAdmin, ):
 make_accept_refund.short_description = 'update refund granted'
 # order admin
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['user', 'items', 'shipping_address', 'total_price', 'reference', 'is_ordered', 'is_delivered', 'is_received', 'is_refund_request', 'refund_granted', 'view_invoice_button', 'download_invoice_button', 'send_invoice_button']
+    list_display = ['user', 'items', 'total_price', 'reference', 'is_ordered', 'is_delivered', 'is_received', 'is_refund_request', 'refund_granted', 'view_invoice_button', 'download_invoice_button', 'send_invoice_button']
     readonly_fields = ('user',)
     list_filter = ['is_ordered','is_delivered', 'is_received', 'is_refund_request']
-    list_display_links = ['user','items', 'shipping_address']
+    list_display_links = ['user','items',]
     search_fields = ['user__username', 'reference']
 
     # Add buttons to view, download, and send the invoice

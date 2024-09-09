@@ -38,7 +38,6 @@ def initiate_payment(request):
     return render(request, 'store/payment.html', {'order': order, 'cart': cart})
 
 
-
 def verify_payment(request, ref):
     try:
         order = Order.objects.get(is_ordered=False, user=request.user)
@@ -60,21 +59,26 @@ def verify_payment(request, ref):
                 payment.verified = True
                 payment.save()
 
-                
                 # Update stock and quantity sold for each product in the order
                 for order_product in order.product.all():
-                    product_size = order_product.size
-                    product_color = order_product.color
-                    quantity = order_product.quantity
                     product = order_product.product
-                    # Update stock in Color model
-                    product_color.stock = F('stock') - quantity
-                    product_color.save()
-                    # Update quantity sold in Size model
-                    product_size.quantity_sold = F('quantity_sold') + quantity
+                    quantity = order_product.quantity
+
+                    # Update stock in Color model if color exists
+                    if order_product.color:
+                        product_color = order_product.color
+                        product_color.stock = F('stock') - quantity
+                        product_color.save()
+                    
+                    # Update quantity sold in Size model if size exists
+                    if order_product.size:
+                        product_size = order_product.size
+                        product_size.quantity_sold = F('quantity_sold') + quantity
+                        product_size.save()
+
+                    # Update product quantity sold
                     product.quantity_sold = F('quantity_sold') + quantity
                     product.save()
-                    product_size.save()
 
                 # Mark order products as ordered
                 order_products = order.product.all()
