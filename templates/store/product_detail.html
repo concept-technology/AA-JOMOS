@@ -34,31 +34,39 @@
                     <div class="col-md-6">
                         <div class="product-gallery product-gallery-separated">
                             <span class="product-label label-sale">{{ product.get_human_readable_label }}</span>
+                        
+                            <!-- Image 1 -->
+                            {% if product.img_1 %}
                             <figure class="product-separated-itemx">
                                 <img src="{{ product.img_1.url }}" alt="product image">
                                 <a href="#" id="btn-separated-gallery" class="btn-product-galleryn">
                                     <i class="icon-arrows"></i>
                                 </a>
                             </figure>
-
-                            {% if  not product.img_2.url == '' %}
+                            {% endif %}
+                        
+                            <!-- Image 2 -->
+                            {% if product.img_2 %}
                             <figure class="product-separated-itemx">
-                                <img src="{{ product.img_2.url }}" alt="{{product.title}} image">
+                                <img src="{{ product.img_2.url }}" alt="{{ product.title }} image">
                             </figure>
                             {% endif %}
-
-                            {% if not product.img_3.url == '' %}
+                        
+                            <!-- Image 3 -->
+                            {% if product.img_3 %}
                             <figure class="product-separated-itemx">
-                                <img src="{{ product.img_3.url }}" alt="{{product.title}} image">
+                                <img src="{{ product.img_3.url }}" alt="{{ product.title }} image">
                             </figure>
                             {% endif %}
-
-                            {% if not product.img_4.url == '' %}
+                        
+                            <!-- Image 4 -->
+                            {% if product.img_4 %}
                             <figure class="product-separated-itemx">
-                                <img src="{{ product.img_4.url }}" alt="{{product.title}} image">
+                                <img src="{{ product.img_4.url }}" alt="{{ product.title }} image">
                             </figure>
                             {% endif %}
                         </div><!-- End .product-gallery -->
+                        
                     </div><!-- End .col-md-6 -->
 
                     <div class="col-md-6">
@@ -73,12 +81,10 @@
                                     }
                                 </style>
                                 <div id="star-ratings">
-                                    <p id="average-rating">
-                                        {{ product.average_rating|floatformat:1 }}
-                                    </p>
                                     {% star_rating product.average_rating %}
+                                    {{ product.average_rating|floatformat:1 }}
                                 </div>
-                                <span class="ratings-text">{{ item.count }} {{ count }} (reviews)</span>
+                                <span class="ratings-text">{{ item.count }}  {{ count }} reviews(s)</span>
                             </div><!-- End .ratings-container -->
                             
                             {% for item in sizes %}              
@@ -156,13 +162,16 @@
                                     <span>Category:</span>
                                     <a href="#">{{ product.category.title }}</a>
                                 </div><!-- End .product-cat -->
-                            
+                                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
                                 <div class="social-icons social-icons-sm">
                                     <span class="social-label">Share:</span>
-                                    <a href="#" class="social-icon" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
-                                    <a href="#" class="social-icon" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
-                                    <a href="#" class="social-icon" title="Instagram" target="_blank"><i class="icon-instagram"></i></a>
-                                    <a href="#" class="social-icon" title="Pinterest" target="_blank"><i class="icon-pinterest"></i></a>
+                                    <a href="{{product.get_facebook_share_url}}" class="social-icon" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
+                                    <a href="{{product.get_twitter_share_url}}" class="social-icon" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
+                                    <!-- <a href="#" class="social-icon" title="Instagram" target="_blank"><i class="icon-instagram"></i></a> -->
+                                    <a href="{{product.get_whatsapp_share_url}}" target="_blank" style="font-size: 2em; color: #25D366;">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </a>
                                 </div><!-- End .social-icons -->
                             </div><!-- End .product-details-footer -->
                             
@@ -279,7 +288,7 @@
                                     <div class="card-header" id="product-review-heading">
                                         <h2 class="card-title">
                                             <a class="collapsed" role="button" data-toggle="collapse" href="#product-accordion-review" aria-expanded="false" aria-controls="product-accordion-review">
-                                                Reviews ({{ count }})
+                                                 ({{ count }} Reviews)
                                             </a>
                                         </h2>
                                     </div><!-- End .card-header -->

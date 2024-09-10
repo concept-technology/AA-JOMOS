@@ -63,19 +63,18 @@
 
                         <div class="col-lg-4">
                             <div class="intro-banners">
-                                {% for product in top_products %}                                   
+                                {% for product in top_rated_products %}                                   
                                 <div class="banne mb-lg-1 mb-xl-2 d-flex">
                                     <div class="m-1">
-
-                                        <a href="#">
+                                        <a href="{{product.get_absolute_url}}">
                                             <img src="{{product.img_1.url}}" alt="Banner" style="width: 80px;">
-                                            <h4 class="banner-subtitle d-lg-none d-xl-block"><a href="#">Top books</a></h4><!-- End .banner-subtitle -->
+                                            <h4 class="banner-subtitle d-lg-none d-xl-block"><a href="#">{{product.category.title}}</a></h4><!-- End .banner-subtitle -->
                                         </a>
                                     </div>
 
                                     <div class="banner-conten m-3">
                                         <h3 class="banner-title"><a href="#"> <br>{{product.title}}</a></h3><!-- End .banner-title -->
-                                        <a href="{{product.get_absolute_url}}" class="banner-link">Shop Now<i class="icon-long-arrow-right"></i></a>
+                                        <a href="{{product.get_absolute_url}}" class="banner-link">top rated<i class="icon-long-arrow-right"></i></a>
                                     </div><!-- End .banner-content -->
                                 </div><!-- End .banner -->
                                 {%endfor%}      
@@ -93,9 +92,9 @@
                     <li class="nav-item">
                         <a class="nav-link" id="products-sale-link" data-toggle="tab" href="#products-sale-tab" role="tab" aria-controls="products-sale-tab" aria-selected="false">On Sale</a>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link" id="products-top-link" data-toggle="tab" href="#products-top-tab" role="tab" aria-controls="products-top-tab" aria-selected="false">Top Rated</a>
-                    </li>
+                    </li> -->
                 </ul>
 
                 <div class="tab-content tab-content-carousel">
@@ -124,7 +123,7 @@
 
                             
                             {% for product in featured_products %}                             
-                            <div class="product product-2">
+                            <div class="product product-2" style="padding: 20px;">
                                 <figure class="product-media">
                                     <a href="{{product.get_absolute_url}}">
                                         <img src="{{product.img_1.url}}" alt="Product image" class="product-image">
@@ -135,7 +134,7 @@
                                     </div><!-- End .product-action -->
 
                                     <div class="product-action product-action-dark">
-                                        {% if product.get_stock_status == 0 %}                                           
+                                        {% if product.total_stock == 0 %}                                           
                                         <span class="product-label label-out">Out of Stock</span>
                                         {%else%}
                                         <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
@@ -155,15 +154,15 @@
                                     <div class="product-price">                
                                         {% for size in product.size.all  %}                     
                                         {% if forloop.counter == 1 %}
+                                        <span class="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
                                         <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                        <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
                                         {% endif %}
                                         {% endfor %}
-                                        <span class="out-text">{{product.get_stock_status}} in stock</span>
+                                        <span class="out-text">{{product.total_stock}} in stock</span>
                                     </div><!-- End .product-price -->
         
                                     <div class="ratings-container">
-                                        <div class="ratings">
+                                        <div class="ratings,">
 
                                             <style>
                                                 #star-ratings {
@@ -172,10 +171,8 @@
                                                 }
                                             </style>
                                             <div id="star-ratings">
-                                                <p id="average-rating">
-                                                    {{ product.average_rating|floatformat:1 }}
-                                                </p>
                                                 {% star_rating product.average_rating %}
+                                                {{ product.average_rating|floatformat:1 }}
                                             </div>
                                             <!-- <div class="ratings-val" style="width: 60%;"></div>End .ratings-val -->
                                         </div><!-- End .ratings -->
@@ -210,19 +207,19 @@
                                     }
                                 }
                             }'>
-                            {% for product in top_rated_products %}
-                            <div class="product product-2">
+                                                   
+                            {% for product in top_rated_products %}                             
+                            <div class="product product-2" style="padding: 20px;">
                                 <figure class="product-media">
                                     <a href="{{product.get_absolute_url}}">
                                         <img src="{{product.img_1.url}}" alt="Product image" class="product-image">
                                     </a>
-
                                     <div class="product-action-vertical">
                                         <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
                                     </div><!-- End .product-action -->
 
                                     <div class="product-action product-action-dark">
-                                        {% if product.get_stock_status == 0 %}                                           
+                                        {% if product.total_stock == 0 %}                                           
                                         <span class="product-label label-out">Out of Stock</span>
                                         {%else%}
                                         <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
@@ -236,26 +233,40 @@
                                     <div class="product-cat">
                                         <a href="#">{{product.category.title}}</a>
                                     </div><!-- End .product-cat -->
-                                    <h3 class="product-title"><a href="product.html">{{product.title}}</a></h3><!-- End .product-title -->
+                                    <!-- <h3 class="product-title"><a href="product.html">GoPro - HERO7 Black HD Waterproof Action</a></h3>End .product-title -->
+                                  
+                                    <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{product.title}}</a></h3><!-- End .product-title -->
                                     <div class="product-price">                
                                         {% for size in product.size.all  %}                     
                                         {% if forloop.counter == 1 %}
+                                        <span class="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
                                         <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                        <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
                                         {% endif %}
                                         {% endfor %}
-                                        <span class="out-text">{{product.get_stock_status}} in stock</span>
+                                        <span class="out-text">{{product.total_stock}} in stock</span>
                                     </div><!-- End .product-price -->
         
                                     <div class="ratings-container">
-                                        <div id="star-ratingsx"  style="width: 100%;">
-                                            {% star_rating product.average_rating %}
+                                        <div class="ratings,">
+
+                                            <style>
+                                                #star-ratings {
+                                                    font-size: 20px;
+                                                    color: gold;
+                                                }
+                                            </style>
+                                            <div id="star-ratings">
+                                                {% star_rating product.average_rating %}
+                                                {{ product.average_rating|floatformat:1 }}
+                                            </div>
+                                            <!-- <div class="ratings-val" style="width: 60%;"></div>End .ratings-val -->
                                         </div><!-- End .ratings -->
+                                        <!-- <span class="ratings-text">( 2 Reviews )</span> -->
                                     </div><!-- End .rating-container -->
                                 </div><!-- End .product-body -->
-                            </div><!-- End .product -->
-                            {%endfor %}
-                          
+                            </div><!-- End .product -->                 
+                            {% endfor %}
+
                 
                         </div><!-- End .owl-carousel -->
                     </div><!-- .End .tab-pane -->
@@ -282,44 +293,47 @@
                                 }
                             }'>
 
-                            {% for product in products_on_sale %}
-                            <div class="product product-2">
+                                                   
+                            {% for product in products_on_sale %}                             
+                            <div class="product product-2" style="padding: 20px;">
                                 <figure class="product-media">
                                     <a href="{{product.get_absolute_url}}">
                                         <img src="{{product.img_1.url}}" alt="Product image" class="product-image">
                                     </a>
-
                                     <div class="product-action-vertical">
                                         <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
                                     </div><!-- End .product-action -->
 
-                                    <div class="product-action product-action-dark">                                        
-                                        {% if product.get_stock_status == 0 %}                                           
+                                    <div class="product-action product-action-dark">
+                                        {% if product.total_stock == 0 %}                                           
                                         <span class="product-label label-out">Out of Stock</span>
                                         {%else%}
-                                        <a href="#" class="btn-product btn-cart" title="view product"><span>{{product.title}}</span></a>
+                                        <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
                                         {% endif %}
+                                        <!-- <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a> -->
                                         <a href="popup/quickView.html" class="btn-product btn-quickview" title="Quick view"><span>quick view</span></a>
                                     </div><!-- End .product-action -->
                                 </figure><!-- End .product-media -->
 
-                                <div class="product-body m-5">
+                                <div class="product-body">
                                     <div class="product-cat">
-                                        <a href="{{get_absolute_url}}">{{product.category.title}}</a>
+                                        <a href="#">{{product.category.title}}</a>
                                     </div><!-- End .product-cat -->
+                                    <!-- <h3 class="product-title"><a href="product.html">GoPro - HERO7 Black HD Waterproof Action</a></h3>End .product-title -->
+                                  
                                     <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{product.title}}</a></h3><!-- End .product-title -->
                                     <div class="product-price">                
                                         {% for size in product.size.all  %}                     
                                         {% if forloop.counter == 1 %}
+                                        <span class="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
                                         <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                        <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
                                         {% endif %}
                                         {% endfor %}
-                                        <span class="out-text">{{product.get_stock_status}} in stock</span>
+                                        <span class="out-text">{{product.total_stock}} in stock</span>
                                     </div><!-- End .product-price -->
         
                                     <div class="ratings-container">
-                                        <div c>
+                                        <div class="ratings,">
 
                                             <style>
                                                 #star-ratings {
@@ -328,16 +342,17 @@
                                                 }
                                             </style>
                                             <div id="star-ratings">
-                                                <p id="average-rating">
-                                                    {{ product.average_rating|floatformat:1 }}
-                                                </p>
                                                 {% star_rating product.average_rating %}
+                                                {{ product.average_rating|floatformat:1 }}
                                             </div>
+                                            <!-- <div class="ratings-val" style="width: 60%;"></div>End .ratings-val -->
                                         </div><!-- End .ratings -->
+                                        <!-- <span class="ratings-text">( 2 Reviews )</span> -->
+                                    </div><!-- End .rating-container -->
                                 </div><!-- End .product-body -->
-                            </div><!-- End .product -->
-                        </div><!-- End .owl-carousel -->
-                        {% endfor %}
+                            </div><!-- End .product -->                 
+                            {% endfor %}
+
                     </div><!-- .End .tab-pane -->
                 </div><!-- End .tab-content -->
             </div><!-- End .container -->
@@ -365,10 +380,7 @@
                 </div><!-- End .cta -->
             </div><!-- End .container -->
 
-            <div class="bg-light deal-container pt-7 pb-7 mb-5">
-                
-                
-                
+            <div class="bg-light deal-container pt-7 pb-7 mb-5">              
                 <div class="container">
                     <div class="heading text-center mb-4">
                         <h2 class="title">Deals & Outlet</h2><!-- End .title -->
@@ -430,11 +442,11 @@
                                                 <div class="product-price">                
                                                     {% for size in product.size.all  %}                     
                                                     {% if forloop.counter == 1 %}
-                                                    <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                                    <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
+                                                    <span class="new-price" id="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
+                                                    <span class="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
                                                     {% endif %}
                                                     {% endfor %}
-                                                    <span class="out-text">{{product.get_stock_status}} in stock</span>
+                                                    <span class="out-text">{{product.total_stock}} in stock</span>
                                                 </div><!-- End .product-price -->
                     
                                                 <div class="ratings-container">
@@ -454,10 +466,7 @@
                                     {% endif %}
 
                                  
-                                    {% if forloop.counter == 2 %}                               
-                              
-                                    
-                                    
+                                    {% if forloop.counter == 2 %}                                      
                                     <div class="col-6">
                                         <div class="product product-2">
                                             <figure class="product-media">
@@ -481,15 +490,14 @@
                                                     <a href="#">Computers & Tablets</a>
                                                 </div><!-- End .product-cat -->
                                                 <h3 class="product-title"><a href="product.html">Apple - Smart Keyboard Folio  for 11-inch iPad Pro</a></h3><!-- End .product-title -->
-                                                <div class="product-price">
-                                                    {% if product.discount_price %}
-                                                    <span class="new-price" id="new-price">&#8358;{{ product.discount_price|floatformat:2|intcomma }}</span>
-                                                    <span class="old-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
-                                                    {% else %}
-                                                    <span class="new-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
+                                                <div class="product-price">                
+                                                    {% for size in product.size.all  %}                     
+                                                    {% if forloop.counter == 1 %}
+                                                    <span class="new-price" id="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
+                                                    <span class="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
                                                     {% endif %}
-            
-                                                    <span class="out-text">{{product.get_stock_status}} in stock</span>
+                                                    {% endfor %}
+                                                    <span class="out-text">{{product.total_stock}} in stock</span>
                                                 </div><!-- End .product-price -->
                     
                                                 <div class="ratings-container">
@@ -525,6 +533,7 @@
             <div class="container">
                 <hr class="mt-3 mb-6">
             </div><!-- End .container -->
+            {% if new_products %}                                
  
             <div class="container trending">
                 <div class="heading heading-flex mb-3">
@@ -564,54 +573,65 @@
                                     
                              
                                    
-                                   {% for product in new_products %}                                        
-                                    <div class="product product-2">
-                                        <figure class="product-media">
-                                            <span class="product-label label-circle {{product.label}}">{{product.get_human_readable_label}}</span>
-                                            <a href="{{product.get_absolute_url}}">
-                                                <img src="{{product.img_1.url}}" alt="Product image" class="product-image" style="width: 200px; height: 220px;">
-                                            </a>
+                            {% for product in new_products %}                             
+                            <div class="product product-2" style="padding: 20px;">
+                                <figure class="product-media">
+                                    <a href="{{product.get_absolute_url}}">
+                                        <img src="{{product.img_1.url}}" alt="Product image" class="product-image">
+                                    </a>
+                                    <div class="product-action-vertical">
+                                        <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
+                                    </div><!-- End .product-action -->
 
-                                            <div class="product-action-vertical">
-                                                <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
-                                            </div><!-- End .product-action -->
+                                    <div class="product-action product-action-dark">
+                                        {% if product.total_stock == 0 %}                                           
+                                        <span class="product-label label-out">Out of Stock</span>
+                                        {%else%}
+                                        <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
+                                        {% endif %}
+                                        <!-- <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a> -->
+                                        <a href="popup/quickView.html" class="btn-product btn-quickview" title="Quick view"><span>quick view</span></a>
+                                    </div><!-- End .product-action -->
+                                </figure><!-- End .product-media -->
 
-                                            <div class="product-action product-action-dark">
-                                                <a href="" class="btn-productx "><span>{{product.title}}</span></a>
-                                                <a href="popup/quickView.html" class="btn-product btn-quickview" title="Quick view"><span>quick view</span></a>
-                                            </div><!-- End .product-action -->
-                                        </figure><!-- End .product-media -->
+                                <div class="product-body">
+                                    <div class="product-cat">
+                                        <a href="#">{{product.category.title}}</a>
+                                    </div><!-- End .product-cat -->
+                                    <!-- <h3 class="product-title"><a href="product.html">GoPro - HERO7 Black HD Waterproof Action</a></h3>End .product-title -->
+                                  
+                                    <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{product.title}}</a></h3><!-- End .product-title -->
+                                    <div class="product-price">                
+                                        {% for size in product.size.all  %}                     
+                                        {% if forloop.counter == 1 %}
+                                        <span class="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
+                                        <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
+                                        {% endif %}
+                                        {% endfor %}
+                                        <span class="out-text">{{product.total_stock}} in stock</span>
+                                    </div><!-- End .product-price -->
+        
+                                    <div class="ratings-container">
+                                        <div class="ratings,">
 
-                                        <div class="product-body">
-                                            <div class="product-cat">
-                                                <a href="#">{{product.category.title}}</a>
-                                            </div><!-- End .product-cat -->
-                                            <h3 class="product-title"><a href="product.get_absolute_url">{{product.title}}</a></h3><!-- End .product-title -->
-                                            <div class="product-price">                
-                                                {% for size in product.size.all  %}                     
-                                                {% if forloop.counter == 1 %}
-                                                <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                                <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
-                                                {% endif %}
-                                                {% endfor %}
-                                                <span class="out-text">{{product.get_stock_status}} in stock</span>
-                                            </div><!-- End .product-price -->
-                
-                                            <div class="ratings-container">
-                                                <div class="ratings">
-                                                    <div class="ratings-val" style="width: 100%;"></div><!-- End .ratings-val -->
-                                                </div><!-- End .ratings -->
-                                                <!-- <span class="ratings-text">( 4 Reviews )</span> -->
-                                            </div><!-- End .rating-container -->
-
-                                            <!-- <div class="product-nav product-nav-dots">
-                                                <a href="#" style="background: #69b4ff;"><span class="sr-only">Color name</span></a>
-                                                <a href="#" style="background: #ff887f;"><span class="sr-only">Color name</span></a>
-                                                <a href="#" class="active" style="background: #333333;"><span class="sr-only">Color name</span></a>
-                                            </div>End .product-nav -->
-                                        </div><!-- End .product-body -->
-                                    </div><!-- End .product -->
-                                    {% endfor %}                    
+                                            <style>
+                                                #star-ratings {
+                                                    font-size: 20px;
+                                                    color: gold;
+                                                }
+                                            </style>
+                                            <div id="star-ratings">
+                                                {% star_rating product.average_rating %}
+                                                {{ product.average_rating|floatformat:1 }}
+                                            </div>
+                                            <!-- <div class="ratings-val" style="width: 60%;"></div>End .ratings-val -->
+                                        </div><!-- End .ratings -->
+                                        <!-- <span class="ratings-text">( 2 Reviews )</span> -->
+                                    </div><!-- End .rating-container -->
+                                </div><!-- End .product-body -->
+                            </div><!-- End .product -->                 
+                            {% endfor %}
+                            {%endif%}
                                 </div><!-- End .owl-carousel -->
                             </div><!-- .End .tab-pane -->
                             <div class="tab-pane p-0 fade" id="trending-tv-tab" role="tabpanel" aria-labelledby="trending-tv-link">
@@ -664,11 +684,11 @@
                                             <div class="product-price">                
                                                 {% for size in product.size.all  %}                     
                                                 {% if forloop.counter == 1 %}
-                                                <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                                <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
+                                                <span class="new-price" id="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
+                                                <span class="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
                                                 {% endif %}
                                                 {% endfor %}
-                                                <span class="out-text">{{product.get_stock_status}} in stock</span>
+                                                <span class="out-text">{{product.total_stock}} in stock</span>
                                             </div><!-- End .product-price -->
                 
                                             <div class="ratings-container">
@@ -749,53 +769,52 @@
                                     }
                                 }
                             }'>
-                            {% for category_data in top_selling_by_category %}
-                            {% for product in category_data.products %}
-                            <div class="product product-2">
-                                <figure class="product-media">
-                                    <span class="product-label label-circle {{product.label}}">{{product.get_human_readable_label}}</span>
-                                    <a href="{{product.get_absolute_url}}">
-                                        <img src="{{product.img_1.url}}" alt="Product image" class="product-image" style="width: 200px; height: 220px;">
-                                    </a>
-
-                                    <div class="product-action-vertical">
-                                        <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
-                                    </div><!-- End .product-action -->
-
-                                    <div class="product-action product-action-dark">
-                                        <a href="#" class="btn-produc" title="Add to cart"><span>{{product.title}}</a>
-                                        <!-- <a href="popup/quickView.html" class="btn-product btn-quickview" title="Quick view"><span>quick view</span></a> -->
-                                    </div><!-- End .product-action -->
-                                </figure><!-- End .product-media -->
-
-                                <div class="product-body">
-                                    <div class="product-cat">
-                                        <a href="#">{{product.category.title}}</a>
-                                    </div><!-- End .product-cat -->
-                                    <h3 class="product-title"><a href="product.html">{{product.title}}</a></h3><!-- End .product-title -->
-                                    <div class="product-price">                
-                                        {% for size in product.size.all  %}                     
-                                        {% if forloop.counter == 1 %}
-                                        <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                        <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
-                                        {% endif %}
-                                        {% endfor %}
-                                        <span class="out-text">{{product.get_stock_status}} in stock</span>
-                                    </div><!-- End .product-price -->
-        
-                                    <div class="ratings-container">
-                                        <div id="star-ratings"  style="width: 100%;">
-                                            {% load star_rating %}
-                                            {% star_rating rating.rating %}
-                                        </div><!-- End .ratings -->
-                                    </div><!-- End .rating-container -->
-                                        <!-- <span class="ratings-text">( 4 Reviews )</span> -->
-                                    </div><!-- End .rating-container -->
-                                </div><!-- End .product-body -->
+                            {% for category, products in top_selling_by_category.items %}
+                            {% for product in products %}
+                                <div class="product product-2" style="padding: 10px;">
+                                    <figure class="product-media">
+                                        <span class="product-label label-circle {{ product.label }}">{{ product.get_human_readable_label }}</span>
+                                        <a href="{{ product.get_absolute_url }}">
+                                            <img src="{{ product.img_1.url }}" alt="Product image" class="product-image" style="width: 200px; height: 220px;">
+                                        </a>
+                        
+                                        <div class="product-action-vertical">
+                                            <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
+                                        </div><!-- End .product-action -->
+                        
+                                        <div class="product-action product-action-dark">
+                                            <a href="#" class="btn-produc" title="Add to cart"><span>{{ product.title }}</a>
+                                        </div><!-- End .product-action -->
+                                    </figure><!-- End .product-media -->
+                        
+                                    <div class="product-body">
+                                        <div class="product-cat">
+                                            <a href="#">{{ product.category.title }}</a>
+                                        </div><!-- End .product-cat -->
+                                        <h3 class="product-title"><a href="product.html">{{ product.title }}</a></h3><!-- End .product-title -->
+                                        <div class="product-price">                
+                                            {% for size in product.size.all %}                     
+                                                {% if forloop.first %}
+                                                    <span class="new-price" id="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
+                                                    <span class="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <span class="out-text">{{ product.total_stock }} in stock</span>
+                                        </div><!-- End .product-price -->
+                            
+                                        <div class="ratings-container">
+                                            <div id="star-ratings" style="width: 100%;">
+                                                {% load star_rating %}
+                                                {% star_rating product.average_rating %}
+                                                {{ product.average_rating|floatformat:1 }}
+                                            </div><!-- End .ratings -->
+                                        </div><!-- End .rating-container -->
+                                    </div><!-- End .product-body -->
+                                </div><!-- End .product product-2 -->
+                            {% endfor %}
+                        {% endfor %}
+                        
                             </div><!-- End .product -->
-
-                            {% endfor%}
-                            {% endfor%}
                         </div><!-- End .owl-carousel -->
                     </div><!-- .End .tab-pane -->
               
@@ -844,13 +863,14 @@
                 </div><!-- End .cta -->
             </div><!-- End .container -->
             {% block title %}
-            A.A JOMOS | Home
-       
+            A.A JOMOS | Home       
         {% endblock title %}
-        
+
         </main><!-- End .main -->
 
   
+
+    
     
     <button id="scroll-top" title="Back to Top"><i class="icon-arrow-up"></i></button>
 

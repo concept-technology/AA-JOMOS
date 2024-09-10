@@ -14,7 +14,7 @@ from django.db.models import Avg
 from django.urls import reverse
 from django.db.models import F, OuterRef, Subquery
 from django.db.models import Avg, Count, Sum
-
+from django.utils.http import urlencode
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from delivery.models import DeliveryLocations
@@ -66,13 +66,13 @@ class ProductManager(models.Manager):
 
     
     @staticmethod
-    def get_top_selling_by_category():
+    def get_top_selling_by_category(limit=10):
         # Ensure products have at least one sale
         return Product.objects.annotate(
             total_quantity_sold=Sum('quantity_sold')
-        ).filter(total_quantity_sold__gt=0).order_by('-total_quantity_sold')
+        ).filter(total_quantity_sold__gt=0).order_by('-total_quantity_sold')[:limit]
 
-    def get_products_by_label(self, limit=5):
+    def get_products_by_label(self, limit=10):
         labels = [choice[0] for choice in label_choices]
         products_by_label = []
 
@@ -103,7 +103,10 @@ class ProductManager(models.Manager):
         
         return self.annotate(
             top_discount_amount=Subquery(size_subquery)
-        ).order_by('-top_discount_amount')[:limit]          
+        ).order_by('-top_discount_amount')[:limit]   
+        
+        
+               
 class Category(models.Model):
     title = models.CharField(max_length=255,)
     slug =models.SlugField(default='')
@@ -209,14 +212,65 @@ class Product(models.Model):
     def get_deal_of_the_day_products():
         return Product.objects.filter(is_deal_of_the_day=True)[:1]
 
+    @staticmethod
+    def get_top_selling_by_category():
+        categories = Category.objects.all()
+        top_selling = {}
+        for category in categories:
+            # Fetch products with quantity_sold greater than 0 and order them by quantity_sold
+            top_selling_products = Product.objects.filter(
+                category=category,
+                quantity_sold__gt=0
+            ).order_by('-quantity_sold')[:5]
+
+            # If the queryset is empty, skip the category
+            if top_selling_products.exists():
+                top_selling[category.title] = top_selling_products
+            else:
+                top_selling[category.title] = None  # or [] to indicate no top-selling products
+
+        return top_selling
+
     
+    
+    def get_full_url(self):
+        # Assuming you're using the request object to get the full URL
+        from django.contrib.sites.models import Site
+        current_site = Site.objects.get_current()
+        return f"https://{current_site.domain}{self.get_absolute_url()}"
+
+    def get_facebook_share_url(self):
+        share_url = self.get_full_url()
+        return f"https://www.facebook.com/sharer/sharer.php?{urlencode({'u': share_url})}"
+
+    def get_twitter_share_url(self):
+        share_url = self.get_full_url()
+        text = f"Check out this product: {self.title}"
+        return f"https://twitter.com/intent/tweet?{urlencode({'url': share_url, 'text': text})}"
+
+    def get_whatsapp_share_url(self):
+        share_url = self.get_full_url()
+        text = f"Check out this product: {self.title} - {share_url}"
+        return f"https://api.whatsapp.com/send?{urlencode({'text': text})}"
+
+    def get_linkedin_share_url(self):
+        share_url = self.get_full_url()
+        return f"https://www.linkedin.com/shareArticle?{urlencode({'url': share_url, 'title': self.title})}"
+
+    def get_email_share_url(self):
+        share_url = self.get_full_url()
+        subject = f"Check out this product: {self.title}"
+        body = f"Check out this product on our website: {self.title} - {share_url}"
+        return f"mailto:?{urlencode({'subject': subject, 'body': body})}"
+
+
+
     @staticmethod
     def get_top_rated_products():
-        # Ensure products have at least one review
         return Product.objects.annotate(
             average_rating=Avg('ratings__rating'),
             review_count=Count('ratings')
-        ).filter(review_count__gt=0).order_by('-average_rating')
+        ).filter(review_count__gt=0).order_by('-average_rating')[:5]
 
     def get_stock_status(self):
         stock = Stock.objects.filter(product=self).first()
@@ -408,7 +462,7 @@ class Order(models.Model):
     cart_id = models.UUIDField(null=True, blank=True)
     session_key = models.CharField(max_length=40, null=True, blank=True)
     invoice_number = models.CharField(max_length=50, blank=True, null=True)
-
+    approved = models.BooleanField(default=False)
     def save(self, *args, **kwargs):
         # Generate invoice number if not set
         if not self.invoice_number:

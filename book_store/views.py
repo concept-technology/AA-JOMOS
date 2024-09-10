@@ -396,8 +396,11 @@ def home_view(request):
     get_deal_of_the_day_products = Product.get_deal_of_the_day_products()
     categories = Category.objects.all() #fetch all the category of products
     category_products = {}
-    top_selling_by_category = Product.objects.get_top_selling_by_category()
+    # top_selling_by_category = Product.objects.get_top_selling_by_category()
     new_products = Product.objects.get_new_products()
+    categories = Category.objects.all()
+    top_selling_by_category = Product.get_top_selling_by_category()
+    
     # top_discounted_products = Product.objects.get_top_discounted_products()
     context = {
         'top_products': top_products,

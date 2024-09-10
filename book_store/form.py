@@ -25,19 +25,44 @@ class UserProfileForm(UserChangeForm):
 class CustomerRatingForm(forms.ModelForm):
     class Meta:
         model = CustomerRating
-        fields = ['rating','headline', 'review']
+        fields = ['rating', 'headline', 'review']
         widgets = {
-            'rating': forms.Select(choices=[
-                (1, '★☆☆☆☆'),
-                (2, '★★☆☆☆'),
-                (3, '★★★☆☆'),
-                (4, '★★★★☆'),
-                (5, '★★★★★')
-            ], attrs=({
-                'class': 'form-control star',
-                'id':'star'
-            }))
+            'rating': forms.Select(
+                choices=[
+                    (1, '★☆☆☆☆'),
+                    (2, '★★☆☆☆'),
+                    (3, '★★★☆☆'),
+                    (4, '★★★★☆'),
+                    (5, '★★★★★')
+                ],
+                attrs={
+                    'class': 'star-rating-select',  # Updated class for styling
+                    'aria-label': 'Select rating',
+                    'id': 'star-rating'
+                }
+            ),
+            'headline': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Headline',
+                    'aria-label': 'Headline'
+                }
+            ),
+            'review': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Write your review here...',
+                    'rows': 4,
+                    'aria-label': 'Review'
+                }
+            ),
         }
+        labels = {
+            'rating': 'Rating',
+            'headline': 'Headline',
+            'review': 'Review',
+        }
+
 
 class CouponForm(forms.Form):
        code =forms.CharField(widget=forms.TextInput(attrs=(
