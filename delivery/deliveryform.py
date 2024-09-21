@@ -1,6 +1,7 @@
 from.models import DeliveryLocations
 from django import forms
 from book_store.models import CustomersAddress
+from phonenumber_field.modelfields import PhoneNumberField
 
 class LocationForm(forms.ModelForm):
     class Meta:
@@ -12,8 +13,28 @@ class LocationForm(forms.ModelForm):
         location_choices = [(location.id, location.state) for location in locations]
         self.fields['state'].widget = forms.Select(choices=location_choices, attrs={'class': 'form-control'})
 
+from django import forms
+from phonenumber_field.formfields import PhoneNumberField
 
+class PhoneNumberForm(forms.Form):
+    phone_number = PhoneNumberField(region='NG')  # Initialize without widget
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Set the custom widget for phone_number here
+        self.fields['phone_number'].widget = forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter phone number'
+        })
+        
+        # Set the label
+        self.fields['phone_number'].label = "Phone Number"
+    
+class OTPForm(forms.Form):
+    otp = forms.CharField(max_length=6,) 
+    
+    
 class AddressForm(forms.ModelForm):
     class Meta:
         model = CustomersAddress

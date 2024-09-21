@@ -103,8 +103,24 @@
         </div>
         <div class="invoice-details">
             <p><strong>Customer:</strong> {{ order.user.username }}</p>
-            <p><strong>Shipping Address:</strong> {{ order.shipping_address }}</p>
-            <p><strong>Date:</strong> {{ order.date|date:"F j, Y" }}</p>
+            <p> <strong>Address:</strong><Address>
+               {{ order.shipping_address.street_address }} <br>
+                 {{ order.shipping_address.apartment }} <br>
+                {{ order.shipping_address.town }},
+                 {{ order.shipping_address.state }}
+                {{ order.shipping_address.telephone }}
+                {{order.shipping_address.zip_code}} <br>
+                {{order.shipping_address.country}}
+            </Address>
+            <strong>tel: {{order.shipping_address.telephone}}</strong>
+        </p>
+        
+       <p><strong>Date: {{ order.date|date:"F j, Y" }}</strong></p> 
+       
+       {% if order.shipping_address.message %}
+       <p>{{order.shipping_address.message}}</p>
+       {% endif %}
+        
         </div>
 
         <table class="invoice-items">

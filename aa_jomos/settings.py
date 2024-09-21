@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import environ
 import dj_database_url
+from twilio.rest import Client
 
 # AUTH_USER_MODEL = 'users.CustomUser'
 # LOGGING = {
@@ -31,7 +32,7 @@ env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False)
 )
-# environ.Env.read_env(BASE_DIR / '.env')
+environ.Env.read_env(BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "phonenumber_field",
     'jazzmin',
     'django.contrib.admin',
     'gunicorn',
@@ -76,7 +78,8 @@ INSTALLED_APPS = [
     'xhtml2pdf',
     'environ',
     'delivery',
-    'paystack_api'
+    'paystack_api',
+    'debug_toolbar',
     # 'jet_django',
 ]
 
@@ -92,7 +95,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "allauth.account.middleware.AccountMiddleware",
-    'book_store.middleware.ignore_static_files.IgnoreStaticFilesMiddleware'
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    # 'book_store.middleware.ignore_static_files.IgnoreStaticFilesMiddleware'
 ]
 
 ROOT_URLCONF = 'aa_jomos.urls'
@@ -124,22 +128,22 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
     
-DATABASE_URL = os.environ.get('DATABASE_URL', default='postgresql://aa_jomos_database_web_server_user:9Zzvw8HG6A5x6VyeYXoE0jjJdXPlvUIY@dpg-crceosd2ng1s739rvaa0-a.oregon-postgres.render.com/aa_jomos_database_web_server')
+    DATABASE_URL = env('DATABASE_URL')
 
-# DATABASES = {
-#         'default': dj_database_url.config(
-#             # Replace this value with your local database's connection string.
-#             default=DATABASE_URL,
-#             conn_max_age=600
-#         )
-#     }
-
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    DATABASES = {
+            'default': dj_database_url.config(
+                # Replace this value with your local database's connection string.
+                default=DATABASE_URL,
+                conn_max_age=600
+            )
+        }
+else:
+   
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
 
 # Password validation
@@ -232,12 +236,11 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 465
 # EMAIL_USE_TLS = True
 EMAIL_USE_SSL = True
-# EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_USER = 'info@conceptechsolution.com'
-EMAIL_HOST_PASSWORD = 'tjpxrilotfighvgw'
-# EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 # Default email address to use for various automated correspondence
-DEFAULT_FROM_EMAIL = 'info@conceptechsolution.com'
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
 
 ACCOUNT_EMAIL_REQUIRED = True
@@ -331,3 +334,9 @@ PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY')
 #         },
 #     },
 # }
+
+
+TWILIO_ACCOUNT_SID = env('TWILIO_ACCOUNT_SID') 
+TWILLIO_AUTH_TOKEN = env('TWILLIO_AUTH_TOKEN')
+
+TWILIO_VERIFICATION_SERVICE_SID = env('TWILIO_VERIFICATION_SERVICE_SID')

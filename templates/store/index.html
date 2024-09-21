@@ -709,9 +709,7 @@
                                         </div><!-- End .product-body -->
                                     </div><!-- End .product -->
                                     {%endfor%}
-                                    {% endif %}
-                                
-                        
+                                    {% endif %}           
                                 </div><!-- End .owl-carousel -->
                             </div><!-- .End .tab-pane -->
               
@@ -848,9 +846,10 @@
                                     <h3 class="cta-title">Get the Latest Deals</h3><!-- End .cta-title -->
                                     <p class="cta-desc">subscribe to our newsletter<br> and receive <span class="text-primary">5% coupon</span> for first shopping</p><!-- End .cta-desc -->
                             
-                                    <form action="#">
+                                    <form method="POST" action="{% url 'store:subscribe_email' %}">
                                         <div class="input-group">
-                                            <input type="email" class="form-control" placeholder="Enter your Email Address" aria-label="Email Adress" required>
+                                            {% csrf_token %}
+                                            <input type="email" class="form-control" name="email" placeholder="Enter your Email Address" aria-label="Email Adress" required>
                                             <div class="input-group-append">
                                                 <button class="btn btn-primary btn-rounded" type="submit"><i class="icon-long-arrow-right"></i></button>
                                             </div><!-- .End .input-group-append -->

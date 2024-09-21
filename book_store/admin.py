@@ -16,7 +16,82 @@ from  django.shortcuts import get_object_or_404
 # from weasyprint import HTML
 from io import BytesIO
 from pdf2image import convert_from_path
+from .form import NewsletterForm
+from django.contrib import admin
+from django.contrib import messages
+from django.conf import settings
+from .models import EmailSubscription
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
+from django.contrib import messages
+import datetime
+from django.shortcuts import redirect
 
+
+def send_newsletter(modeladmin, request, queryset):
+    email_list = [subscriber.email for subscriber in queryset]
+    
+    # Initialize form with POST data if present, otherwise create an empty form
+    form = NewsletterForm(request.POST or None)
+    
+    if 'apply' in request.POST:  # Check if the form was submitted
+        if form.is_valid():
+            print("Form is valid")  # Debug: Ensure this is printed      
+            subject = form.cleaned_data['subject']
+            heading = form.cleaned_data['heading']
+            message = form.cleaned_data['message']
+            url = form.cleaned_data['url']
+            
+            if email_list:
+                try:
+                    print("Preparing email...")  # Debug message
+
+                    # Context for the email template
+                    context = {
+                        'heading': heading,
+                        'subject': subject,
+                        'message': message,
+                        'url': url if url else 'https://yourwebsite.com/newsletter',  # Optional default URL
+                        'year': datetime.datetime.now().year,
+                    }
+
+                    # Render the HTML template
+                    html_content = render_to_string('emails/newsletter_email.html', context)
+                    text_content = strip_tags(html_content)
+
+                    # Create an email message
+                    email = EmailMultiAlternatives(
+                        subject=subject,
+                        body=text_content,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=email_list,
+                    )
+                    email.attach_alternative(html_content, "text/html")
+                    email.send(fail_silently=False)
+
+                    print("Email sent")  # Debug message
+
+                    messages.success(request, f'Successfully sent emails to {len(email_list)} subscribers.')
+                except Exception as e:
+                    print(f"Error: {e}")  # Debug the error
+                    messages.error(request, f'An error occurred: {e}')
+                else:
+                    messages.error(request, 'No subscribers selected.')
+                return redirect(request.get_full_path())
+
+    # If the form wasn't submitted or wasn't valid, render the form
+    return render(request, 'admin/newsletter_form.html', {'form': form, 'subscribers': queryset})
+
+
+# Customize the EmailSubscriptionAdmin to include the action
+class EmailSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('email', 'date')  # Customize the list display as needed
+    actions = [send_newsletter]  # Add the send_newsletter function as an action
+
+# Register the model with the custom admin class
+admin.site.register(EmailSubscription, EmailSubscriptionAdmin)
 
 
 
@@ -256,11 +331,9 @@ class OrderAdmin(admin.ModelAdmin):
         
         # Convert PDF to image
         images = convert_from_path(BytesIO(pdf), dpi=300)  # Converts PDF to images
-
         # Save image
         image_path = f'/path/to/save/invoice_{order_id}.png'
-        images[0].save(image_path, 'PNG')
-        
+        images[0].save(image_path, 'PNG')       
         return image_path
 
 

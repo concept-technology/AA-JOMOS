@@ -23,6 +23,7 @@ from .form import *
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 # from django.conf import settings
 from aa_jomos import settings
+
 import random
 import string
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -48,6 +49,10 @@ from allauth.account.models import EmailConfirmationHMAC, EmailConfirmation
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.http import Http404
+
+from .models import EmailSubscription
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 
 class StoreConfig(AppConfig):
     name = 'book_store'
@@ -170,7 +175,7 @@ class DashBoardView(LoginRequiredMixin, View):
         cart = Cart.objects.filter(user=self.request.user, is_ordered=True)
         orders = Order.objects.filter(user=self.request.user, is_ordered=True).order_by('id')
         address = CustomersAddress.objects.filter(user=self.request.user).first()
-        address_form = AddressForm(instance=address) if address else AddressForm()
+        address_form = AddressForm(instance=address) 
         
         # # Fetch all products the user has reviewed
         # reviewed_products = Rating.objects.filter(user_ratings=self.request.user).values_list('object_id', flat=True)
@@ -184,7 +189,7 @@ class DashBoardView(LoginRequiredMixin, View):
             'orders': orders,
             'cart': cart,
             'address': address,
-            'address_form': address_form,
+            'form': address_form,
             'rating_form': CustomerRatingForm(),
             # 'unreviewed_products': unreviewed_products,  # Pass unreviewed products to context
         }
@@ -705,6 +710,18 @@ def load_cities(request):
 @method_decorator(login_required, name='dispatch')
 class CheckoutView(View):
     def get(self, *args, **kwargs):
+        profile, created = Profile.objects.get_or_create(user=self.request.user)
+
+        # # Check if phone number is provided
+        # if not profile.phone_number:
+        #     messages.warning(self.request, "Please provide your phone number before proceeding to checkout.")
+        #     return redirect('delivery:enter_phone_number')
+        
+        # # Check if phone number is verified
+        # if not profile.is_phone_verified:
+        #     messages.warning(self.request, "Please verify your phone number before proceeding to checkout.")
+        #     return redirect('delivery:enter_phone_number')
+
         # Check if the user has an existing address
         try:
             address = CustomersAddress.objects.get(user=self.request.user)
@@ -722,6 +739,9 @@ class CheckoutView(View):
             if not cart.exists():
                 messages.warning(self.request, 'Your cart is empty.')
                 return redirect('store:cart')
+
+            # Pre-populate the phone number in the form if it's verified
+            form.fields['telephone'].initial = profile.phone_number
 
             context = {
                 'coupon': coupon,
@@ -1620,4 +1640,53 @@ def update_cart_color_and_qty(request):
     except Exception as e:
         logger.error(f"Error updating cart: {str(e)}")
         return JsonResponse({'message': f'Error: {str(e)}'}, status=400)
+
+
+
+class EmailSubscriptionView(View):
+    def post(self, *args, **kwargs):
+        email = self.request.POST.get('email')
+        # Log the email input
+        print(f'Received email: {email}')
+
+        # Validate the email
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(self.request, 'Please enter a valid email address.')
+            print('Invalid email address')
+            return redirect('store:subscribe_email')  # Ensure 'subscribe_email' exists in your urls.py
+
+        # Check if the email already exists in the database
+        if EmailSubscription.objects.filter(email=email).exists():
+            messages.error(self.request, 'This email is already subscribed.')
+            print('Email already subscribed')
+        else:
+            # Create and save the subscription
+            EmailSubscription.objects.create(email=email)
+            messages.success(self.request, 'Thank you for subscribing!')
+            print('Email subscription created successfully')
+
+        # Redirect to the homepage or wherever you want after subscription
+        return redirect('store:index')
+
+
+def send_newsletter(request):
+    subscribers = EmailSubscription.objects.all()
+    email_list = [subscriber.email for subscriber in subscribers]
+
+    if email_list:
+        send_mail(
+            subject='Our Latest News',
+            message='Here is the latest news from our eCommerce store.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=email_list,
+            fail_silently=False,
+        )
+        messages.success(request, f'Successfully sent emails to {len(email_list)} subscribers.')
+    else:
+        messages.error(request, 'No subscribers found.')
+
+    return redirect('some_view')  # Change 'some_view' to where you want to redirect after sending
+
 

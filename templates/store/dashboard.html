@@ -140,18 +140,65 @@
                                             <div class="card card-dashboard">
                                                 <div class="card-body">
                                                     <h3 class="card-title">Delivery Address</h3>
-													<form method="post" action="{% url 'store:dash-board' %}">
-														{% csrf_token %}
-														{{address_form.as_p}}
-														<button type="submit" name="update_address" class="btn btn-primary">save changes<i class="icon-edit"></i></button></p>
-													</form>
-                          
+                                                    
+                                                      <form action="{% url 'store:dash-board' %}" method="post">
+                                                        {% csrf_token %}
+                                                        <div class="row">
+                                                            <div class="col-lg-9">
+                                                                <h2 class="checkout-title">Billing Details</h2>
+                                                                
+                                                                <label>Country *</label>
+                                                                {{ form.country }}
+                                    
+                                                                <label>Street address *</label>
+                                                                {{ form.street_address }}
+                                                                {{ form.apartment }}
+                                    
+                                                                <div class="row">
+                                    
+                                                                    <div class="col-sm-6">
+                                                                        <label>State</label>
+                                                                        <select id="state-select" name="state" class="form-control">
+                                                                            <option value="">select state</option>
+                                                                            {% for value, display in form.state.field.choices %}
+                                                                                <option value="{{ value }}" {% if form.state.value == value %}selected{% endif %}>{{ display }}</option>
+                                                                            {% endfor %}
+                                                                        </select>
+                                                                        
+                                                                    </div>
+                                                                    
+                                                                    <div class="col-sm-6">
+                                                                        <label>Town / City *</label>
+                                                                        <select id="id_town" name="town" class="form-control">
+                                                                            <option value="">Select City</option>
+                                                                        </select>
+                                                                    </div>
+                                    
+                                                                 
+                                                                </div>
+                                    
+                                                                <div class="row">
+                                                                    <div class="col-sm-6">
+                                                                        <label>Postcode / ZIP *</label>
+                                                                        {{ form.zip_code }}
+                                                                    </div>
+                                    
+                                                                    <div class="col-sm-6">
+                                                                        <label>Phone *</label>
+                                                                        {{ form.telephone }}
+                                                                    </div>
+                                                                </div>
+                                    
+                                                                <label>Order notes (optional)</label>
+                                                                {{ form.message }}
+                                                                <button type="submit" class="btn btn-primary" name="update_address">update</button>
+                                                            </div>
+                                                        </div>
+                                                    </form> 
                                                 </div>
                                             </div>
                                         </div>
-                                        <!-- End .col-lg-6 -->
-
-                                 
+                                        <!-- End .col-lg-6 -->                                 
                                     </div>
                                     <!-- End .row -->
                                 </div>
@@ -284,6 +331,61 @@ document.getElementById('logout-buttonn').addEventListener('click', function() {
         }
     })
 });
+
+
+
+
+    $(document).ready(function() {
+        // Event handler when the state dropdown changes
+        $('#state-select').change(function() {
+            var state = $(this).val();  // Get the selected state value
+
+            // Check if a valid state is selected
+            if (state) {
+                $.ajax({
+                    url: '{% url "store:load_cities" %}',  // The URL for the AJAX view
+                    data: {
+                        'state': state  // Send the selected state as data
+                    },
+                    success: function(data) {
+                        var $citySelect = $('#id_town');  // Reference to the town/city select element
+                        $citySelect.empty();  // Clear any existing options
+
+                        // Add a default option to the city dropdown
+                        $citySelect.append(new Option("Select City", ""));
+
+                        // Loop through the returned data and add each city as an option
+                        $.each(data, function(index, city) {
+                            $citySelect.append(new Option(city.town_name, city.town_name));
+                        });
+                    },
+                    error: function() {
+                        alert('Error loading cities. Please try again.');  // Error handling
+                    }
+                });
+            } else {
+                // If no state is selected, clear the city dropdown and add a default option
+                $('#id_town').empty().append(new Option("Select City", ""));
+            }
+        });
+
+
+        $('form').submit(function(e) {
+            e.preventDefault();  // Prevent the default submission for debugging
+            console.log("Form is being submitted!");
+            this.submit();  // Proceed with submission after logging
+        });
+        
+    });
+
+
+
+
+
+
+
 </script>
+
+
 
 {% endblock content %}

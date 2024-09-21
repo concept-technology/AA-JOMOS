@@ -20,6 +20,17 @@ from django.db import models
 from delivery.models import DeliveryLocations
 from paystack_api.models import Payment
 from django.core.exceptions import ValidationError
+from phonenumber_field.modelfields import PhoneNumberField
+from django.contrib.auth.models import User
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    phone_number = PhoneNumberField(region='NG', blank=True)
+    otp = models.CharField(max_length=6, blank=True, null=True)
+    is_phone_verified = models.BooleanField(default=False)
+    def __str__(self):
+        return self.user.username
+
 category_choices = (
         ('new', 'new'),
         ('featured', 'featured'),
@@ -402,12 +413,12 @@ class CartColor(models.Model):
         return f"{self.color.name} {self.quantity}"
 
 class CustomersAddress(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', blank=True, null=True )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', blank=True, null=True , related_name='users')
     street_address = models.CharField(max_length=300)
     apartment = models.CharField(max_length=255)
     town = models.CharField(max_length=255)
     state = models.CharField(max_length=255)
-    telephone = models.CharField(validators=[phone_regex], max_length=17, blank=True)
+    telephone = PhoneNumberField(region='NG')
     zip_code = models.CharField(max_length=20)
     # country = CountryField(multiple=False)
     country = models.CharField(max_length=20, default='Nigeria')
@@ -578,3 +589,10 @@ class Stock(models.Model):
         return f"{self.product.title} {self.quantity}"
 
 
+
+class EmailSubscription(models.Model):
+    email = models.EmailField(unique=True)
+    date= models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.email
