@@ -1397,37 +1397,26 @@ class UpdateCartQuantity(View):
             if cart_item.size is None:
                 return JsonResponse({'message': 'Size not found for this cart item'}, status=400)
 
-            # Calculate the total quantity of the same product in the cart
-            if request.user.is_authenticated:
-                cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
-                product_total_quantity = cart_items.filter(product=cart_item.product).aggregate(total_qty=Sum('quantity'))['total_qty']
-                product_total_quantity = product_total_quantity if product_total_quantity is not None else 0
-                # Determine if the wholesale price should be used
-                if product_total_quantity >= cart_item.product.minimum_order:
-                    price_per_unit = cart_item.size.wholesale_price
-                else:
-                    price_per_unit = cart_item.size.discount_price if cart_item.size.discount_price else cart_item.size.price
-                
+            # Calculate the total quantity from the Size model for the same product
+            product_sizes = cart_item.product.size.all()
+            total_quantity = product_sizes.aggregate(total_pieces=Sum('pieces'))['total_pieces'] or 0
+
+            # Determine if the wholesale price should be used
+            if total_quantity >= cart_item.product.minimum_order:
+                price_per_unit = cart_item.size.wholesale_price
             else:
-                session_cart_id = request.session.get('cart_id', None)           
-                if not session_cart_id:
-                    session_cart_id = str(uuid.uuid4())
-                    request.session['cart_id'] = session_cart_id
-                    request.session.modified = True
-                cart_items = Cart.objects.filter(session_key=session_cart_id, is_ordered=False)
-                product_total_quantity = cart_items.filter(product=cart_item.product).aggregate(total_qty=Sum('quantity'))['total_qty']
-                product_total_quantity = product_total_quantity if product_total_quantity is not None else 0
+                price_per_unit = cart_item.size.discount_price if cart_item.size.discount_price else cart_item.size.price
 
-                # Determine if the wholesale price should be used
-                if product_total_quantity >= cart_item.product.minimum_order:
-                    price_per_unit = cart_item.size.wholesale_price
-                else:
-                    price_per_unit = cart_item.size.discount_price if cart_item.size.discount_price else cart_item.size.price
-
-            # Calculate size and product price
+            # Calculate the cart item total price based on the updated quantity and price
             cart_item_total = price_per_unit * quantity
 
             # Calculate the total price for all items in the cart
+            if request.user.is_authenticated:
+                cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
+            else:
+                session_cart_id = request.session.get('cart_id', None)
+                cart_items = Cart.objects.filter(session_key=session_cart_id, is_ordered=False)
+            
             total_price = sum(item.get_total_price() for item in cart_items)
 
             # Fetch the order and calculate the total with delivery
@@ -1446,7 +1435,7 @@ class UpdateCartQuantity(View):
                 'total_order_and_delivery': int(total_order_and_delivery),
                 'cart_item_total': cart_item_total,
                 'total_order': total_price,
-                'product_total_quantity': product_total_quantity,
+                'total_quantity': total_quantity,
                 'messages': [{'message': 'Cart updated successfully', 'tags': 'success'}],
             })
 
@@ -1527,21 +1516,23 @@ def handle_unauthenticated_user(request, product, size, color, quantity):
         return {'message': f'Error: {str(e)}'}
 
 
-
 def adjust_cart_item_price(cart_item, product, size, quantity):
-    total_quantity = Cart.objects.filter(
-        user=cart_item.user,
-        product=product,
-        is_ordered=False,
-        quantity=quantity
-    ).aggregate(total_quantity=Sum('quantity'))['total_quantity']
-
+    # Sum all the pieces for the sizes of the same product
+    total_quantity = Size.objects.filter(
+        products=product  # `products` is the related name for the ManyToMany relationship with Product
+    ).aggregate(total_pieces=Sum('pieces'))['total_pieces'] or 0
+    print({'total qty:': total_quantity})
+    # Check if total pieces is greater than or equal to the product's minimum order
     if total_quantity >= product.minimum_order:
-        cart_item.price = size.wholesale_price
+        cart_item.price = size.wholesale_price # Use wholesale price
+        print({'price is wholesale': cart_item.price})
+        print({' minimum order is ': product.minimum_order})
+        
     else:
-        cart_item.price = size.discount_price
+        cart_item.price = size.discount_price  # Use discount price
+        print({'the price is  discount': cart_item.price})
+        print({' minimum order is ': product.minimum_order})
     cart_item.save()
-
 
 def update_or_create_order(request, cart_item, cart_id=None):
     if request.user.is_authenticated:

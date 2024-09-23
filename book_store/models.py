@@ -151,6 +151,7 @@ class Size(models.Model):
     price = models.IntegerField(default=0, blank=True,null=True)
     discount_price = models.IntegerField(default=0)
     wholesale_price = models.IntegerField(default=0)
+    pieces = models.IntegerField(default=0)
     objects = SizeManager()
     product_colors = models.ManyToManyField(Color, through='ProductSizeColor', related_name='size_colors')
     def __str__(self) -> str:
@@ -162,7 +163,7 @@ class Size(models.Model):
 class Product(models.Model):
     title = models.CharField(max_length=255)
     description= models.TextField(max_length=1000)
-    additional_information= models.TextField(max_length=1000, default='')
+    additional_information= models.TextField(max_length=1000, default='', blank=True, null=True)
     feature1 =  models.CharField(max_length=255, blank=True,null=True)
     feature2 =  models.CharField(max_length=255,blank=True,null=True)
     feature3 =  models.CharField(max_length=255,blank=True,null=True)
@@ -354,6 +355,7 @@ class Cart(models.Model):
     size = models.ForeignKey(Size, on_delete=models.CASCADE, blank=True, null=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, blank=True, null=True)
 
+
     def get_discount_price(self):
         if self.size and self.size.discount_price:
             return self.quantity * self.size.discount_price
@@ -363,6 +365,22 @@ class Cart(models.Model):
         if self.size:
             return self.quantity * self.size.price
         return 0
+
+    def get_total_price(self):
+        if self.size:
+            return self.get_discount_price()
+        return self.get_normal_price()
+    
+    
+    def get_discount_price(self):
+        if self.size and self.size.discount_price:
+            return self.quantity * self.size.discount_price
+        return self.quantity * self.size.price
+
+    # def get_normal_price(self):
+    #     if self.size:
+    #         return self.quantity * self.size.price
+    #     return 0
 
     def get_amount_saved(self):
         return self.get_normal_price() - self.get_discount_price()
@@ -376,11 +394,26 @@ class Cart(models.Model):
             return normal_price
         return 0
 
+
     def get_total_price(self):
         if self.size:
-            return self.get_discount_price()
-        return self.get_normal_price()
+            size = self.size
+            product = self.product
+            quantity = self.quantity
 
+            # Apply wholesale price if quantity meets or exceeds the minimum order
+            if size.pieces >= product.minimum_order:
+                price = size.wholesale_price
+            else:
+                # Check if retail price or discount price should be applied
+                if size.discount_price:  # If there's a discount price, apply it
+                    price = size.discount_price
+                else:
+                    price = size.price  # Apply retail price if no discount is available
+
+            return price * quantity  # Return the price based on the quantity
+        return 0
+    
     def add_quantity(self):
         self.quantity += 1
         return self.quantity
@@ -474,6 +507,8 @@ class Order(models.Model):
     session_key = models.CharField(max_length=40, null=True, blank=True)
     invoice_number = models.CharField(max_length=50, blank=True, null=True)
     approved = models.BooleanField(default=False)
+    
+    
     def save(self, *args, **kwargs):
         # Generate invoice number if not set
         if not self.invoice_number:
@@ -491,13 +526,13 @@ class Order(models.Model):
             return items.quantity
         return None
     
-    def get_total(self):
-        total = 0
-        for item in self.product.all():
-            total += item.get_total_price()
-        if self.coupon:
-            total -= self.coupon.amount
-        return total 
+    # def get_total(self):
+    #     total = 0
+    #     for item in self.product.all():
+    #         total += item.get_total_price()
+    #     if self.coupon:
+    #         total -= self.coupon.amount
+    #     return total 
     
     def get_coupon(self):
  
@@ -516,18 +551,35 @@ class Order(models.Model):
             return '-'
         return queryset
     
-        # get the price in the order
-    def total_price(self):
-        return self.get_total()
+
+
+    def get_total(self):
+        total = 0
+        for cart_item in self.product.all():
+            # Use the total price from the cart item's get_total_price method
+            total += cart_item.get_total_price()
+
+        # Apply coupon discount if available
+        if self.coupon:
+            total -= self.coupon.amount
+
+        return total
+
+    def get_total_with_delivery(self):
+        return self.get_total() + self.get_delivery_cost()
+
+    def get_delivery_cost(self):
+        if self.delivery_location:
+            return self.delivery_location.delivery_cost
+        return 0
     
- 
-    def get_delivery_cost(self):# calculates the delivery cost
+    
+    def get_delivery_cost(self):
         if self.delivery_location:
             return self.delivery_location.delivery_cost
         return 0
 
-    def get_total_with_delivery(self):
-        return self.get_total() + self.get_delivery_cost()
+
 
 
 class Refunds(models.Model):
