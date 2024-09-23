@@ -104,27 +104,19 @@ WSGI_APPLICATION = 'aa_jomos.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = ['*']
 
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-    
-    DATABASE_URL = env('DATABASE_URL')
+# RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+# if RENDER_EXTERNAL_HOSTNAME:
+#     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-    DATABASES = {
+
+DATABASE_URL = env('DATABASE_URL')
+
+DATABASES = {
             'default': dj_database_url.config(
-                # Replace this value with your local database's connection string.
                 default=DATABASE_URL,
                 conn_max_age=600
             )
         }
-else:
-   
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

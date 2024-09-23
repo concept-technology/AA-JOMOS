@@ -400,7 +400,6 @@ class Cart(models.Model):
             size = self.size
             product = self.product
             quantity = self.quantity
-
             # Apply wholesale price if quantity meets or exceeds the minimum order
             if size.pieces >= product.minimum_order:
                 price = size.wholesale_price
