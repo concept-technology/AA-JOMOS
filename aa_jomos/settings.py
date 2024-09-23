@@ -5,26 +5,6 @@ import environ
 import dj_database_url
 from twilio.rest import Client
 
-# AUTH_USER_MODEL = 'users.CustomUser'
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'handlers': {
-#         'file': {
-#             'level': 'DEBUG',
-#             'class': 'logging.FileHandler',
-#             'filename': 'django_debug.log',
-#         },
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['file'],
-#             'level': 'DEBUG',
-#             'propagate': True,
-#         },
-#     },
-# }
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -79,7 +59,7 @@ INSTALLED_APPS = [
     'environ',
     'delivery',
     'paystack_api',
-    'debug_toolbar',
+
     # 'jet_django',
 ]
 
@@ -95,7 +75,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "allauth.account.middleware.AccountMiddleware",
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     # 'book_store.middleware.ignore_static_files.IgnoreStaticFilesMiddleware'
 ]
 
@@ -336,7 +316,7 @@ PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY')
 # }
 
 
-TWILIO_ACCOUNT_SID = env('TWILIO_ACCOUNT_SID') 
-TWILLIO_AUTH_TOKEN = env('TWILLIO_AUTH_TOKEN')
+# TWILIO_ACCOUNT_SID = env('TWILIO_ACCOUNT_SID') 
+# TWILLIO_AUTH_TOKEN = env('TWILLIO_AUTH_TOKEN')
 
-TWILIO_VERIFICATION_SERVICE_SID = env('TWILIO_VERIFICATION_SERVICE_SID')
+# TWILIO_VERIFICATION_SERVICE_SID = env('TWILIO_VERIFICATION_SERVICE_SID')

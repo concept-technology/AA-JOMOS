@@ -21,10 +21,3 @@ urlpatterns = [
         path('__debug__/', include(debug_toolbar.urls)),
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# http://localhost:8000/jet_api/register/
-
-
-if settings.DEBUG:
-    urlpatterns = [
-        path('__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns
