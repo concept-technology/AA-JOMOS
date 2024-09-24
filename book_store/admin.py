@@ -115,20 +115,36 @@ class make_accept_refund(admin.ModelAdmin, ):
 make_accept_refund.short_description = 'update refund granted'
 # order admin
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['user', 'items', 'total_price_display', 'reference', 'is_ordered', 'is_delivered', 'is_received', 'is_refund_request', 'refund_granted', 'view_invoice_button', 'download_invoice_button', 'send_invoice_button', 'approve_order_button','cancel_order_button']
+    list_display = ['user', 'items', 'item_price_display', 'delivery_fee_display', 'total_price_display', 'reference', 'is_ordered', 'is_delivered', 'is_received', 'is_refund_request', 'refund_granted', 'view_invoice_button', 'download_invoice_button', 'send_invoice_button', 'approve_order_button','cancel_order_button']
+    # list_display = ['user', 'items', 'total_price_display', 'reference', 'is_ordered', 'is_delivered', 'is_received', 'is_refund_request', 'refund_granted', 'view_invoice_button', 'download_invoice_button', 'send_invoice_button', 'approve_order_button','cancel_order_button']
     readonly_fields = ('user',)
     list_filter = ['is_ordered','is_delivered', 'is_received', 'is_refund_request']
     list_display_links = ['user','items',]
     search_fields = ['user__username', 'reference']
-
-    @admin.display(description='Total Price')
-    def total_price_display(self, obj):
-        # Ensure you're calling the total_price method
-        total_price_value = obj.total_price()
-        # Format the price before passing it to format_html
+    
+    
+    # def get_queryset(self, request):
+    #     queryset = super().get_queryset(request)
+    #     return queryset.filter(is_ordered=True)
+    
+    
+    @admin.display(description='Item(s) Price')
+    def item_price_display(self, obj):
+        total_price_value = obj.get_total()
         formatted_price = "₦{:,.2f}".format(float(total_price_value))
         return format_html('<p class="h5">{}</p>', formatted_price)
-
+    
+    @admin.display(description='Delivery Fee')
+    def delivery_fee_display(self, obj):
+        delivery_cost_value = obj.get_delivery_cost()
+        formatted_price = "₦{:,.2f}".format(float(delivery_cost_value))
+        return format_html('<p class="h5">{}</p>', formatted_price)
+    
+    @admin.display(description='Total')
+    def total_price_display(self, obj):
+        total_price_value = obj.get_total_with_delivery()
+        formatted_price = "₦{:,.2f}".format(float(total_price_value))
+        return format_html('<p class="h5">{}</p>', formatted_price)
     
     # Add buttons to view, download, and send the invoice
     @admin.display(description='Invoice Action')
@@ -275,7 +291,7 @@ class OrderAdmin(admin.ModelAdmin):
     def cancel_order(self, request, order_id):
         try:
             order = Order.objects.get(id=order_id)
-            if order.is_ordered:
+            if order.approved:
                 self.message_user(request, "Cannot cancel an approved order.", level=messages.ERROR)
             else:
                 # Cancel the order
@@ -284,7 +300,7 @@ class OrderAdmin(admin.ModelAdmin):
 
                 # Send email notification to the user
                 subject = f'Order Canceled - Reference {order.reference}'
-                message = render_to_string('emails/order_canceled_email.html', {
+                message = render_to_string('emails/cancel_order_email.html', {
                     'order': order,
                 })
                 email = EmailMessage(
@@ -361,7 +377,7 @@ class InventAdmin(admin.ModelAdmin):
     list_display = ['product', 'quantity']
 
 class AddressAdmin(admin.ModelAdmin):
-    list_display = ['user', 'street_address', 'apartment', 'town', 'zip_code', 'telephone']
+    list_display = ['user', 'street_address', 'apartment', 'town', 'state', 'zip_code', 'telephone']
 
 
 

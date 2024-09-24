@@ -140,61 +140,96 @@
                                             <div class="card card-dashboard">
                                                 <div class="card-body">
                                                     <h3 class="card-title">Delivery Address</h3>
-                                                    
-                                                      <form action="{% url 'store:dash-board' %}" method="post">
+                                                
+                                                    <form action="{% url 'store:dash-board' %}" method="post">
                                                         {% csrf_token %}
                                                         <div class="row">
                                                             <div class="col-lg-9">
                                                                 <h2 class="checkout-title">Billing Details</h2>
-                                                                
+                                                    
+                                                                <!-- Country Field -->
                                                                 <label>Country *</label>
-                                                                {{ form.country }}
-                                    
+                                                                {{ address_form.country }}
+                                                                {% if address_form.country.errors %}
+                                                                    <div class="error">{{ address_form.country.errors }}</div>
+                                                                {% endif %}
+                                                    
+                                                                <!-- Street Address and Apartment Fields -->
                                                                 <label>Street address *</label>
-                                                                {{ form.street_address }}
-                                                                {{ form.apartment }}
-                                    
+                                                                {{ address_form.street_address }}
+                                                                {% if address_form.street_address.errors %}
+                                                                    <div class="error">{{ address_form.street_address.errors }}</div>
+                                                                {% endif %}
+                                                    
+                                                                {{ address_form.apartment }}
+                                                                {% if address_form.apartment.errors %}
+                                                                    <div class="error">{{ address_form.apartment.errors }}</div>
+                                                                {% endif %}
+                                                    
                                                                 <div class="row">
-                                    
+                                                                    <!-- State Field -->
                                                                     <div class="col-sm-6">
-                                                                        <label>State</label>
+                                                                        <label>State *</label>
                                                                         <select id="state-select" name="state" class="form-control">
-                                                                            <option value="">select state</option>
-                                                                            {% for value, display in form.state.field.choices %}
-                                                                                <option value="{{ value }}" {% if form.state.value == value %}selected{% endif %}>{{ display }}</option>
+                                                                            <option value="">Select State</option>
+                                                                            {% for value, display in address_form.state.field.choices %}
+                                                                                <option value="{{ value }}" {% if address_form.state.value == value %}selected{% endif %}>{{ display }}</option>
+                                                                            {% endfor %}
+                                                                        </select>
+                                                                        {% if address_form.state.errors %}
+                                                                            <div class="error">{{ address_form.state.errors }}</div>
+                                                                        {% endif %}
+                                                                    </div>
+                                                    
+                                                                    <!-- Town Field -->
+                                                                    <div class="col-sm-6">
+                                                                        <label>town *</label>
+
+                                                                        <select id="id_town" name="town" class="form-control">
+                                                                            <option value="">Select City</option>
+                                                                            {% for town in address_form.fields.town.choices %}
+                                                                                <option value="{{ town.0 }}" {% if town.0 == address.town %}selected{% endif %}>
+                                                                                    {{ town.1 }}
+                                                                                </option>
                                                                             {% endfor %}
                                                                         </select>
                                                                         
-                                                                    </div>
-                                                                    
-                                                                    <div class="col-sm-6">
-                                                                        <label>Town / City *</label>
-                                                                        <select id="id_town" name="town" class="form-control">
-                                                                            <option value="">Select City</option>
-                                                                        </select>
-                                                                    </div>
-                                    
-                                                                 
-                                                                </div>
-                                    
+                                                                    </div><!-- End .col-sm-6 -->
+                                                                </div><!-- End .row -->
+                                                    
                                                                 <div class="row">
+                                                                    <!-- ZIP Code Field -->
                                                                     <div class="col-sm-6">
                                                                         <label>Postcode / ZIP *</label>
-                                                                        {{ form.zip_code }}
+                                                                        {{ address_form.zip_code }}
+                                                                        {% if address_form.zip_code.errors %}
+                                                                            <div class="error">{{ address_form.zip_code.errors }}</div>
+                                                                        {% endif %}
                                                                     </div>
-                                    
+                                                    
+                                                                    <!-- Phone Field -->
                                                                     <div class="col-sm-6">
                                                                         <label>Phone *</label>
-                                                                        {{ form.telephone }}
+                                                                        {{ address_form.telephone }}
+                                                                        {% if address_form.telephone.errors %}
+                                                                            <div class="error">{{ address_form.telephone.errors }}</div>
+                                                                        {% endif %}
                                                                     </div>
-                                                                </div>
-                                    
+                                                                </div><!-- End .row -->
+                                                    
+                                                                <!-- Order Notes Field -->
                                                                 <label>Order notes (optional)</label>
-                                                                {{ form.message }}
-                                                                <button type="submit" class="btn btn-primary" name="update_address">update</button>
+                                                                {{ address_form.message }}
+                                                                {% if address_form.message.errors %}
+                                                                    <div class="error">{{ address_form.message.errors }}</div>
+                                                                {% endif %}
+                                                    
+                                                                <!-- Submit Button -->
+                                                                <button type="submit" class="btn btn-primary" name="update_address">Update</button>
                                                             </div>
                                                         </div>
-                                                    </form> 
+                                                    </form>
+                                                    
                                                 </div>
                                             </div>
                                         </div>
@@ -332,51 +367,46 @@ document.getElementById('logout-buttonn').addEventListener('click', function() {
     })
 });
 
+$(document).ready(function() {
+    // Get the current town from the user data
+    var currentTown = "{{ address.town }}";  // Use Django template syntax to pass the current town
 
+    $('#state-select').change(function() {
+        var state = $(this).val();
+        if (state) {
+            $.ajax({
+                url: '{% url "store:load_cities" %}',
+                data: {
+                    'state': state
+                },
+                success: function(data) {
+                    var $citySelect = $('#id_town');
+                    $citySelect.empty();  // Clear existing options
+                    $citySelect.append(new Option("Select City", "")); // Add default option
 
-
-    $(document).ready(function() {
-        // Event handler when the state dropdown changes
-        $('#state-select').change(function() {
-            var state = $(this).val();  // Get the selected state value
-
-            // Check if a valid state is selected
-            if (state) {
-                $.ajax({
-                    url: '{% url "store:load_cities" %}',  // The URL for the AJAX view
-                    data: {
-                        'state': state  // Send the selected state as data
-                    },
-                    success: function(data) {
-                        var $citySelect = $('#id_town');  // Reference to the town/city select element
-                        $citySelect.empty();  // Clear any existing options
-
-                        // Add a default option to the city dropdown
-                        $citySelect.append(new Option("Select City", ""));
-
-                        // Loop through the returned data and add each city as an option
-                        $.each(data, function(index, city) {
-                            $citySelect.append(new Option(city.town_name, city.town_name));
-                        });
-                    },
-                    error: function() {
-                        alert('Error loading cities. Please try again.');  // Error handling
-                    }
-                });
-            } else {
-                // If no state is selected, clear the city dropdown and add a default option
-                $('#id_town').empty().append(new Option("Select City", ""));
-            }
-        });
-
-
-        $('form').submit(function(e) {
-            e.preventDefault();  // Prevent the default submission for debugging
-            console.log("Form is being submitted!");
-            this.submit();  // Proceed with submission after logging
-        });
-        
+                    // Populate new options with the returned data
+                    $.each(data, function(index, city) {
+                        var option = new Option(city.town_name, city.town_name);
+                        // Check if this town is the user's current town and preselect it
+                        if (city.town_name === currentTown) {
+                            option.selected = true;
+                        }
+                        $citySelect.append(option);
+                    });
+                },
+                error: function() {
+                    alert('Error loading cities. Please try again.');
+                }
+            });
+        } else {
+            $('#id_town').empty().append(new Option("Select City", ""));  // Reset the town field if no state selected
+        }
     });
+
+    // Trigger change event on page load to populate towns for the current state
+    $('#state-select').trigger('change');
+});
+
 
 
 

@@ -27,7 +27,10 @@ class UserProfileForm(UserChangeForm):
         model = User
         fields = ['username', 'first_name', 'last_name', 'email']
 
-
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['phone_number', 'country']
 
 class CustomerRatingForm(forms.ModelForm):
     class Meta:

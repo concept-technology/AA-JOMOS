@@ -26,6 +26,8 @@ from django.contrib.auth.models import User
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone_number = PhoneNumberField(region='NG', blank=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+
     otp = models.CharField(max_length=6, blank=True, null=True)
     is_phone_verified = models.BooleanField(default=False)
     def __str__(self):
@@ -432,10 +434,6 @@ address_choices =(
     ('billing', 'billing Address')
 )
 
-phone_regex = RegexValidator(
-    regex=r'^\+?1?\d{9,15}$',
-    message="Phone number  must be entered in the format: '+999999999'. Up to 15 digits allowed."
-)
 
 class CartColor(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
@@ -444,12 +442,18 @@ class CartColor(models.Model):
     def __str__(self) -> str:
         return f"{self.color.name} {self.quantity}"
 
+# phone_regex = RegexValidator(
+#     regex=r'^\+?1?\d{9,15}$',
+#     message="Phone number  must be entered in the format: '+2349234445556'. Up to 15 digits allowed."
+# )
+
 class CustomersAddress(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', blank=True, null=True , related_name='users')
     street_address = models.CharField(max_length=300)
     apartment = models.CharField(max_length=255)
-    town = models.CharField(max_length=255)
-    state = models.CharField(max_length=255)
+    town = models.CharField(max_length=50, default='')
+    city = models.CharField(max_length=50, default='')
+    state = models.CharField(max_length=50, default='')
     telephone = PhoneNumberField(region='NG')
     zip_code = models.CharField(max_length=20)
     # country = CountryField(multiple=False)

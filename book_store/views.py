@@ -189,8 +189,8 @@ class DashBoardView(LoginRequiredMixin, View):
             'orders': orders,
             'cart': cart,
             'address': address,
-            'form': address_form,
-            'rating_form': CustomerRatingForm(),
+            'address_form': address_form,
+            # 'rating_form': CustomerRatingForm(),
             # 'unreviewed_products': unreviewed_products,  # Pass unreviewed products to context
         }
         return render(self.request, 'store/dashboard.html', context)
@@ -218,12 +218,15 @@ class DashBoardView(LoginRequiredMixin, View):
             address_form.save()
             messages.success(self.request, 'Your address has been updated successfully!')
             return redirect('store:dash-board')
+        else:
+            messages.error(request, 'There was an error with your submission. Please correct the errors below.')
+            return redirect('store:dash-board')
 
         # Fetch all products the user has reviewed
-        # reviewed_products = Rating.objects.filter(user_ratings=self.request.user).values_list('object_id', flat=True)
+        reviewed_products = Rating.objects.filter(user_ratings=self.request.user).values_list('object_id', flat=True)
 
         # # Fetch all products in the user's orders that have not been reviewed yet
-        # unreviewed_products = Product.objects.filter(order__in=Order.objects.filter(user=self.request.user, is_ordered=True)).exclude(id__in=reviewed_products).distinct()
+        unreviewed_products = Product.objects.filter(order__in=Order.objects.filter(user=self.request.user, is_ordered=True)).exclude(id__in=reviewed_products).distinct()
 
         context = {
             'profile_form': profile_form,
@@ -233,9 +236,11 @@ class DashBoardView(LoginRequiredMixin, View):
             'address': address,
             'address_form': address_form,
             'rating_form': CustomerRatingForm(),
-            # 'unreviewed_products': unreviewed_products,  # Pass unreviewed products to context
+            'unreviewed_products': unreviewed_products,  # Pass unreviewed products to context
         }
         return render(self.request, 'store/dashboard.html', context)
+
+
 
 
 def rate_product(request, slug):
@@ -1177,6 +1182,7 @@ def product_detail(request, slug):
         is_in_cart = Cart.objects.filter(product=product, is_ordered=False, user=request.user).exists()
         user_rating = CustomerRating.objects.filter(user=request.user, product=product).first()
         cart = Cart.objects.filter(product=product, is_ordered=False, user=request.user).first()
+        print({'user':request.user.profile.phone_number},'added to cart ')
     else:
         session_key = get_session_key(request)
         is_in_cart = Cart.objects.filter(product=product, is_ordered=False, session_key=session_key).exists()

@@ -45,7 +45,7 @@ class AddressForm(forms.ModelForm):
              'town': forms.Select(attrs={'class': 'form-control', 'id': 'id_town'}),
             'zip_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Zip Code'}),
             'state': forms.Select(attrs={'class': 'form-control', 'id': 'state-select'}),
-            'telephone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '08099999999'}),
+            'telephone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+2348099999999'}),
             'country': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Country'}),
             'message': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Do you have any message about your delivery? (optional)'}),
         }
