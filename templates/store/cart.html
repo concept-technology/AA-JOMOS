@@ -1,6 +1,10 @@
 {% extends 'store/base.html' %}
 {% load humanize %}
 {% load cart_template_tag %}
+{% block title %}
+    aajomos |{{user}} | cart
+{% endblock title %}
+    
 {% block content %}
 {% load custom_filters %}
 

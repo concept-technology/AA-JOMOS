@@ -1,13 +1,12 @@
 {% extends 'store/base.html' %}
 
-{% block content %}
-    {{ block.super }}
-    {% load humanize %}
-
 {% block title %}
     {{user }} checkout
 {% endblock title %}
     
+{% block content %}
+    {{ block.super }}
+    {% load humanize %}
     <nav aria-label="breadcrumb" class="breadcrumb-nav">
         <div class="container">
             <ol class="breadcrumb">

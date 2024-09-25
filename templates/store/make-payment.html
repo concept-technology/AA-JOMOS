@@ -1,5 +1,9 @@
 {% extends 'store/base.html' %}
 {{block.super}}
+
+{% block title %}
+ aajomos | checkout |{{user}} | payment
+{% endblock title %}
 {% load humanize %}
 {% block content %}
 <div class="container row justify-content-center">

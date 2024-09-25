@@ -163,8 +163,8 @@ class Size(models.Model):
 
 
 class Product(models.Model):
-    title = models.CharField(max_length=255)
-    description= models.TextField(max_length=1000)
+    title = models.CharField(max_length=100)
+    description= models.TextField(max_length=255,)
     additional_information= models.TextField(max_length=1000, default='', blank=True, null=True)
     feature1 =  models.CharField(max_length=255, blank=True,null=True)
     feature2 =  models.CharField(max_length=255,blank=True,null=True)
@@ -188,7 +188,7 @@ class Product(models.Model):
     specification10 =  models.CharField(max_length=255,blank=True,null=True)
     
     size = models.ManyToManyField(Size, related_name='products', through='ProductSizeColor') 
-    img_1  = models.ImageField(upload_to='static/media/img', default='img')
+    img_1  = models.ImageField(upload_to='static/media/img', default='img', blank=True,null=True)
     img_2  = models.ImageField(upload_to='static/media/img', default='img', blank=True, null=True)
     img_3  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
     img_4  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)

@@ -1,6 +1,9 @@
 {% extends 'store/base.html' %}
 {% load static %}
 {% load humanize %}
+{% block title %}
+A.A JOMOS | Home       
+{% endblock title %}
  {% block content %}  
  {% load custom_filters %}
  {% load star_rating %}
@@ -861,10 +864,7 @@
                     </div><!-- End .bg-white -->
                 </div><!-- End .cta -->
             </div><!-- End .container -->
-            {% block title %}
-            A.A JOMOS | Home       
-        {% endblock title %}
-
+  
         </main><!-- End .main -->
 
   

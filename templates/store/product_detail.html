@@ -1,4 +1,7 @@
 {% extends "store/base.html" %}
+{% block title %}
+product | {{ product.title }}
+{% endblock title %}
 {% load static %}
 {% block content %}
 {% load star_rating %}   
@@ -18,9 +21,6 @@
                 <li class="breadcrumb-item"><a href="{% url 'store:categories-list' %}">Shop</a></li>
                 <li class="breadcrumb-item active" aria-current="page">{{ product.title }}</li>
             </ol>
-            {% block title %}
-            {{ product.title }}
-            {% endblock title %}
             {% block seo %}
             <meta name="description" content="{{ product.description.title }}">
             <meta name="keywords" content="{{ product.title }}">
@@ -85,8 +85,7 @@
                                     {{ product.average_rating|floatformat:1 }}
                                 </div>
                                 <span class="ratings-text">{{ item.count }}  {{ count }} reviews(s)</span>
-                            </div><!-- End .ratings-container -->
-                            
+                            </div><!-- End .ratings-container -->                          
                             {% for item in sizes %}              
                             <div class="product-price">
                                 {% if forloop.counter == 1 %}

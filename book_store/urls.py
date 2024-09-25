@@ -9,8 +9,8 @@ urlpatterns = [
      path('submit_rating/<str:slug>', views.product_detail, name='submit_rating'),
      path('email-subscibe', views.EmailSubscriptionView.as_view(), name='subscribe_email'),
      path('send-newsletter/', views.send_newsletter, name='send_newsletter'),
-    path('category/', views.ProductCategories_view, name='categories-list'),
-    path('category/<slug:slug>', views.product_list_by_category, name='product_list_by_category'),
+    path('product/category/', views.ProductCategories_view, name='categories-list'),
+    path('product/category/<slug:slug>', views.product_list_by_category, name='product_list_by_category'),
 #  
     path('', views.home_view,name='index'),
       
