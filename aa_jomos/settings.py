@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
     'gunicorn',
-    'dj_database_url',
     "corsheaders",
     'allauth',
     'allauth.account',
