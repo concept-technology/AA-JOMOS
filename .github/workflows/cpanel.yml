@@ -47,6 +47,6 @@ jobs:
         server-dir: aajomos.com/public_html/  # Your cPanel deployment directory (adjust as needed)
         method: "sync"  # Sync files and remove old ones not in your repo
         exclude:
-          venvtualenv/
+          virtualenv/
           *.pyc
           __pycache__/
