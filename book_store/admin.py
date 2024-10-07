@@ -13,7 +13,6 @@ from .models import Order
 from xhtml2pdf import pisa
 import io
 from  django.shortcuts import get_object_or_404
-# from weasyprint import HTML
 from io import BytesIO
 from pdf2image import convert_from_path
 from .form import NewsletterForm
