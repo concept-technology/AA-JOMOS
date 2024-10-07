@@ -22,7 +22,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.8'  # Adjust the Python version if necessary
+        python-version: '3.12.5'  # Adjust the Python version if necessary
 
     # Install dependencies
     - name: Install dependencies
@@ -37,7 +37,7 @@ jobs:
 
     # Deploy via FTP/SFTP to cPanel
     - name: Deploy to cPanel using FTP
-      uses: SamKirkland/FTP-Deploy-Action@4.3.0
+      uses: SamKirkland/FTP-Deploy-Action@4.3.0  # Ensure this action version exists
       with:
         ftp-server: ${{ secrets.CPANEL_FTP_SERVER }}
         ftp-username: ${{ secrets.CPANEL_FTP_USERNAME }}
@@ -46,3 +46,9 @@ jobs:
         local-dir: ./  # Adjust this if necessary (e.g., public folder)
         server-dir: aajomos.com/public_html/  # Your cPanel deployment directory (adjust as needed)
         method: "sync"  # Optional, to sync files and remove old ones not in your repo
+
+    # Optional: Clean up old files (if not using "sync" method)
+    # - name: Clean up old files
+    #   run: |
+    #     find aajomos.com/public_html/ -type f -not -name '*.py' -exec rm -f {} +
+
