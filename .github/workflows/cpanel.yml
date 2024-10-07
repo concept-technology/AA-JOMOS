@@ -37,12 +37,12 @@ jobs:
 
     # Deploy via FTP/SFTP to cPanel
     - name: Deploy to cPanel using FTP
-      uses: SamKirkland/FTP-Deploy-Action@4.5.0
+      uses: SamKirkland/FTP-Deploy-Action@v4  # Corrected version
       with:
         ftp-server: ${{ secrets.CPANEL_FTP_SERVER }}
         ftp-username: ${{ secrets.CPANEL_FTP_USERNAME }}
-        ftp-password: ${{ secrets.CPANEL_FTP_PASSWORD }}  # Only define ftp-password once here
-        ftp-port: ${{ secrets.CPANEL_FTP_PORT }}  # Only define ftp-password once here
+        ftp-password: ${{ secrets.CPANEL_FTP_PASSWORD }}
+        ftp-port: ${{ secrets.CPANEL_FTP_PORT }}
         local-dir: ./  # Adjust this if necessary (e.g., public folder)
         server-dir: aajomos.com/public_html/  # Your cPanel deployment directory (adjust as needed)
         method: "sync"  # Optional, to sync files and remove old ones not in your repo
