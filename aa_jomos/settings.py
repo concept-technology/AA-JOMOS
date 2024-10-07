@@ -25,7 +25,7 @@ environ.Env.read_env(BASE_DIR / '.env')
 # SECRET_KEY = 'django-insecure-=13zeu+im=zl5$+k=)6@y65hkbn1458jlcf^cqtc%t4e$r2*2z'
 SECRET_KEY =os.environ.get('SECRET_KEY', default='django-insecure-=13zeu+im=zl5$+k=)6@y65hkbn1458jlcf^cqtc%t4e$r2*2z')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG',)
+DEBUG = True
 
 
 INSTALLED_APPS = [
@@ -129,16 +129,16 @@ ALLOWED_HOSTS = ['*']
 #     }
 # }
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',  # MySQL engine
-        'NAME': 'concxyea_aajomos_db',          # Name of the MySQL database
-        'USER': 'aa_jomos_admin',          # MySQL user
-        'PASSWORD': 'your_database_password',  # MySQL user password
-        'HOST': 'concept-techsolutions.dev',                   # MySQL is typically hosted locally on cPanel
-        'PORT': '3306',                        # Default MySQL port
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',  # MySQL engine
+#         'NAME': 'concxyea_aajomos_db',          # Name of the MySQL database
+#         'USER': 'aa_jomos_admin',          # MySQL user
+#         'PASSWORD': 'ZsbLZpG_eZb9yq4',  # MySQL user password
+#         'HOST': 'localhost',                   # MySQL is typically hosted locally on cPanel
+#         'PORT': '3306',                        # Default MySQL port
+#     }
+# }
 
 
 # Password validation
@@ -231,11 +231,11 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 465
 # EMAIL_USE_TLS = True
 EMAIL_USE_SSL = True
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 # Default email address to use for various automated correspondence
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
 
 
 ACCOUNT_EMAIL_REQUIRED = True
@@ -246,19 +246,19 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_USERNAME_REQUIRED = False
 
 
-AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID') 
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID') 
 # AWS_ACCESS_KEY_ID = 'AKIAUBKFCNZRUXD6ZRVE'
-AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_SIGNATURE_NAME = env('AWS_S3_SIGNATURE_NAME')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_SIGNATURE_NAME = os.environ.get('AWS_S3_SIGNATURE_NAME')
 AWS_S3_REGION_NAME = 'eu-north-1'
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL =  None
 AWS_S3_VERIFY = True
 AWS_QUERYSTRING_EXPIRE = 10
 AWS_S3_CUSTOM_DOMAIN = 'd2nxnkp3c6n4f.cloudfront.net'
-AWS_CLOUDFRONT_KEY_ID = env.str('AWS_CLOUDFRONT_KEY_ID').strip()
-AWS_CLOUDFRONT_KEY = env.str('AWS_CLOUDFRONT_KEY', multiline=True).encode('ascii').strip()
+AWS_CLOUDFRONT_KEY_ID = os.environ.get('AWS_CLOUDFRONT_KEY_ID')
+AWS_CLOUDFRONT_KEY = os.environ.get('AWS_CLOUDFRONT_KEY',)
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -267,6 +267,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 1
 }
+
 
 SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
@@ -310,8 +311,8 @@ ACCOUNT_FORMS = {
     'user_token': 'allauth.account.forms.UserTokenForm',
 }
 
-PAYSTACK_PUBLIC_KEY = env('PAYSTACK_PUBLIC_KEY')
-PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY')
+PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY')
+PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
 
 # LOGGING = {
 #     'version': 1,
