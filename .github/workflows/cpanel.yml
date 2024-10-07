@@ -22,19 +22,13 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.12.5'  # Adjust the Python version if necessary
+        python-version: '3.8'  # Adjust the Python version if necessary
 
     # Install dependencies
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-
-    # Run tests (optional)
-    # Uncomment if you want to run tests before deploying
-    # - name: Run Django tests
-    #   run: |
-    #     python manage.py test
 
     # Collect static files for Django (required for deployment)
     - name: Collect static files
@@ -47,7 +41,8 @@ jobs:
       with:
         ftp-server: ${{ secrets.CPANEL_FTP_SERVER }}
         ftp-username: ${{ secrets.CPANEL_FTP_USERNAME }}
-        ftp-password: ${{ secrets.CPANEL_FTP_PASSWORD }}
-        ftp-password: ${{ secrets.CPANEL_FTP_PORT }}
+        ftp-password: ${{ secrets.CPANEL_FTP_PASSWORD }}  # Only define ftp-password once here
+        ftp-password: ${{ secrets.CPANEL_FTP_PORT }}  # Only define ftp-password once here
         local-dir: ./  # Adjust this if necessary (e.g., public folder)
         server-dir: aajomos.com/public_html/  # Your cPanel deployment directory (adjust as needed)
+        method: "sync"  # Optional, to sync files and remove old ones not in your repo
