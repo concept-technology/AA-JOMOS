@@ -1,5 +1,5 @@
 name: Deploy Django to cPanel 
-
+x
 on:
   push:
     branches:
@@ -44,7 +44,7 @@ jobs:
           password: ${{ secrets.CPANEL_FTP_PASSWORD }}
           port: ${{ secrets.CPANEL_FTP_PORT }}
           local-dir: ./  # Adjust this if necessary (e.g., public folder)
-          server-dir: aajomos.com/public_html/  # Your cPanel deployment directory (adjust as needed)
+          server-dir: public_html/  # Your cPanel deployment directory (adjust as needed)
           method: "sync"  # Sync files and remove old ones not in your repo
           exclude: |
             virtualenv/

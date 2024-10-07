@@ -126,16 +126,16 @@ ALLOWED_HOSTS = ['*']
 #     }
 # }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',  # MySQL engine
-#         'NAME': 'concxyea_aajomos_db',          # Name of the MySQL database
-#         'USER': 'aa_jomos_admin',          # MySQL user
-#         'PASSWORD': 'ZsbLZpG_eZb9yq4',  # MySQL user password
-#         'HOST': 'localhost',                   # MySQL is typically hosted locally on cPanel
-#         'PORT': '3306',                        # Default MySQL port
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql', 
+        'NAME': 'concxyea_aajomos_db',         
+        'USER': 'oncxyea_aajomos_admi',          
+        'PASSWORD': 'ZsbLZpG_eZb9yq4',
+        'HOST': 'localhost',                   
+        'PORT': '3306',                       
+    }
+}
 
 
 # Password validation
