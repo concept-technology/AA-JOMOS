@@ -14,39 +14,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Check out the latest code from GitHub
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # Check out the latest code from GitHub
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # Set up Python
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12.5'  # Adjust the Python version if necessary
+      # Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.5'  # Adjust the Python version if necessary
 
-    # Install dependencies
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    # Collect static files for Django (required for deployment)
-    - name: Collect static files
-      run: |
-        python manage.py collectstatic --noinput
+      # Collect static files for Django (required for deployment)
+      - name: Collect static files
+        run: |
+          python manage.py collectstatic --noinput
 
-    # Deploy via FTP/SFTP to cPanel
-    - name: Deploy to cPanel using FTP
-      uses: SamKirkland/FTP-Deploy-Action@4.3.0
-      with:
-        server: ${{ secrets.CPANEL_FTP_SERVER }}
-        username: ${{ secrets.CPANEL_FTP_USERNAME }}
-        password: ${{ secrets.CPANEL_FTP_PASSWORD }}
-        port: ${{ secrets.CPANEL_FTP_PORT }}
-        local-dir: ./  # Adjust this if necessary (e.g., public folder)
-        server-dir: aajomos.com/public_html/  # Your cPanel deployment directory (adjust as needed)
-        method: "sync"  # Sync files and remove old ones not in your repo
-        exclude:
-          virtualenv/
-          *.pyc
-          __pycache__/
+      # Deploy via FTP/SFTP to cPanel
+      - name: Deploy to cPanel using FTP
+        uses: SamKirkland/FTP-Deploy-Action@4.3.0
+        with:
+          server: ${{ secrets.CPANEL_FTP_SERVER }}
+          username: ${{ secrets.CPANEL_FTP_USERNAME }}
+          password: ${{ secrets.CPANEL_FTP_PASSWORD }}
+          port: ${{ secrets.CPANEL_FTP_PORT }}
+          local-dir: ./  # Adjust this if necessary (e.g., public folder)
+          server-dir: aajomos.com/public_html/  # Your cPanel deployment directory (adjust as needed)
+          method: "sync"  # Sync files and remove old ones not in your repo
+          exclude: |
+            virtualenv/
+            venv/
+            env/
+            env.bak/
+            *.pyc
+            __pycache__/
