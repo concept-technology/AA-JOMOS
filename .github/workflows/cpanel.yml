@@ -43,7 +43,7 @@ jobs:
         username: ${{ secrets.CPANEL_FTP_USERNAME }}   # Change 'ftp-username' to 'username'
         password: ${{ secrets.CPANEL_FTP_PASSWORD }}    # Change 'ftp-password' to 'password'
         port: ${{ secrets.CPANEL_FTP_PORT }}            # Change 'ftp-port' to 'port'
-        local-dir: ./home/  # Adjust this if necessary (e.g., public folder)
+        local-dir: ./  # Adjust this if necessary (e.g., public folder)
         server-dir: aajomos.com/public_html/  # Your cPanel deployment directory (adjust as needed)
         method: "sync"  # Optional, to sync files and remove old ones not in your repo
 
