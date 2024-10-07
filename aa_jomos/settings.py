@@ -4,7 +4,6 @@ from pathlib import Path
 import environ
 import dj_database_url
 from twilio.rest import Client
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -13,6 +12,11 @@ env = environ.Env(
     DEBUG=(bool, False)
 )
 environ.Env.read_env(BASE_DIR / '.env')
+
+# dotenv_path = os.path.join(BASE_DIR, '.env')
+# if os.path.exists(dotenv_path):
+#     environ.Env.read_env(BASE_DIR / '.env')
+    
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -104,23 +108,35 @@ WSGI_APPLICATION = 'aa_jomos.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = ['*']
 
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+# RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+# if RENDER_EXTERNAL_HOSTNAME:
+#     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
     
-    DATABASE_URL = env('DATABASE_URL')
+#     DATABASE_URL = env('DATABASE_URL')
 
-    DATABASES = {
-                'default': dj_database_url.config(
-                    default=DATABASE_URL,
-                    conn_max_age=600
-                )
-            }
-else:
-    DATABASES = {
+#     DATABASES = {
+#                 'default': dj_database_url.config(
+#                     default=DATABASE_URL,
+#                     conn_max_age=600
+#                 )
+#             }
+# else:
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',  # MySQL engine
+        'NAME': 'concxyea_aajomos_db',          # Name of the MySQL database
+        'USER': 'aa_jomos_admin',          # MySQL user
+        'PASSWORD': 'your_database_password',  # MySQL user password
+        'HOST': 'concept-techsolutions.dev',                   # MySQL is typically hosted locally on cPanel
+        'PORT': '3306',                        # Default MySQL port
     }
 }
 
