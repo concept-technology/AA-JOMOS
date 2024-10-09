@@ -1,11 +1,7 @@
 from django import forms
-from django_countries.fields import CountryField
-from  django_countries.widgets import CountrySelectWidget
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserChangeForm
-from book_store.widget import StarRatingWidget
 from .models import *
-from phonenumber_field.modelfields import PhoneNumberField
 
 class NewsletterForm(forms.Form):
     subject = forms.CharField(max_length=255, required=True, label="Newsletter Subject")

@@ -53,6 +53,13 @@ from django.http import Http404
 from .models import EmailSubscription
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.template.loader import render_to_string
+
+from django.utils.html import strip_tags
+
+
+
+
 
 class StoreConfig(AppConfig):
     name = 'book_store'
@@ -764,85 +771,6 @@ def Update_addressView(request, pk):
     }
     return render(request, 'store/update_address.html', context)
 
-# @login_required
-# def verify_address_and_pay(request):
-#     # Fetch user's addresses
-#     user_addresses = CustomersAddress.objects.filter(user=request.user)
-#     pk = settings.PAYSTACK_PUBLIC_KEY
-#     # Fetch current order details
-#     orders = Order.objects.filter(user=request.user, is_ordered=False)
-    
-#     total_order_cost = 0
-#     total_delivery_cost = 0
-#     total_cost_with_delivery = 0
-#     order = None
-#     order_items = []
-#     coupon = None
-#     payment = None  # Initialize payment as None
-
-#     if orders.exists():
-#         order = orders.first()
-#         total_order_cost = order.get_total()  # get_total() method calculates total cost
-#         total_delivery_cost = order.get_delivery_cost()  # get_delivery_cost() method calculates delivery cost
-#         total_cost_with_delivery = total_order_cost + total_delivery_cost
-#         order_items = order.product.all()  # Access the related products directly from the order
-#         if order.coupon:
-#             coupon = order.coupon
-
-#     if request.method == 'POST':
-#         amount = request.POST['amount']
-#         email = request.POST['email']
-#         ref_number = request.POST['ref']
-#         amount = int(total_cost_with_delivery * 100)  # Paystack expects the amount in kobo
-#         email = request.user.email
-
-#         headers = {
-#             "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
-#             "Content-Type": "application/json"
-#         }
-#         data = {
-#             "email": email,
-#             "amount": amount,
-#             "ref": ref_number,
-#         }
-#         url = "https://api.paystack.co/transaction/initialize"
-#         response = requests.post(url, headers=headers, data=json.dumps(data))
-#         response_data = response.json()
-
-#         if response_data['status']:
-#             payment = Payment.objects.create(amount=float(amount), email=email, order=order, user=request.user, ref=ref_number)
-#             payment.save()
-#             authorization_url = response_data['data']['authorization_url']
-#             print({'ref':ref_number})
-#             return redirect(authorization_url)
-#         else:
-#             # Handle error here
-#             context = {
-#                 'addresses': user_addresses,
-#                 'order': order,
-#                 'total_order_cost': total_order_cost,
-#                 'total_delivery_cost': total_delivery_cost,
-#                 'total_cost_with_delivery': total_cost_with_delivery,
-#                 'order_items': order_items,
-#                 'coupon': [coupon] if coupon else None,
-#                 'error': 'There was a problem initializing the payment. Please try again.',
-#             }
-#             return render(request, 'store/check-user-address.html', context)
-
-#     context = {
-#         'addresses': user_addresses,
-#         'order': order,
-#         'total_order_cost': total_order_cost,
-#         'total_delivery_cost': total_delivery_cost,
-#         'total_cost_with_delivery': total_cost_with_delivery,
-#         'order_items': order_items,
-#         'coupon': [coupon] if coupon else None,
-#         'paystack_pub_key': pk,
-#       # Check if payment is not None
-#     }
-#     return render(request, 'store/check-user-address.html', context)
-
-
 @login_required
 def verify_address_and_pay(request):
     # Fetch user's addresses
@@ -1253,7 +1181,7 @@ def toggle_wishlist(request, product_id):
         return redirect(next_url)
     return redirect('store:wishlist')
 
-    return JsonResponse({'message': message, 'in_wishlist': in_wishlist})
+    # return JsonResponse({'message': message, 'in_wishlist': in_wishlist})
 
 
 def remove_from_wishlist(request, product_id):
@@ -1613,3 +1541,47 @@ def send_newsletter(request):
     return redirect('some_view')  # Change 'some_view' to where you want to redirect after sending
 
 
+
+
+def cancel_order(request, order_id):
+    # Fetch the order
+    order = get_object_or_404(Order, id=order_id)
+
+    # Mark the order as canceled
+    order.user_cancelled = True
+    order.save()
+
+    # Email subject and sender
+    subject = f"Your Order #{order.reference} Has Been Canceled"
+    from_email = settings.DEFAULT_FROM_EMAIL
+    recipient_list = [order.user.email]
+
+    # Create link for the user to continue the order
+    continue_order_link = request.build_absolute_uri(reverse('store:continue_order', args=[order.id]))
+
+    # Render email content
+    html_message = render_to_string('emails/user_order_canceled.html', {
+        'order': order,
+        'user': order.user,
+        'continue_order_link': continue_order_link,
+    })
+    plain_message = strip_tags(html_message)  # Fallback for non-HTML email clients
+
+    # Send the email
+    send_mail(subject, plain_message, from_email, recipient_list, html_message=html_message)
+
+    # Redirect to the cart page after canceling the order
+    return redirect('store:cart')
+
+
+
+def continue_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+
+    # Reactivate the order by setting the canceled status to False
+    if order.user_cancelled:
+        order.user_cancelled = False
+        order.save()
+
+    # Redirect the user to the checkout page
+    return redirect('store:check-out')

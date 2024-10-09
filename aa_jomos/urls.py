@@ -4,7 +4,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.conf import settings
 from django.views.static import serve
-import debug_toolbar
 
 
 
@@ -17,7 +16,6 @@ urlpatterns = [
         re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
         path('ratings/', include('star_ratings.urls', namespace='ratings')),
         path('', include("paystack_api.urls")),
-        path('', include('delivery.urls')),
-        path('__debug__/', include(debug_toolbar.urls)),
+        path('', include('delivery.urls'))
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

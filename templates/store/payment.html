@@ -1,74 +1,72 @@
-{% extends 'store/base.html' %}
-<!-- CSS only -->
- 
- {% block title %}
-   aajomos | {{user}} | order
- {% endblock title %}
-    
-{%include 'store/partials/_header.html'%}
-
-
+{% load static %}
 {% load humanize %}
 
-{% load crispy_forms_tags %}
-{% block content %}
-<nav aria-label="breadcrumb" class="breadcrumb-nav">
-    <div class="container">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'store:index' %}">Home</a></li>
-            <li class="breadcrumb-item"><a href="{% url  'store:cart' %}">cart</a></li>
-            <li class="breadcrumb-item"><a href="{% url  'store:check-out' %}">check-out</a></li>
-            <li class="breadcrumb-item active" aria-current="page">order</li>
-        </ol>
-    </div><!-- End .container -->
-</nav><!-- End .breadcrumb-nav -->
-            <!-- <div class="container"> -->
-                <div class="row d-flex justify-content-center m-3">
-                                <form id="paymentForm"  method="POST" action="{% url 'paystack:initiate_payment' %}">
-                                   
-                                            <div class="summary">
-                                                <h3 class="summary-title">Confirm Your Order  ref: {{order.reference}}</h3><!-- End .summary-title -->
-        
-                                                <table class="table table-summary">
-                                                    <thead>
-                                                        <tr>
-                                                            <th></th>
-                                                           <th></th>
-                                                            <th></th>
-                                                            <th>amount</th>                                                   
-                                                        </tr>
-                                                    </thead>        
-                                                    <tbody>             
-                                                        <tr>
-                                                            <td>delivery:</td>           
-                                                            <td colspan="4">&#8358;{{order.get_delivery_cost|floatformat:2|intcomma}}</td>
-                                                        </tr>
-                                                        <tr class="summary-total">
-                                                            <td>Grand Total:</td>
-                                                            <td></td>
-                                                            <td></td>
-                                                                <td> &#8358;{{order.get_total_with_delivery|floatformat:2|intcomma}}</td>
-                                                           
-                                                        </tr><!-- End .summary-total -->
-                                                    </tbody>
-                                                </table><!-- End .table table-summary -->
-        
-                                            </div><!-- End .summary -->
-                                    {% csrf_token %}
-                                            
-                                    <input type="hidden" name="amount" value="{{order.get_total_with_delivery}}"/>
-                                    <input type="hidden" value="{{user.email}}" name="email" />
-                    
-                                    <div class="form-footer">
-                                        <button type="submit" class="btn btn-primary">
-                                            <span>Confirm</span>
-                                            <i class="icon-long-arrow-right"></i>
-                                        </button>
-                                    </div><!-- End .form-footer -->
-                                </form>
-                           
-                        </div><!-- End .tab-content -->
-                    </div><!-- End .form-tab -->
-                </div><!-- End .form-box -->
-        </div><!-- End .login-page section-bg -->
-{% endblock content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aajomos | {{ user }} | Order</title>
+    <link rel="stylesheet" href="{% static 'assets/css/order.css' %}">
+</head>
+<body>
+
+    <!-- Breadcrumb Section -->
+    <nav class="order-breadcrumb">
+        <div class="breadcrumb-container">
+            <ul class="breadcrumb-list">
+                <li><a href="{% url 'store:index' %}">Home</a></li>
+                <li><a href="{% url 'store:cart' %}">Cart</a></li>
+                <li><a href="{% url 'store:check-out' %}">Checkout</a></li>
+                <li>Order</li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Order Confirmation Section -->
+    <div class="order-container">
+        <div class="order-summary-box">
+            <h1>Confirm Your Order</h1>
+            <p>Reference: <strong>{{ order.reference }}</strong></p>
+
+            <!-- Order Table -->
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th class="text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Delivery</td>
+                        <td class="text-right">&#8358;{{ order.get_delivery_cost|floatformat:2|intcomma }}</td>
+                    </tr>
+                    <tr class="grand-total">
+                        <td>Grand Total</td>
+                        <td class="text-right">&#8358;{{ order.get_total_with_delivery|floatformat:2|intcomma }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Payment Form -->
+            <form id="paymentForm" method="POST" action="{% url 'paystack:initiate_payment' %}">
+                {% csrf_token %}
+                <input type="hidden" name="amount" value="{{ order.get_total_with_delivery }}">
+                <input type="hidden" value="{{ user.email }}" name="email">
+
+                <div class="button-group">
+                    <button type="submit" class="order-btn-primary">Confirm Payment</button>
+                </div>
+            </form>
+
+            <!-- Cancel Order Form -->
+            <form id="cancelOrderForm" method="POST" action="{% url 'store:cancel_order' order.id %}">
+                {% csrf_token %}
+                <button type="submit" class="order-btn-danger">Cancel Order</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

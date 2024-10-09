@@ -442,10 +442,6 @@ class CartColor(models.Model):
     def __str__(self) -> str:
         return f"{self.color.name} {self.quantity}"
 
-# phone_regex = RegexValidator(
-#     regex=r'^\+?1?\d{9,15}$',
-#     message="Phone number  must be entered in the format: '+2349234445556'. Up to 15 digits allowed."
-# )
 
 class CustomersAddress(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', blank=True, null=True , related_name='users')
@@ -456,8 +452,8 @@ class CustomersAddress(models.Model):
     state = models.CharField(max_length=50, default='')
     telephone = PhoneNumberField(region='NG')
     zip_code = models.CharField(max_length=20)
-    # country = CountryField(multiple=False)
-    country = models.CharField(max_length=20, default='Nigeria')
+    country = CountryField(multiple=False)
+    # country = models.CharField(max_length=20, default='Nigeria')
     message = models.TextField(max_length=500, null=True, blank=True)
     # payment_option = models.CharField(max_length=255, choices=payment_choices, blank=True,null=True)
    
@@ -510,6 +506,7 @@ class Order(models.Model):
     session_key = models.CharField(max_length=40, null=True, blank=True)
     invoice_number = models.CharField(max_length=50, blank=True, null=True)
     approved = models.BooleanField(default=False)
+    user_cancelled = False
     
     
     def save(self, *args, **kwargs):

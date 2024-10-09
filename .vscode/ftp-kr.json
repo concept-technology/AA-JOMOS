@@ -1,0 +1,17 @@
+{
+    "host": "ftp.concept-techsolutions.dev",
+    "username": "aajomserver@aajomos.com",
+    "password": "xoCeg{*(9~}7",
+    "remotePath": "/",
+    "protocol": "ftp",
+    "port": 0,
+    "fileNameEncoding": "utf8",m
+    "autoUpload": true,
+    "autoDelete": false,
+    "autoDownload": false,
+    "ignore": [
+        ".git",
+        "/.vscode",
+        ".venv"
+    ]
+}

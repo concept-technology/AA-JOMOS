@@ -1,11 +1,9 @@
 {% extends 'store/base.html' %}
 {% load crispy_forms_tags %}
 {% load humanize %}
-
 {% block title %}
 aajomos |{{user}} | check-out
 {% endblock title %}
-
 {% block content %}    
 
 <main class="main">
@@ -23,8 +21,8 @@ aajomos |{{user}} | check-out
                 <li class="breadcrumb-item"><a href="{% url 'store:cart' %}">Cart</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Checkout</li>
             </ol>
-        </div><!-- End .container -->
-    </nav><!-- End .breadcrumb-nav -->
+        </div>
+    </nav>
     
     <div class="page-content">
         <div class="checkout">
@@ -38,7 +36,7 @@ aajomos |{{user}} | check-out
                     <form method="post" action="{% url 'store:apply-coupon' %}?next={{ request.path }}">
                         {% csrf_token %}
                         {{ order.coupon_form.code }}
-                        <button class="btn btn-primary" type="submit">Apply</button>
+                        <button class="btn btn-primary" type="submit">Apply coupon </button>
                     </form>
                 </div><!-- End .checkout-discount -->
                 
@@ -46,7 +44,7 @@ aajomos |{{user}} | check-out
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-lg-9">
-                            <h2 class="checkout-title">Billing Details</h2><!-- End .checkout-title -->
+                            <h2 class="checkout-title">Billing Details</h2>
                             
                             <label>Country *</label>
                             {{ form.country }}
@@ -72,31 +70,33 @@ aajomos |{{user}} | check-out
                                     <select id="id_town" name="town" class="form-control">
                                         <option value="">Select City</option>
                                     </select>
-                                </div><!-- End .col-sm-6 -->
+                                </div>
 
                              
-                            </div><!-- End .row -->
+                            </div>
 
                             <div class="row">
                                 <div class="col-sm-6">
                                     <label>Postcode / ZIP *</label>
                                     {{ form.zip_code }}
-                                </div><!-- End .col-sm-6 -->
+                                </div>
 
                                 <div class="col-sm-6">
                                     <label>Phone *</label>
                                     {{ form.telephone }}
-                                </div><!-- End .col-sm-6 -->
-                            </div><!-- End .row -->
+                                </div>
+                            </div>
 
                             <label>Order notes (optional)</label>
                             {{ form.message }}
-                        </div><!-- End .col-lg-9 -->
+                        </div>
+
+
+
 
                         <aside class="col-lg-3">
                             <div class="summary">
-                                <h3 class="summary-title">Your Order</h3><!-- End .summary-title -->
-
+                                <h3 class="summary-title">Your Order</h3>
                                 <table class="table table-summary">
                                     <thead>
                                         <tr>
@@ -108,32 +108,32 @@ aajomos |{{user}} | check-out
                                     <tbody>
                                         {% for item in cart %}
                                         <tr>
-                                            <td><a href="#">{{ item.product.title }} {{ item.quantity }} pcs *</a></td>
-                                            <td>&#8358;{{ item.get_price_tag|floatformat:2|intcomma }}</td>
+                                            <td><a href="{{item.product.get_absolute_url}}">{{ item.product.title }} {{ item.quantity }} pcs *</a></td>
+                                            <td> &#8358;{{ item.get_price_tag|floatformat:2|intcomma }}</td>
                                         </tr>
                                         {% endfor %}
                                         
                                         <tr class="summary-subtotal">
                                             <td>Subtotal:</td>
-                                            <td>{{ order.get_total|floatformat:2|intcomma }}</td>
+                                            <td> &#8358;{{ order.get_total|floatformat:2|intcomma }}</td>
                                         </tr><!-- End .summary-subtotal -->
-                                        
                                         <tr>
                                             <td>Delivery:</td>
-                                            <td > &#8358;<span id="delivery_cost"></span></td>
+                                            <td >----<span id="delivery_cost"></span></td>
                                         </tr>
                                         
                                         <tr class="summary-total">
                                             <td>Total:</td>
-                                            &#8358;<td id="total_with_delivery"></td>
-                                        </tr><!-- End .summary-total -->
+                                            <td id="total_with_delivery"></td>
+                                        </tr>
                                     </tbody>
                                 </table><!-- End .table table-summary -->
-
                                 <button type="submit" class="btn btn-primary">
                                     <span class="btn-text">Place Order</span>
                                     <span class="btn-hover-text">Proceed to Checkout</span>
                                 </button>
+                            
+
                             </div><!-- End .summary -->
                         </aside><!-- End .col-lg-3 -->
                     </div><!-- End .row -->

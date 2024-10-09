@@ -13,8 +13,7 @@ class LocationForm(forms.ModelForm):
         location_choices = [(location.id, location.state) for location in locations]
         self.fields['state'].widget = forms.Select(choices=location_choices, attrs={'class': 'form-control'})
 
-from django import forms
-from phonenumber_field.formfields import PhoneNumberField
+
 
 class PhoneNumberForm(forms.Form):
     phone_number = PhoneNumberField(region='NG')  # Initialize without widget
@@ -52,7 +51,6 @@ class AddressForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(AddressForm, self).__init__(*args, **kwargs)
-
         # Get distinct states
         abuja_states = DeliveryLocations.objects.values('state').distinct()
         self.fields['state'].choices = [(state['state'], state['state']) for state in abuja_states]

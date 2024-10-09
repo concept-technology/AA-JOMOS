@@ -1,0 +1,32 @@
+{
+  "ftp://aajomserver@aajomos.com@ftp.concept-techsolutions.dev": {
+    ".ftpquota": {
+      "type": "-",
+      "size": 9,
+      "lmtime": 0,
+      "modified": false
+    },
+    "aa_jomos": {},
+    "manage.py": {
+      "type": "-",
+      "size": 664,
+      "lmtime": 0,
+      "modified": false
+    },
+    "passenger_wsgi.py": {
+      "type": "-",
+      "size": 37,
+      "lmtime": 0,
+      "modified": false
+    },
+    "public": {},
+    "stderr.log": {
+      "type": "-",
+      "size": 3271,
+      "lmtime": 0,
+      "modified": false
+    },
+    "tmp": {}
+  },
+  "$version": 1
+}

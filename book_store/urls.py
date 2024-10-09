@@ -68,9 +68,12 @@ urlpatterns = [
     
     path('rate/product/<str:slug>', views.rate_product, name='rate_product'),   
   path('accounts/confirm-email/<str:key>/', views.CustomConfirmEmailView.as_view(), name='account_confirm_email'),
-   path('load-cities/', views.load_cities, name='load_cities')
-  # Other URL patterns...
+   path('load-cities/', views.load_cities, name='load_cities'),
+    path('cancel-order/<int:order_id>/', views.cancel_order, name='cancel_order'),
+    path('continue-order/<int:order_id>/', views.cancel_order, name='continue_order'),
 ]
+  # Other URL patterns...
+
 
 
 
