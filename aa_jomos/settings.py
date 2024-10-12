@@ -11,8 +11,13 @@ env = environ.Env(
 )
 environ.Env.read_env(BASE_DIR / '.env')
 
-SECRET_KEY =env('SECRET_KEY', default='django-insecure-=13zeu+im=zl5$+k=)6@y65hkbn1458jlcf^cqtc%t4e$r2*2z')
-DEBUG = True
+SECRET_KEY =env('SECRET_KEY')
+# DEBUG = True
+
+
+ENVIRONMENT = env('DJANGO_ENV')
+
+DEBUG = ENVIRONMENT == 'development'
 
 
 INSTALLED_APPS = [
@@ -50,8 +55,10 @@ INSTALLED_APPS = [
     'delivery',
     'paystack_api',
     # 'jet_django',
-]
+    'settings',
+    # 'django_inline_actions'
 
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -81,6 +88,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'settings.context_processors.site_settings',
             ],
         },
     },
@@ -93,37 +101,24 @@ WSGI_APPLICATION = 'aa_jomos.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = ['*']
 
-# RENDER_EXTERNAL_HOSTNAME = env('RENDER_EXTERNAL_HOSTNAME')
-# if RENDER_EXTERNAL_HOSTNAME:
-#     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-    
-#     DATABASE_URL = env('DATABASE_URL')
-
-#     DATABASES = {
-#                 'default': dj_database_url.config(
-#                     default=DATABASE_URL,
-#                     conn_max_age=600
-#                 )
-#             }
-# else:
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if ENVIRONMENT == 'development':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql', 
-#         'NAME': 'concxyea_aajomos_db',         
-#         'USER': 'oncxyea_aajomos_admi',          
-#         'PASSWORD': 'ZsbLZpG_eZb9yq4',
-#         'HOST': 'localhost',                   
-#         'PORT': '3306',                       
-#     }
-# }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql', 
+            'NAME':    env('DATABASE_NAME'),         
+            'USER': env('DATABASE_USER_NAME'),          
+            'PASSWORD': env('DATABASE_PASSWORD'),
+            'HOST': env('DATABASE_HOST'),                   
+            'PORT': env('DATABASE_PORT'),                       
+        }
+    }
 
 
 # Password validation

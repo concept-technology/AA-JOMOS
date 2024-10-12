@@ -4,8 +4,8 @@
     "password": "xoCeg{*(9~}7",
     "remotePath": "/",
     "protocol": "ftp",
-    "port": 0,
-    "fileNameEncoding": "utf8",m
+    "port": 0778,
+    "fileNameEncoding": "utf8",
     "autoUpload": true,
     "autoDelete": false,
     "autoDownload": false,

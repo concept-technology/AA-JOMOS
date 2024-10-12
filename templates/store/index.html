@@ -7,85 +7,75 @@ A.A JOMOS | Home
  {% block content %}  
  {% load custom_filters %}
  {% load star_rating %}
-   
+ <!-- <img src="{% static  'assets/images/backgrounds/book3.jpg' %}" alt="Image Description"> -->
+  
         <main>           
-          <div class="intro-section pt-3 pb-3 mb-2">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <div class="intro-slider-container slider-container-ratio mb-2 mb-lg-0">
-                                <div class="intro-slider owl-carousel owl-simple owl-dark owl-nav-inside" data-toggle="owl" data-owl-options='{
-                                    "nav": false, 
-                                    "dots": true,
-                                    "responsive": {
-                                        "768": {
-                                            "nav": true,
-                                            "dots": false
-                                        }
-                                    }
-                                }'>
-                                
-                        
-                                    <!-- discounted products -->
-                             
-                                <div class="intro-slide">
-                                    <figure class="slide-imagex">
-                                        <picture>
-                                            <source media="(max-width: 480px)" srcset="{{product.img_1.url}}">
-                                            <img src="{% static 'assets/images/aajomoslogo.jpg' %}" alt="Image Description">
-                                        </picture>
-                                    </figure><!-- End .slide-image -->
 
-                                    <div class="intro-content">
-                                        <h3 class="intro-subtitle text-primary">welcome to</h3><!-- End .h3 intro-subtitle -->
-                                        <h1 class="intro-title">
-                                            A.A JOMOS 
-                                        </h1><!-- End .intro-title -->
+            <div class="intro-slider owl-carousel owl-theme owl-nav-inside owl-light" data-toggle="owl" 
+            data-owl-options='{
+                "dots": true,
+                "nav": false, 
+                "responsive": {
+                    "1200": {
+                        "nav": true,
+                        "dots": false
+                    }
+                }
+            }'>
+            <div class="intro-slide" style="background-image: url('{% static 'assets/images/backgrounds/book4.jpg' %}');">
+                <div class="container intro-content">
+                    <div class="row justify-content-end">
+                        <div class="col-auto col-sm-7 col-md-6 col-lg-5">
+                            <h3 class="intro-subtitle text-primary">welcome</h3><!-- End .h3 intro-subtitle -->
+                            <h1 class="intro-title">AA JOOMOS<br>Book Store</h1><!-- End .intro-title -->
 
-                                        <div class="intro-price">
-                                            <sup>Book store</sup>
-                                            <span class="text-primary">
-                                                &<sup>stationary</sup>
-                                            </span>
-                                        </div><!-- End .intro-price -->
+                            <div class="intro-price">
+                                <sup>AND</sup>
+                                <span class="text-primary">
+                                    Stationary<sup></sup>
+                                </span>
+                            </div><!-- End .intro-price -->
 
-                                        <a href="{% url 'store:categories-list' %}" class="btn btn-primary btn-round">
-                                            <span>explore</span>
-                                            <i class="icon-long-arrow-right"></i>
-                                        </a>
-                                    </div><!-- End .intro-content -->
-                                </div><!-- End .intro-slide -->
-                           
-                       
-                        
-                            </div><!-- End .intro-slider owl-carousel owl-simple -->
-                            
-                                <span class="slider-loader"></span><!-- End .slider-loader -->
-                            </div><!-- End .intro-slider-container -->
-                        </div><!-- End .col-lg-8 -->
-
-                        <div class="col-lg-4">
-                            <div class="intro-banners">
-                                {% for product in top_rated_products %}                                   
-                                <div class="banne mb-lg-1 mb-xl-2 d-flex">
-                                    <div class="m-1">
-                                        <a href="{{product.get_absolute_url}}">
-                                            <img src="{{product.img_1.url}}" alt="Banner" style="width: 80px;">
-                                            <h4 class="banner-subtitle d-lg-none d-xl-block"><a href="#">{{product.category.title}}</a></h4><!-- End .banner-subtitle -->
-                                        </a>
-                                    </div>
-
-                                    <div class="banner-conten m-3">
-                                        <h3 class="banner-title"><a href="#"> <br>{{product.title}}</a></h3><!-- End .banner-title -->
-                                        <a href="{{product.get_absolute_url}}" class="banner-link">top rated<i class="icon-long-arrow-right"></i></a>
-                                    </div><!-- End .banner-content -->
-                                </div><!-- End .banner -->
-                                {%endfor%}      
-                            </div><!-- End .intro-banners -->
-                        </div><!-- End .col-lg-4 -->
+                            <a href="{% url 'store:categories-list' %}" class="btn btn-primary btn-round">
+                                <span>Shop More</span>
+                                <i class="icon-long-arrow-right"></i>
+                            </a>
+                        </div><!-- End .col-md-6 offset-md-6 -->
                     </div><!-- End .row -->
-                </div><!-- End .container -->
-            </div><!-- End .intro-section -->
+                </div><!-- End .intro-content -->
+            </div><!-- End .intro-slide -->
+
+
+            {% for product in top_rated_products %}                             
+            <div class="intro-slide" style="background-image: url('{{product.img_1.url}}'); background-position: left;  background-repeat: no-repeat;">
+                <div class="container intro-content">
+                    <div class="row justify-content-end">
+                        <div class="col-auto col-sm-7 col-md-6 col-lg-5">
+                            <h3 class="intro-subtitle text-third">Top rated products</h3><!-- End .h3 intro-subtitle -->
+                            <h1 class="intro-title">{{product.title}}</h1>
+                            <!-- <h1 class="intro-title">Dre Studio 3</h1>End .intro-title -->
+                            
+                            {% for size in product.size.all %}
+                            <div class="intro-price">
+                                <sup class="intro-old-price"></sup>
+                                <span class="text-third">
+                                    &#8358;{{ size.discount_price|floatformat:2|intcomma }}<sup></sup>
+                                </span>
+                            </div><!-- End .intro-price -->
+                            {%endfor%}
+                            <a href="{{product.get_absolute_url}}" class="btn btn-primary btn-round">
+                                <span>Buy now</span>
+                                <i class="icon-long-arrow-right"></i>
+                            </a>
+                        </div><!-- End .col-lg-11 offset-lg-1 -->
+                    </div><!-- End .row -->
+                </div><!-- End .intro-content -->
+            </div><!-- End .intro-slide -->
+            {%endfor%}
+
+
+     
+        </div><!-- End .intro-slider owl-carousel owl-simple -->
 
             <div class="container featured">
                 <ul class="nav nav-pills nav-border-anim nav-big justify-content-center mb-3" role="tablist">
@@ -836,11 +826,11 @@ A.A JOMOS | Home
                                     <h3 class="cta-title">Shop Social</h3><!-- End .cta-title -->
                                     <p class="cta-desc">follow us on our social media platforms</p><!-- End .cta-desc -->  
                                     <div class="social-icons social-icons-colored justify-content-center">
-                                        <a href="#" class="social-icon social-facebook" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
-                                        <a href="#" class="social-icon social-twitter" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
-                                        <a href="#" class="social-icon social-instagram" title="Instagram" target="_blank"><i class="icon-instagram"></i></a>
-                                        <a href="#" class="social-icon social-youtube" title="Youtube" target="_blank"><i class="icon-youtube"></i></a>
-                                        <a href="#" class="social-icon social-pinterest" title="Pinterest" target="_blank"><i class="icon-pinterest"></i></a>
+                                        <a href="{{site_settings.facebook_link}}" class="social-icon social-facebook" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
+                                        <a href="{{ite_settings.twiter_link}}" class="social-icon social-twitter" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
+                                        <a href="{{site_settings.instagram_link}}" class="social-icon social-instagram" title="Instagram" target="_blank"><i class="icon-instagram"></i></a>
+                                        <a href="{{site_settings.youtube_link}}" class="social-icon social-youtube" title="Youtube" target="_blank"><i class="icon-youtube"></i></a>
+                                        <a href="{{site_settings.pinterest_link}}" class="social-icon social-pinterest" title="Pinterest" target="_blank"><i class="icon-pinterest"></i></a>
                                     </div><!-- End .soial-icons -->
                                 </div><!-- End .cta-wrapper -->
                             </div><!-- End .col-lg-6 -->

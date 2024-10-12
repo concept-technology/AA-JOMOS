@@ -1,4 +1,4 @@
-*.pyc
-__pycahe__
 .env
 .envs
+*.pyc
+__pycahe__,
