@@ -9,7 +9,7 @@ from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from delivery.deliveryform import AddressForm
+from delivery.deliveryform import AddressForm, VerifyPhoneForm
 from delivery.models import DeliveryLocations
 from .models import *
 from django.views.generic import DetailView, ListView,View
@@ -645,22 +645,107 @@ def load_cities(request):
     return JsonResponse(list(cities), safe=False)  # Return as JSON  return JsonResponse(list(cities), safe=False)
 
 
+# @method_decorator(login_required, name='dispatch')
+# class CheckoutView(View):
+#     def get(self, *args, **kwargs):
+
+#         profile, created = Profile.objects.get_or_create(user=self.request.user)
+#         # if not profile.phone_number or not profile.is_phone_verified:
+#         #     messages.warning(self.request, "Please provide your phone number before proceeding to checkout.")
+#         #     return redirect('delivery:phone_number_verify')
+#         # # Check if the user has an existing address
+#         try:
+#             address = CustomersAddress.objects.get(user=self.request.user)
+#             form = AddressForm(instance=address)  # Pre-populate form with the existing address
+#         except CustomersAddress.DoesNotExist:
+#             form = AddressForm()  # If no existing address, present a blank form
+
+#         coupon = Coupon.objects.filter(active=True)
+#         states = DeliveryLocations.objects.all()
+
+#         try:
+#             order = Order.objects.get(user=self.request.user, is_ordered=False)
+#             cart = Cart.objects.filter(user=self.request.user, is_ordered=False)
+
+#             if not cart.exists():
+#                 messages.warning(self.request, 'Your cart is empty.')
+#                 return redirect('store:cart')
+
+#             # Pre-populate the phone number in the form if it's verified
+#             form.fields['telephone'].initial = profile.phone_number
+
+#             context = {
+#                 'coupon': coupon,
+#                 'states': states,
+#                 'form': form,
+#                 'order': order,
+#                 'cart': cart,
+#                 'coupon_form': CouponForm(),
+#             }
+
+#             return render(self.request, 'store/checkout.html', context)
+        
+#         except Order.DoesNotExist:
+#             messages.error(self.request, 'You do not have an active order')
+#             return redirect('store:categories-list')
+
+#     def post(self, *args, **kwargs):
+#         try:
+#             form = AddressForm(self.request.POST or None)
+#             order = Order.objects.get(user=self.request.user, is_ordered=False)
+            
+#             if form.is_valid():
+#                 street_address = form.cleaned_data.get('street_address')
+#                 apartment = form.cleaned_data.get('apartment')
+#                 town = form.cleaned_data.get('town')
+#                 state = form.cleaned_data.get('state')
+#                 country = form.cleaned_data.get('country')
+#                 zip_code = form.cleaned_data.get('zip_code')
+
+#                 # Get delivery cost based on state and town
+#                 delivery_location = get_object_or_404(DeliveryLocations, state=state, town_name=town)
+                
+#                 # Check if the user already has an address
+#                 address, created = CustomersAddress.objects.update_or_create(
+#                     user=self.request.user,
+#                     defaults={
+#                         'street_address': street_address,
+#                         'apartment': apartment,
+#                         'town': town,
+#                         'state': state,
+#                         'country': country,
+#                         'zip_code': zip_code,
+#                     }
+#                 )
+
+#                 # Update the order with the new shipping address and delivery location
+#                 order.shipping_address = address
+#                 order.delivery_location = delivery_location  # Set delivery location
+#                 order.save()  # Save the order with the updated delivery location
+
+#                 # Calculate the total with delivery
+#                 total_with_delivery = order.get_total_with_delivery()  # Use the method to calculate total
+#                 order.total_price = total_with_delivery  # Update the order total price
+#                 order.save()  # Save again after updating the total price with delivery
+
+#                 return redirect('paystack:initiate_payment')
+            
+#             messages.warning(self.request, 'Order failed')
+#             return redirect('store:cart')
+                
+#         except ObjectDoesNotExist:
+#             messages.error(self.request, 'You do not have an active order')
+#             return redirect('store:categories')
+
+
 @method_decorator(login_required, name='dispatch')
 class CheckoutView(View):
     def get(self, *args, **kwargs):
-        profile, created = Profile.objects.get_or_create(user=self.request.user)
+        # Get or create the user's profile
+        profile = Profile.objects.filter(user=self.request.user).first()
+        if not profile:
+            profile = Profile.objects.create(user=self.request.user)
 
-        # # Check if phone number is provided
-        # if not profile.phone_number:
-        #     messages.warning(self.request, "Please provide your phone number before proceeding to checkout.")
-        #     return redirect('delivery:enter_phone_number')
-        
-        # # Check if phone number is verified
-        # if not profile.is_phone_verified:
-        #     messages.warning(self.request, "Please verify your phone number before proceeding to checkout.")
-        #     return redirect('delivery:enter_phone_number')
-
-        # Check if the user has an existing address
         try:
             address = CustomersAddress.objects.get(user=self.request.user)
             form = AddressForm(instance=address)  # Pre-populate form with the existing address
@@ -691,58 +776,79 @@ class CheckoutView(View):
             }
 
             return render(self.request, 'store/checkout.html', context)
-        
+
         except Order.DoesNotExist:
             messages.error(self.request, 'You do not have an active order')
             return redirect('store:categories-list')
 
     def post(self, *args, **kwargs):
+        form = AddressForm(self.request.POST or None)
+
         try:
-            form = AddressForm(self.request.POST or None)
             order = Order.objects.get(user=self.request.user, is_ordered=False)
-            
-            if form.is_valid():
-                street_address = form.cleaned_data.get('street_address')
-                apartment = form.cleaned_data.get('apartment')
-                town = form.cleaned_data.get('town')
-                state = form.cleaned_data.get('state')
-                country = form.cleaned_data.get('country')
-                zip_code = form.cleaned_data.get('zip_code')
-
-                # Get delivery cost based on state and town
-                delivery_location = get_object_or_404(DeliveryLocations, state=state, town_name=town)
-                
-                # Check if the user already has an address
-                address, created = CustomersAddress.objects.update_or_create(
-                    user=self.request.user,
-                    defaults={
-                        'street_address': street_address,
-                        'apartment': apartment,
-                        'town': town,
-                        'state': state,
-                        'country': country,
-                        'zip_code': zip_code,
-                    }
-                )
-
-                # Update the order with the new shipping address and delivery location
-                order.shipping_address = address
-                order.delivery_location = delivery_location  # Set delivery location
-                order.save()  # Save the order with the updated delivery location
-
-                # Calculate the total with delivery
-                total_with_delivery = order.get_total_with_delivery()  # Use the method to calculate total
-                order.total_price = total_with_delivery  # Update the order total price
-                order.save()  # Save again after updating the total price with delivery
-
-                return redirect('paystack:initiate_payment')
-            
-            messages.warning(self.request, 'Order failed')
-            return redirect('store:cart')
-                
-        except ObjectDoesNotExist:
+        except Order.DoesNotExist:
             messages.error(self.request, 'You do not have an active order')
-            return redirect('store:categories')
+            return redirect('store:categories-list')
+
+        if form.is_valid():
+            street_address = form.cleaned_data.get('street_address')
+            apartment = form.cleaned_data.get('apartment')
+            town = form.cleaned_data.get('town')
+            state = form.cleaned_data.get('state')
+            country = form.cleaned_data.get('country')
+            zip_code = form.cleaned_data.get('zip_code')
+            telephone = form.cleaned_data.get('telephone')
+
+            try:
+                # Get delivery cost based on state and town
+                delivery_location = DeliveryLocations.objects.get(state=state, town_name=town)
+            except DeliveryLocations.DoesNotExist:
+                messages.error(self.request, 'Delivery location not found for the selected state and town.')
+                return render(self.request, 'store/checkout.html', {'form': form})
+
+            # Check if the user already has an address
+            address, created = CustomersAddress.objects.update_or_create(
+                user=self.request.user,
+                defaults={
+                    'street_address': street_address,
+                    'apartment': apartment,
+                    'town': town,
+                    'state': state,
+                    'country': country,
+                    'zip_code': zip_code,
+                    'telephone':telephone
+                }
+            )
+
+            # Update or get the user's profile (do not create a new one if it exists)
+            profile = Profile.objects.filter(user=self.request.user).first()
+            if profile:
+                profile.phone_number = telephone
+                profile.country = country
+                profile.save()
+
+            # Update the order with the new shipping address and delivery location
+            order.shipping_address = address
+            order.delivery_location = delivery_location  # Set delivery location
+            order.save()  # Save the order with the updated delivery location
+
+            # Calculate the total with delivery
+            total_with_delivery = order.get_total_with_delivery()  # Use the method to calculate total
+            order.total_price = total_with_delivery  # Update the order total price
+            order.save()  # Save again after updating the total price with delivery
+
+            return redirect('paystack:initiate_payment')
+
+        # Form is not valid, render the form with error messages
+        messages.warning(self.request, 'Please correct the errors below.')
+        print(form.errors)
+        return render(self.request, 'store/checkout.html', {
+            'form': form,
+            'order': order,
+            'states': DeliveryLocations.objects.all(),
+            'coupon': Coupon.objects.filter(active=True),
+            'coupon_form': CouponForm(),
+        })
 
 # next_url = request.GET.get('next')  # Define next_url early in the code
  

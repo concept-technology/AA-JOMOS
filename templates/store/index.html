@@ -112,16 +112,13 @@ A.A JOMOS | Home
                                         "items":4
                                     }
                                 }
-                            }'>
-
-                            
+                            }'>                           
                             {% for product in featured_products %}                             
                             <div class="product product-2" style="padding: 20px;">
                                 <figure class="product-media">
                                     <a href="{{product.get_absolute_url}}">
                                         <img src="{{product.img_1.url}}" alt="Product image" class="product-image">
                                     </a>
-
                                     <div class="product-action-vertical">
                                         <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
                                     </div><!-- End .product-action -->

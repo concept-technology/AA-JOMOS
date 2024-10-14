@@ -28,7 +28,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "phonenumber_field",
-    'jazzmin',
+    # 'jazzmin',
+    'admin_volt.apps.AdminVoltConfig',
+    'unfold',
     'django.contrib.admin',
     'gunicorn',
     "corsheaders",
@@ -207,8 +209,13 @@ ACCOUNT_EMAIL_CONFIRMATION_HMAC = True
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True  # Auto-login after email confirmation
 # ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1  # Example: 1 day until the confirmation link expires
 
+
+LOGIN_REDIRECT_URL = '/'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 # Email configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = env('EMAIL_HOST')
 EMAIL_PORT = 465
 # EMAIL_USE_TLS = True
@@ -313,7 +320,6 @@ PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY')
 # }
 
 
-# TWILIO_ACCOUNT_SID = env('TWILIO_ACCOUNT_SID') 
-# TWILLIO_AUTH_TOKEN = env('TWILLIO_AUTH_TOKEN')
-
-# TWILIO_VERIFICATION_SERVICE_SID = env('TWILIO_VERIFICATION_SERVICE_SID')
+TWILIO_ACCOUNT_SID = env('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = env('TWILIO_AUTH_TOKEN')
+TWILIO_PHONE_NUMBER = env('TWILIO_PHONE_NUMBER')

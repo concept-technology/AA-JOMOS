@@ -9,6 +9,8 @@ from django.views.static import serve
 
 
 urlpatterns = [
+        #  path('jet/', include('jet.urls', 'jet')),  # Django JET URLS
+        # path('jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
         path('admin/', admin.site.urls, name='admin',),
         path('accounts/', include('allauth.urls')),
         path('', include('book_store.urls')),
@@ -16,6 +18,8 @@ urlpatterns = [
         re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
         path('ratings/', include('star_ratings.urls', namespace='ratings')),
         path('', include("paystack_api.urls")),
-        path('', include('delivery.urls'))
+        path('', include('delivery.urls')),
+        path('', include('admin_volt.urls')),
+        
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

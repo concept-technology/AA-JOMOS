@@ -35,7 +35,7 @@ aajomos |{{user}} | check-out
                     {% endif %}
                     <form method="post" action="{% url 'store:apply-coupon' %}?next={{ request.path }}">
                         {% csrf_token %}
-                        {{ order.coupon_form.code }}
+                        {{ order.coupon_form.as_p }}
                         <button class="btn btn-primary" type="submit">Apply coupon </button>
                     </form>
                 </div><!-- End .checkout-discount -->

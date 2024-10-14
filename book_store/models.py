@@ -165,7 +165,6 @@ class Size(models.Model):
 class Product(models.Model):
     title = models.CharField(max_length=100)
     description= models.TextField(max_length=255,)
-    additional_information= models.TextField(max_length=1000, default='', blank=True, null=True)
     feature1 =  models.CharField(max_length=255, blank=True,null=True)
     feature2 =  models.CharField(max_length=255,blank=True,null=True)
     feature3 =  models.CharField(max_length=255,blank=True,null=True)
@@ -452,11 +451,11 @@ class CustomersAddress(models.Model):
     state = models.CharField(max_length=50, default='')
     telephone = PhoneNumberField(region='NG')
     zip_code = models.CharField(max_length=20)
-    country = CountryField(multiple=False)
+    country = CountryField(blank_label='(select country)')
     # country = models.CharField(max_length=20, default='Nigeria')
     message = models.TextField(max_length=500, null=True, blank=True)
     # payment_option = models.CharField(max_length=255, choices=payment_choices, blank=True,null=True)
-   
+  
     def __str__(self):
        return f"{self.street_address}, {self.apartment}, {self.telephone}, {self.state}, {self.zip_code}" 
    

@@ -1,0 +1,60 @@
+{% extends "volt/base.html" %}
+
+{% block content %}
+<div class="row justify-content-md-center">
+    <!-- Total Sales Card -->
+    <div class="col-12 col-sm-6 col-xl-3 mb-4">
+        <div class="card border-light shadow-sm">
+            <div class="card-body">
+                <div class="row d-block d-xl-flex align-items-center">
+                    <div class="col-12 col-xl-12 px-xl-0">
+                        <div class="d-none d-sm-block">
+                            <h2 class="h5 text-muted">Total Sales</h2>
+                        </div>
+                        <h3 class="fw-extrabold mb-1">{{ total_sales }} USD</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Sales Chart -->
+    <div class="col-12 mb-4">
+        <div class="card border-light shadow-sm">
+            <div class="card-header">
+                <h2 class="h5">Sales Overview</h2>
+            </div>
+            <div class="card-body">
+                <canvas id="salesChart" width="400" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Example for rendering a chart (using Chart.js with Volt Admin styling)
+    var salesData = {{ sales_data|safe }};  // Pass your sales data as JSON
+    var ctx = document.getElementById('salesChart').getContext('2d');
+    var salesChart = new Chart(ctx, {
+        type: 'line',  // You can change the chart type (e.g., bar, pie, etc.)
+        data: {
+            labels: salesData.map(sale => sale.date),  // Example: map dates for the x-axis
+            datasets: [{
+                label: 'Sales Amount',
+                data: salesData.map(sale => sale.amount),  // Dynamic sales data
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                fill: true  // Optional: fill the area under the curve
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true  // Ensure the y-axis starts at 0
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

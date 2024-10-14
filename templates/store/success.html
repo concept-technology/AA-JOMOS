@@ -68,7 +68,7 @@
 
 
 <div class="container">
-
+  
 <div class="invoice-box">
     <div class="row text-center w-50">
         <div class="col-sm-6 col-sm-offset-3">
@@ -82,7 +82,13 @@
             <td colspan="2">
                 <table>
                     <tr>
+                        <div class="header-center">
+                            <a href="{% url 'store:index'%}" class="logo">
+                                <img src="{{ site_settings.site_logo.url }}" alt="Logo" width="82" height="20">
+                            </a>
+                        </div>
                         <td class="title">
+
                             <h2>A.A Jomos</h2>
                         </td>
                         <td>
@@ -124,14 +130,14 @@
         </tr>
         
         <tr class="heading">
-            <td>Item</td>
+            <!-- <td>Item</td> -->
             <td>Price</td>
             <td>total</td>
         </tr>
         
         {% for item in order.product.all %}
         <tr class="item">
-            <td>{{ item.product.title }}</td>
+            <!-- <td>{{ item.product.title }}</td> -->
             <td>{{ item.product.size.discount_price }}</td>
             <td>{{ item.product.get_total_price|floatformat:2|intcomma}}</td>
         </tr>

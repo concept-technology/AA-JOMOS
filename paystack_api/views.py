@@ -66,8 +66,9 @@ def verify_payment(request, ref):
 
                     # Update stock in Color model if color exists
                     if order_product.color:
+                        product_size = order_product.size
                         product_color = order_product.color
-                        product_color.stock = F('stock') - quantity
+                        product_color.stock = F('stock') - product_size.pieces
                         product_color.save()
                     
                     # Update quantity sold in Size model if size exists
