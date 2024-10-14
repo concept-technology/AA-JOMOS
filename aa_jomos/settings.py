@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 import environ
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+DEVELOPMENT = True
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
@@ -14,12 +16,11 @@ environ.Env.read_env(BASE_DIR / '.env')
 SECRET_KEY =env('SECRET_KEY')
 # DEBUG = True
 
+ENVIRONMENT = 'production'
 
-ENVIRONMENT = env('DJANGO_ENV')
+DEBUG = True
 
-DEBUG = ENVIRONMENT == 'development'
-
-
+# a = os.environ.get('')
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -30,7 +31,6 @@ INSTALLED_APPS = [
     "phonenumber_field",
     # 'jazzmin',
     'admin_volt.apps.AdminVoltConfig',
-    'unfold',
     'django.contrib.admin',
     'gunicorn',
     "corsheaders",
@@ -103,24 +103,46 @@ WSGI_APPLICATION = 'aa_jomos.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = ['*']
 
-if ENVIRONMENT == 'development':
-    DATABASES = {
+
+DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql', 
-            'NAME':    env('DATABASE_NAME'),         
-            'USER': env('DATABASE_USER_NAME'),          
-            'PASSWORD': env('DATABASE_PASSWORD'),
-            'HOST': env('DATABASE_HOST'),                   
-            'PORT': env('DATABASE_PORT'),                       
-        }
-    }
+
+PAYSTACK_PUBLIC_KEY = env('PAYSTACK_PUBLIC_KEY')
+PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY')
+
+DEBUG_PROPAGATE_EXCEPTIONS = env('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_PORT = 465
+# EMAIL_USE_TLS = True
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+# Default email address to use for various automated correspondence
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+SERVER_EMAIL = env('EMAIL_HOST_USER')
+ACCOUNT_EMAIL_REQUIRED = True
+
+
+AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID') 
+# AWS_ACCESS_KEY_ID = 'AKIAUBKFCNZRUXD6ZRVE'
+AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_SIGNATURE_NAME = env('AWS_S3_SIGNATURE_NAME')
+AWS_S3_REGION_NAME = 'eu-north-1'
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL =  None
+AWS_S3_VERIFY = True
+AWS_QUERYSTRING_EXPIRE = 10
+AWS_S3_CUSTOM_DOMAIN = 'd2nxnkp3c6n4f.cloudfront.net'
+AWS_CLOUDFRONT_KEY_ID = env.str('AWS_CLOUDFRONT_KEY_ID').strip()
+AWS_CLOUDFRONT_KEY = env.str('AWS_CLOUDFRONT_KEY', multiline=True).encode('ascii').strip()
+
+
 
 
 # Password validation
@@ -214,39 +236,12 @@ LOGIN_REDIRECT_URL = '/'
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# Email configuration
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = env('EMAIL_HOST')
-EMAIL_PORT = 465
-# EMAIL_USE_TLS = True
-EMAIL_USE_SSL = True
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-# Default email address to use for various automated correspondence
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
-SERVER_EMAIL = env('EMAIL_HOST_USER')
-ACCOUNT_EMAIL_REQUIRED = True
 
 
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_USERNAME_REQUIRED = False
 
-
-AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID') 
-# AWS_ACCESS_KEY_ID = 'AKIAUBKFCNZRUXD6ZRVE'
-AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_SIGNATURE_NAME = env('AWS_S3_SIGNATURE_NAME')
-AWS_S3_REGION_NAME = 'eu-north-1'
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL =  None
-AWS_S3_VERIFY = True
-AWS_QUERYSTRING_EXPIRE = 10
-AWS_S3_CUSTOM_DOMAIN = 'd2nxnkp3c6n4f.cloudfront.net'
-AWS_CLOUDFRONT_KEY_ID = env.str('AWS_CLOUDFRONT_KEY_ID').strip()
-AWS_CLOUDFRONT_KEY = env.str('AWS_CLOUDFRONT_KEY', multiline=True).encode('ascii').strip()
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -264,7 +259,7 @@ SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
-DEBUG_PROPAGATE_EXCEPTIONS = env('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
+# DEBUG_PROPAGATE_EXCEPTIONS = env('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
 
 # Custom settings
 STAR_RATINGS_STAR_HEIGHT = 20
@@ -299,8 +294,6 @@ ACCOUNT_FORMS = {
     'user_token': 'allauth.account.forms.UserTokenForm',
 }
 
-PAYSTACK_PUBLIC_KEY = env('PAYSTACK_PUBLIC_KEY')
-PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY')
 
 # LOGGING = {
 #     'version': 1,
@@ -319,7 +312,3 @@ PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY')
 #     },
 # }
 
-
-TWILIO_ACCOUNT_SID = env('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = env('TWILIO_AUTH_TOKEN')
-TWILIO_PHONE_NUMBER = env('TWILIO_PHONE_NUMBER')

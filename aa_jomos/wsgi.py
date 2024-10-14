@@ -11,6 +11,10 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aa_jomos.settings')
+settings_module = 'aa_jomos.deployment' if 'WEBSITE_HOSTNAME' in os.environ else 'aajomos.settings'
+
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_module)
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aa_jomos.settings')
 
 application = get_wsgi_application()
