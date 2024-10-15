@@ -30,6 +30,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: insstall psycopg2
+        run: pip install psycopg2
+
+
       - name: Collect static files
         run: python manage.py collectstatic --noinput
 
