@@ -128,7 +128,7 @@ else:
         'password': '$3E5gpG$yM5uKZqc',
         'port': '5432',
     }
-Database=;Server=;User Id=;Password=
+
 # Log extracted parameters for debugging
 print(f"Extracted Parameters: {parameters}")
 
