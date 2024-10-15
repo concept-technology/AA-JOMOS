@@ -108,15 +108,29 @@ DEBUG = False
 
 connection_string = os.environ.get('AZURE_POSTGRESQL_CONNECTIONSTRING')
 
-# Check if the connection string exists
+# Check if the connection string exists and is not empty
 if connection_string:
-    # Split the connection string and extract key-value pairs
+    # Log the connection string for debugging
+    print(f"Connection String: {connection_string}")
+
+    # Try splitting the connection string and extracting key-value pairs
     try:
-        parameters = {pair.split('=')[0]: pair.split('=')[1] for pair in connection_string.split(' ')}
-    except IndexError:
-        raise ValueError("Connection string is malformed. Ensure it's in the correct format.")
+        parameters = {pair.split('=')[0]: pair.split('=')[1] for pair in connection_string.split(' ') if '=' in pair}
+    except Exception as e:
+        print(f"Error processing the connection string: {e}")
+        parameters = {}  # Set parameters to an empty dict on error
 else:
-    raise ValueError("AZURE_POSTGRESQL_CONNECTIONSTRING is not set or is empty.")
+    print("Warning: AZURE_POSTGRESQL_CONNECTIONSTRING is not set or is empty. Using default settings.")
+    parameters = {
+        'dbname': 'your_default_db_name',
+        'host': 'localhost',  # or your default host
+        'user': 'your_default_user',
+        'password': 'your_default_password',
+        'port': '5432',  # default PostgreSQL port
+    }
+
+# Log extracted parameters for debugging
+print(f"Extracted Parameters: {parameters}")
 
 # Now use the parameters in your DATABASES settings
 DATABASES = {
