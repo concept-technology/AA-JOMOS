@@ -16,7 +16,7 @@ environ.Env.read_env(BASE_DIR / '.env')
 ENVIRONMENT = 'production'
 
 DEBUG = True
-  SECRET_KEY =os.environ.grt('SECRET_KEY')
+  SECRET_KEY =os.environ.get('SECRET_KEY')
 # a = os.environ.get('')
 INSTALLED_APPS = [
     'django.contrib.auth',
