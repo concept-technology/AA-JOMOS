@@ -19,7 +19,6 @@ urlpatterns = [
         path('ratings/', include('star_ratings.urls', namespace='ratings')),
         path('', include("paystack_api.urls")),
         path('', include('delivery.urls')),
-        path('', include('admin_volt.urls')),
         
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
