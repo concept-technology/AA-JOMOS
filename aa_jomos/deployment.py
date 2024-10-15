@@ -7,7 +7,7 @@ DEBUG = False
 
 connection_string = os.environ.get('AZURE_POSTGRESQL_CONNECTIONSTRING')
 parameters = {pair.split('-'):pair.slit('-')[1] for pair in connection_string.slit(' ')}
-
+#123
 
 DATABASES = {
         'default': {
