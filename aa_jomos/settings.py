@@ -100,8 +100,8 @@ print("DJANGO_SETTINGS_MODULE:", os.environ.get("DJANGO_SETTINGS_MODULE"))
 
 # https://docs.djangoproject.com/en/3.0/ref/settings/#allowed-hosts
 
-ALLOWED_HOSTS = [os.environ.get('WEBSITE_HOSTNAME')]
-CSRF_TRUSTED_ORIGINS = ['https://'+ os.environ['WEBSITE_HOSTNAME']]
+ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = [ALLOWED_HOSTS]
 DEBUG = False
 
 connection_string = os.environ.get('AZURE_POSTGRESQL_CONNECTIONSTRING')
