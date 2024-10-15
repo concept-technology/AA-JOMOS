@@ -1,0 +1,45 @@
+name: Build and deploy to cPanel via rsync
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python version
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.12'
+
+      - name: Create and start virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Collect static files
+        run: python manage.py collectstatic --noinput
+
+
+      - name: Deploy to cPanel via rsync
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.CPANEL_SSH_PRIVATE_KEY }}
+        run: |
+          sudo apt-get install rsync -y
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.CPANEL_USERNAME }}@${{ secrets.CPANEL_SERVER }}:/aajomos.com
+
+            # server: ${{ secrets.CPANEL_FTP_SERVER }}
+            # username: ${{ secrets.CPANEL_FTP_USERNAME }}
+            # password: ${{ secrets.CPANEL_FTP_PASSWORD }}
+            # port: ${{ secrets.CPANEL_FTP_PORT }}
