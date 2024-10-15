@@ -104,20 +104,30 @@ ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [ALLOWED_HOSTS]
 DEBUG = False
 
+
+
 connection_string = os.environ.get('AZURE_POSTGRESQL_CONNECTIONSTRING')
+
 parameters = {pair.split('-'): pair.split('-')[1] for pair in connection_string.split(' ')}
 
+# Check if the connection string exists
+if connection_string:
+    # Split the connection string and extract key-value pairs
+    parameters = {pair.split('=')[0]: pair.split('=')[1] for pair in connection_string.split(' ')}
+else:
+    raise ValueError("AZURE_POSTGRESQL_CONNECTIONSTRING is not set or is empty.")
+
+# Now use the parameters in your DATABASES settings
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': parameters['dbname'],
-        'HOST': parameters['host'],
-        'USER': parameters['user'],
-        'PASSWORD': parameters['password'],
-        'PORT': parameters['port'],  # Make sure the key is 'port', not 'DATABASE_PORT'
+        'NAME': parameters.get('dbname'),
+        'HOST': parameters.get('host'),
+        'USER': parameters.get('user'),
+        'PASSWORD': parameters.get('password'),
+        'PORT': parameters.get('port'),
     }
 }
-
 
 
 PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY')
