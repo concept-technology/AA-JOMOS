@@ -190,7 +190,7 @@ else:
     # AWS_ACCESS_KEY_ID = 'AKIAUBKFCNZRUXD6ZRVE'
     AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY', default='fheirehwrwerhewkrjerkwjrenw')
     AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME', default='fjwerejrerjewrjewrejow')
-    AWS_S3_SIGNATURE_NAME = env('AWS_S3_SIGNATURE_NAME')
+    AWS_S3_SIGNATURE_NAME = env('AWS_S3_SIGNATURE_NAME', default='gggjjhiytt7rytfytfhgvhhhgh')
     AWS_S3_REGION_NAME = 'eu-north-1'
     AWS_S3_FILE_OVERWRITE = False
     AWS_DEFAULT_ACL =  None
