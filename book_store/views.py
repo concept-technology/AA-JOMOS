@@ -67,32 +67,32 @@ class StoreConfig(AppConfig):
         import book_store.signals
         print("Signals imported and ready.")
 
-class CustomConfirmEmailView(ConfirmEmailView):
-    template_name = "account/custom_email_confirm.html"  # Specify the custom template
+# class CustomConfirmEmailView(ConfirmEmailView):
+#     template_name = "account/custom_email_confirm.html"  # Specify the custom template
 
-    def get_object(self, queryset=None):
-        """ Retrieve the confirmation object using either EmailConfirmation or EmailConfirmationHMAC """
-        key = self.kwargs['key']
-        try:
-            # Try to retrieve confirmation using HMAC
-            obj = EmailConfirmationHMAC.from_key(key)
-            if obj:
-                return obj
-            # If not found, use EmailConfirmation model
-            obj = EmailConfirmation.objects.get(key=key.lower())
-            return obj
-        except EmailConfirmation.DoesNotExist:
-            raise Http404("Email confirmation link expired or invalid.")
+#     def get_object(self, queryset=None):
+#         """ Retrieve the confirmation object using either EmailConfirmation or EmailConfirmationHMAC """
+#         key = self.kwargs['key']
+#         try:
+#             # Try to retrieve confirmation using HMAC
+#             obj = EmailConfirmationHMAC.from_key(key)
+#             if obj:
+#                 return obj
+#             # If not found, use EmailConfirmation model
+#             obj = EmailConfirmation.objects.get(key=key.lower())
+#             return obj
+#         except EmailConfirmation.DoesNotExist:
+#             raise Http404("Email confirmation link expired or invalid.")
 
-    def get(self, request, *args, **kwargs):
-        try:
-            confirmation = self.get_object()
-            confirmation.confirm(request)  # Confirm and verify the email
-            # Redirect to login or a success page
-            return redirect(reverse('account_login'))  # Replace with your desired URL
-        except Http404:
-            # Redirect to an appropriate page if the link is invalid or expired
-            return redirect(reverse('account_email_verification_sent'))
+#     def get(self, request, *args, **kwargs):
+#         try:
+#             confirmation = self.get_object()
+#             confirmation.confirm(request)  # Confirm and verify the email
+#             # Redirect to login or a success page
+#             return redirect(reverse('account_login'))  # Replace with your desired URL
+#         except Http404:
+#             # Redirect to an appropriate page if the link is invalid or expired
+#             return redirect(reverse('account_email_verification_sent'))
 
 # get or create session key
 def get_session_key(request):
@@ -316,6 +316,7 @@ def product_list_by_category(request, slug):
 
 
 def logout_view(request):
+    
     logout(request)
     return redirect('store/index.html')
 
@@ -325,8 +326,9 @@ def register(request):
 
 
 def login(request):
-    form = LoginForm()
-    return render(request, 'account/login.html', {'form': form})
+    pass
+    # form = LoginForm()
+    # return render(request, 'account/login.html', {'form': form})
 
 
 

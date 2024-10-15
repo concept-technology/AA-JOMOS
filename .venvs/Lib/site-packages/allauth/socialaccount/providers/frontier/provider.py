@@ -3,6 +3,9 @@ from urllib.parse import urlencode
 
 from allauth.account.models import EmailAddress
 from allauth.socialaccount.providers.base import ProviderAccount
+from allauth.socialaccount.providers.frontier.views import (
+    FrontierOAuth2Adapter,
+)
 from allauth.socialaccount.providers.oauth2.provider import OAuth2Provider
 
 
@@ -18,19 +21,12 @@ class FrontierAccount(ProviderAccount):
             urlencode({"d": "mp"}),
         )
 
-    def to_str(self):
-        dflt = super(FrontierAccount, self).to_str()
-        full_name = "%s %s" % (
-            self.account.extra_data.get("firstname", dflt),
-            self.account.extra_data.get("lastname", dflt),
-        )
-        return full_name
-
 
 class FrontierProvider(OAuth2Provider):
     id = "frontier"
     name = "Frontier"
     account_class = FrontierAccount
+    oauth2_adapter_class = FrontierOAuth2Adapter
 
     def get_default_scope(self):
         scope = ["auth", "capi"]
