@@ -160,7 +160,7 @@ if  'WEBSITE_HOSTNAME' in os.environ:
     AWS_CLOUDFRONT_KEY = aws_cloudfront_key.replace('\\n', '\n').encode('ascii').strip()
 
 
-else:
+if DEBUG:
     DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',
