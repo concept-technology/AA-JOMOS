@@ -108,8 +108,6 @@ DEBUG = False
 
 connection_string = os.environ.get('AZURE_POSTGRESQL_CONNECTIONSTRING')
 
-parameters = {pair.split('-'): pair.split('-')[1] for pair in connection_string.split(' ')}
-
 # Check if the connection string exists
 if connection_string:
     # Split the connection string and extract key-value pairs
