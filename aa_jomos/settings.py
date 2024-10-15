@@ -105,20 +105,18 @@ CSRF_TRUSTED_ORIGINS = [ALLOWED_HOSTS]
 DEBUG = False
 
 connection_string = os.environ.get('AZURE_POSTGRESQL_CONNECTIONSTRING')
-parameters = {pair.split('-'):pair.split('-')[1] for pair in connection_string.split(' ')}
-
+parameters = {pair.split('-'): pair.split('-')[1] for pair in connection_string.split(' ')}
 
 DATABASES = {
-'default': {
-    'ENGINE': 'django.db.backends.postgresql', 
-    'NAME':    parameters('dbname'),         
-    'HOST': parameters('host'),                   
-    'USER': parameters('user'),          
-    'PASSWORD': parameters('password'),
-    'PORT': parameters('DATABASE_PORT'),                       
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': parameters['dbname'],
+        'HOST': parameters['host'],
+        'USER': parameters['user'],
+        'PASSWORD': parameters['password'],
+        'PORT': parameters['port'],  # Make sure the key is 'port', not 'DATABASE_PORT'
+    }
 }
-}
-
 
 
 
