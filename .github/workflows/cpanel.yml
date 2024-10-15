@@ -1,4 +1,4 @@
-name: Build and deploy to cPanel via rsync
+name: Build and deploy to cPanel via lftp
 
 on:
   push:
@@ -10,31 +10,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the repository
       - uses: actions/checkout@v4
 
+      # Set up Python (if needed)
       - name: Set up Python version
         uses: actions/setup-python@v1
         with:
           python-version: '3.12'
 
-      - name: Create and start virtual environment
+      # Install dependencies (if needed)
+      - name: Install dependencies
         run: |
           python -m venv venv
           source venv/bin/activate
+          pip install -r requirements.txt
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
+      # Collect static files (if using Django or similar frameworks)
       - name: Collect static files
         run: python manage.py collectstatic --noinput
 
+      # Install lftp for FTP deployment
+      - name: Install lftp
+        run: sudo apt-get install lftp -y
 
-      - name: Deploy to cPanel via rsync
+      # Deploy to cPanel using lftp
+      - name: Deploy via lftp
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.CPANEL_SSH_PRIVATE_KEY }}
+          FTP_HOST: ${{ secrets.CPANEL_FTP_HOST }}
+          FTP_USER: ${{ secrets.CPANEL_FTP_USER }}
+          FTP_PASS: ${{ secrets.CPANEL_FTP_PASS }}
+          FTP_PORT: ${{ secrets.CPANEL_FTP_PORT }}
         run: |
-          sudo apt-get install rsync -y
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.CPANEL_USERNAME }}@${{ secrets.CPANEL_SERVER }}:/aajomos.com
+          lftp -c "
+          set ftp:ssl-allow true;
+          set ftp:ssl-force true;
+          set net:max-retries 2;           # Retry twice in case of network issues
+          set net:persist-retries true;    # Keep trying to reconnect
+          set net:timeout 30;              # 30 seconds timeout for connections
+          set net:reconnect-interval-base 5;
+          set net:reconnect-interval-max 30;
+          open -u $FTP_USER,$FTP_PASS $FTP_HOST;
+          mirror -R ./ /public_html --delete --parallel=10"
