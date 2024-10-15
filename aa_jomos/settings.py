@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import environ
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-DEVELOPMENT = True
+DEVELOPMENT = False
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
