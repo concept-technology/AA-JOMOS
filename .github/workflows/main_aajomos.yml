@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: collect static files
+        run: python manage.py collectstatic
+
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
@@ -47,7 +50,7 @@ jobs:
     needs: build
     environment:
       name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+      url: ${{ aajomos-bcfcfqc8czayf2aa.canadacentral-01.azurewebsites.net }}
 
     steps:
       - name: Download artifact from build job
