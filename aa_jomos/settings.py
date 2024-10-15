@@ -13,13 +13,11 @@ env = environ.Env(
 )
 environ.Env.read_env(BASE_DIR / '.env')
 
-# DEBUG = True
-
 ENVIRONMENT = 'production'
 
 DEBUG = True
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
-# a = os.environ.get('')
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -75,7 +73,6 @@ MIDDLEWARE = [
     # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     # 'book_store.middleware.ignore_static_files.IgnoreStaticFilesMiddleware'
 ]
-
 ROOT_URLCONF = 'aa_jomos.urls'
 
 TEMPLATES = [
@@ -101,7 +98,7 @@ WSGI_APPLICATION = 'aa_jomos.wsgi.application'
 print("DJANGO_SETTINGS_MODULE:", os.environ.get("DJANGO_SETTINGS_MODULE"))
 
 # https://docs.djangoproject.com/en/3.0/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['*']
+
 
 DATABASES = {
             'default': {
@@ -133,15 +130,6 @@ AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID', default='uhweirworiewjriwerhewirhwe
 AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY', default='fheirehwrwerhewkrjerkwjrenw')
 AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME', default='fjwerejrerjewrjewrejow')
 AWS_S3_SIGNATURE_NAME = env('AWS_S3_SIGNATURE_NAME', default='gggjjhiytt7rytfytfhgvhhhgh')
-AWS_S3_REGION_NAME = 'eu-north-1'
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL =  None
-AWS_S3_VERIFY = True
-AWS_QUERYSTRING_EXPIRE = 10
-AWS_S3_CUSTOM_DOMAIN = 'd2nxnkp3c6n4f.cloudfront.net'
-AWS_CLOUDFRONT_KEY_ID = env.str('AWS_CLOUDFRONT_KEY_ID',default='erwwkwkwkk').strip()
-AWS_CLOUDFRONT_KEY = env.str('AWS_CLOUDFRONT_KEY', multiline=True, default='kfjnweekfjewkwewkewk').encode('ascii').strip()
-
 
 
 

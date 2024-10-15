@@ -38,8 +38,3 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.CPANEL_USERNAME }}@${{ secrets.CPANEL_SERVER }}:/aajomos.com
-
-            # server: ${{ secrets.CPANEL_FTP_SERVER }}
-            # username: ${{ secrets.CPANEL_FTP_USERNAME }}
-            # password: ${{ secrets.CPANEL_FTP_PASSWORD }}
-            # port: ${{ secrets.CPANEL_FTP_PORT }}
