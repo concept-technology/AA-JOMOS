@@ -16,8 +16,8 @@ environ.Env.read_env(BASE_DIR / '.env')
 ENVIRONMENT = 'production'
 
 DEBUG = True
-  SECRET_KEY =os.environ.get('SECRET_KEY')
-# a = os.environ.get('')
+  SECRET_KEY = os.environ.get('SECRET_KEY')
+
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -27,7 +27,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "phonenumber_field",
     'jazzmin',
-
     'allauth',
     'allauth.account',
 
