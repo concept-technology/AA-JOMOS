@@ -122,13 +122,13 @@ if connection_string:
 else:
     print("Warning: AZURE_POSTGRESQL_CONNECTIONSTRING is not set or is empty. Using default settings.")
     parameters = {
-        'dbname': 'your_default_db_name',
-        'host': 'localhost',  # or your default host
-        'user': 'your_default_user',
-        'password': 'your_default_password',
-        'port': '5432',  # default PostgreSQL port
+        'dbname': 'aajomos-database',
+        'host': 'aajomos-server.postgres.database.azure.com',  # or your default host
+        'user': 'jjuhvybtka',
+        'password': '$3E5gpG$yM5uKZqc',
+        'port': '5432',
     }
-
+Database=;Server=;User Id=;Password=
 # Log extracted parameters for debugging
 print(f"Extracted Parameters: {parameters}")
 
