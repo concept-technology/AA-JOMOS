@@ -113,7 +113,10 @@ parameters = {pair.split('-'): pair.split('-')[1] for pair in connection_string.
 # Check if the connection string exists
 if connection_string:
     # Split the connection string and extract key-value pairs
-    parameters = {pair.split('=')[0]: pair.split('=')[1] for pair in connection_string.split(' ')}
+    try:
+        parameters = {pair.split('=')[0]: pair.split('=')[1] for pair in connection_string.split(' ')}
+    except IndexError:
+        raise ValueError("Connection string is malformed. Ensure it's in the correct format.")
 else:
     raise ValueError("AZURE_POSTGRESQL_CONNECTIONSTRING is not set or is empty.")
 
