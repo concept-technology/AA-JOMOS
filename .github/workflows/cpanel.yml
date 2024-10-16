@@ -19,14 +19,18 @@ jobs:
         with:
           python-version: '3.12'
 
-      # Activate virtual environment and install dependencies
-      - name: Install dependencies
+      # Install dependencies (if needed)
+      - name: activate virtual environment
         run: |
           python -m venv venv
           source venv/bin/activate
-          pip install -r requirements.txt
 
-      # Collect static files (if using Django)
+      - name: install requirements.txt
+        run:    pip install -r requirements.txt
+
+      - name: Install django
+        run: pip install django
+      # Collect static files (if using Django or similar frameworks)
       - name: Collect static files
         run: python manage.py collectstatic --noinput
 
@@ -42,13 +46,15 @@ jobs:
           FTP_PASS: ${{ secrets.CPANEL_FTP_PASS }}
           FTP_PORT: ${{ secrets.CPANEL_FTP_PORT }}
         run: |
-          lftp -c "
-          set ftp:ssl-allow true;               # Allow SSL
-          set ssl:verify-certificate false;     # Disable certificate verification
-          set net:max-retries 2;                # Retry twice in case of network issues
-          set net:persist-retries true;         # Keep trying to reconnect
-          set net:timeout 30;                   # 30 seconds timeout for connections
-          set net:reconnect-interval-base 5;    # Base reconnect interval
-          set net:reconnect-interval-max 30;    # Max reconnect interval
-          open -u $FTP_USER,$FTP_PASS $FTP_HOST;
-          mirror -R ./ /public_html --delete --parallel=10"
+            lftp -c "
+            set ftp:ssl-allow true;               # Allow SSL
+            set ssl:verify-certificate false;     # Disable certificate verification
+            set net:max-retries 2;                # Retry twice in case of network issues
+            set net:persist-retries true;         # Keep trying to reconnect
+            set net:timeout 30;                   # 30 seconds timeout for connections
+            set net:reconnect-interval-base 5;    # Base reconnect interval
+            set net:reconnect-interval-max 30;    # Max reconnect interval
+            open -u $FTP_USER,$FTP_PASS $FTP_HOST;
+            mirror -R ./ /public_html --delete --parallel=10"
+
+            
