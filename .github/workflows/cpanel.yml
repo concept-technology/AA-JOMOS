@@ -47,13 +47,14 @@ jobs:
           FTP_PORT: ${{ secrets.CPANEL_FTP_PORT }}
         run: |
           lftp -c "
-          set ftp:ssl-allow true;               # Allow SSL
-          set ssl:verify-certificate false;     # Disable certificate verification
-          set net:max-retries 2;                # Retry twice in case of network issues
-          set net:persist-retries true;         # Keep trying to reconnect
-          set net:timeout 30;                   # 30 seconds timeout for connections
-          set net:reconnect-interval-base 5;    # Base reconnect interval
-          set net:reconnect-interval-max 30;    # Max reconnect interval
+          set ftp:ssl-allow true;
+          set ssl:verify-certificate false;
+          set net:max-retries 2;
+          set net:persist-retries true;
+          set net:timeout 30;
+          set net:reconnect-interval-base 5;
+          set net:reconnect-interval-max 30;
           open -u $FTP_USER,$FTP_PASS $FTP_HOST;
-          mirror -R --exclude-glob venv --exclude-glob *.exe --delete --parallel=5 ./ /public_html"
-        
+          mirror -R --exclude-glob venv --exclude-glob *.exe --exclude-glob *.pyc --exclude-glob __pycache__ --delete --no-symlinks --parallel=5 ./ /public_html"      
+
+
