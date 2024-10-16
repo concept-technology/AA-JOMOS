@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 import environ
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-DEVELOPMENT = False
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -12,10 +11,12 @@ env = environ.Env(
     DEBUG=(bool, False)
 )
 environ.Env.read_env(BASE_DIR / '.env')
+ALLOWED_HOSTS = ['aajomos.com']
 
 ENVIRONMENT = 'production'
 
-DEBUG = True
+DEBUG = 0
+
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 INSTALLED_APPS = [
@@ -100,37 +101,55 @@ print("DJANGO_SETTINGS_MODULE:", os.environ.get("DJANGO_SETTINGS_MODULE"))
 # https://docs.djangoproject.com/en/3.0/ref/settings/#allowed-hosts
 
 
+# DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.mysql', 
+#             'NAME':    os.environ.get('DATABASE_NAME'),        
+#             'HOST': os.environ.get('DATABASE_HOST'),                   
+#             'USER': os.environ.get('DATABASE_USER_NAME'),          
+#             'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+#             'PORT': '3306',                       
+#         }
+#     }
+    
 DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
+        'default': {
+            'ENGINE': 'django.db.backends.mysql', 
+            'NAME':  'concxyea_aajoms_store_database',        
+            'HOST': 'localhost',                   
+            'USER': 'concxyea_aajomos_admin_root_user',          
+            'PASSWORD': 'hKA%hrcTF7o#',
+            'PORT': '3306',                       
         }
+    }
+ 
 
-SECRET_KEY =env('SECRET_KEY', default='django-insecure-=13zeu+im=zl5$+k=)6@y65hkbn1458jlcf^cqtc%t4e$r2*2z')
-PAYSTACK_PUBLIC_KEY = env('PAYSTACK_PUBLIC_KEY', default='rkerfnrkejferfehy')
-PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY', default='ewerewerwerrbbwerjhwbejr')
 
-DEBUG_PROPAGATE_EXCEPTIONS = env('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
-EMAIL_HOST = env('EMAIL_HOST', default='fnwwekewkwkwejewkrejwkr')
+SECRET_KEY =os.environ.get('SECRET_KEY')
+PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY',)
+PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY',)
+
+DEBUG_PROPAGATE_EXCEPTIONS = os.environ.get('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
+EMAIL_HOST = os.environ.get('EMAIL_HOST',)
 EMAIL_PORT = 465
 # EMAIL_USE_TLS = True
 EMAIL_USE_SSL = True
-EMAIL_HOST_USER = env('EMAIL_HOST_USER',default='efjhiuhiruhrierfrr')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='wefjhewwieewirewirewre')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 # Default email address to use for various automated correspondence
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='rffiwuhiwuhwiwhuwhirhiwehriwr')
-SERVER_EMAIL = env('EMAIL_HOST_USER', default='fuhiruwhriwrhiruhwiruwhriwrhw')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
+SERVER_EMAIL = os.environ.get('EMAIL_HOST_USER')
 ACCOUNT_EMAIL_REQUIRED = True
 
 
-AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID', default='uhweirworiewjriwerhewirhweiuwehwir') 
-# AWS_ACCESS_KEY_ID = 'AKIAUBKFCNZRUXD6ZRVE'
-AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY', default='fheirehwrwerhewkrjerkwjrenw')
-AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME', default='fjwerejrerjewrjewrejow')
-AWS_S3_SIGNATURE_NAME = env('AWS_S3_SIGNATURE_NAME', default='gggjjhiytt7rytfytfhgvhhhgh')
-
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID',) 
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY',)
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME',)
+AWS_S3_SIGNATURE_NAME = os.environ.get('AWS_S3_SIGNATURE_NAME',)
+AWS_CLOUDFRONT_KEY_ID = os.environ.get('AWS_CLOUDFRONT_KEY_ID')
+aws_cloudfront_key = os.environ.get('AWS_CLOUDFRONT_KEY', '')
+AWS_CLOUDFRONT_KEY = aws_cloudfront_key.replace('\\n', '\n').encode('ascii').strip()
 
 
 # Password validation
@@ -200,8 +219,9 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
   # Tell Django to copy static assets into a path called `staticfiles` (this is specific to Render)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+# DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 
@@ -247,7 +267,7 @@ SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
-# DEBUG_PROPAGATE_EXCEPTIONS = env('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
+# DEBUG_PROPAGATE_EXCEPTIONS = os.environ.get('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
 
 # Custom settings
 STAR_RATINGS_STAR_HEIGHT = 20

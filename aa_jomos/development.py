@@ -2,8 +2,7 @@
 import os
 from pathlib import Path
 import environ
-
-# DVwCm@&p7bmj  ssh password
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -13,9 +12,10 @@ env = environ.Env(
 )
 environ.Env.read_env(BASE_DIR / '.env')
 
-ENVIRONMENT = 'production'
+ALLOWED_HOSTS = ['aajomos.com', 'localhost']
 
-DEBUG = True
+SECRET_KEY = os.environ.get('SECRET_KEY')
+
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -70,7 +70,6 @@ MIDDLEWARE = [
     # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     # 'book_store.middleware.ignore_static_files.IgnoreStaticFilesMiddleware'
 ]
-
 ROOT_URLCONF = 'aa_jomos.urls'
 
 TEMPLATES = [
@@ -96,59 +95,40 @@ WSGI_APPLICATION = 'aa_jomos.wsgi.application'
 print("DJANGO_SETTINGS_MODULE:", os.environ.get("DJANGO_SETTINGS_MODULE"))
 
 # https://docs.djangoproject.com/en/3.0/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['*']
-
-DEBUG = False
-
-# connection_string = os.environ.get('AZURE_POSTGRESQL_CONNECTIONSTRING')
-# parameters = {pair.split('-'):pair.slit('-')[1] for pair in connection_string.slit('')}
 
 
 DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql', 
-            'NAME':    os.environ.get('DATABASE_NAME'),         
-            'HOST': os.environ.get('DATABASE_HOST'),                   
-            'USER': os.environ.get('DATABASE_USER_NAME'),          
-            'PASSWORD': os.environ.get('password'),
-            'PORT': os.environ.get('DATABASE_PASSWORD'),                       
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
         }
-    }
 
 
+SECRET_KEY =env('SECRET_KEY', default='django-insecure-=13zeu+im=zl5$+k=)6@y65hkbn1458jlcf^cqtc%t4e$r2*2z')
+PAYSTACK_PUBLIC_KEY = env('PAYSTACK_PUBLIC_KEY', default='rkerfnrkejferfehy')
+PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY', default='ewerewerwerrbbwerjhwbejr')
 
-
-PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY')
-PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
-
-DEBUG_PROPAGATE_EXCEPTIONS = os.environ.get('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
-EMAIL_HOST = os.environ.get('EMAIL_HOST')
+DEBUG_PROPAGATE_EXCEPTIONS = env('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
+EMAIL_HOST = env('EMAIL_HOST', default='fnwwekewkwkwejewkrejwkr')
 EMAIL_PORT = 465
 # EMAIL_USE_TLS = True
 EMAIL_USE_SSL = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER',default='efjhiuhiruhrierfrr')
 
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='wefjhewwieewirewirewre')
 # Default email address to use for various automated correspondence
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
-SERVER_EMAIL = os.environ.get('EMAIL_HOST_USER')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='rffiwuhiwuhwiwhuwhirhiwehriwr')
+SERVER_EMAIL = env('EMAIL_HOST_USER', default='fuhiruwhriwrhiruhwiruwhriwrhw')
 ACCOUNT_EMAIL_REQUIRED = True
 
 
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID') 
+AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID', default='uhweirworiewjriwerhewirhweiuwehwir') 
 # AWS_ACCESS_KEY_ID = 'AKIAUBKFCNZRUXD6ZRVE'
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_SIGNATURE_NAME = os.environ.get('AWS_S3_SIGNATURE_NAME')
-AWS_S3_REGION_NAME = 'eu-north-1'
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL =  None
-AWS_S3_VERIFY = True
-AWS_QUERYSTRING_EXPIRE = 10
-AWS_S3_CUSTOM_DOMAIN = 'd2nxnkp3c6n4f.cloudfront.net'
-AWS_CLOUDFRONT_KEY_ID = os.environ.get('AWS_CLOUDFRONT_KEY_ID')
-aws_cloudfront_key = os.environ.get('AWS_CLOUDFRONT_KEY', '')
-AWS_CLOUDFRONT_KEY = aws_cloudfront_key.replace('\\n', '\n').encode('ascii').strip()
+AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY', default='fheirehwrwerhewkrjerkwjrenw')
+AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME', default='fjwerejrerjewrjewrejow')
+AWS_S3_SIGNATURE_NAME = env('AWS_S3_SIGNATURE_NAME', default='gggjjhiytt7rytfytfhgvhhhgh')
+
 
 
 # Password validation
@@ -218,10 +198,10 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
   # Tell Django to copy static assets into a path called `staticfiles` (this is specific to Render)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+# DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Application definition
 ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = '/profile/'  # Example redirect for authenticated users
@@ -289,6 +269,7 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
+
 ACCOUNT_FORMS = {
     'add_email': 'allauth.account.forms.AddEmailForm',
     'change_password': 'allauth.account.forms.ChangePasswordForm',
@@ -299,5 +280,6 @@ ACCOUNT_FORMS = {
     'signup': 'allauth.account.forms.SignupForm',
     'user_token': 'allauth.account.forms.UserTokenForm',
 }
+
 
 

@@ -3,8 +3,9 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-production = 1
-setting_module = 'aa_jomos.settings' if production else 'aa_jomos.deployment'
+from aa_jomos.settings import DEBUG
+
+setting_module =   'aa_jomos.development' if DEBUG else 'aa_jomos.settings'
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', setting_module)
 
