@@ -15,7 +15,7 @@ ALLOWED_HOSTS = ['aajomos.com']
 
 ENVIRONMENT = 'production'
 
-DEBUG = 0
+DEBUG = True
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
@@ -132,8 +132,8 @@ PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY',)
 DEBUG_PROPAGATE_EXCEPTIONS = os.environ.get('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
 EMAIL_HOST = os.environ.get('EMAIL_HOST',)
 EMAIL_PORT = 465
-# EMAIL_USE_TLS = True
-EMAIL_USE_SSL = True
+EMAIL_USE_TLS = True
+# EMAIL_USE_SSL = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')

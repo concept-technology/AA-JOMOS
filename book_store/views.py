@@ -326,9 +326,9 @@ def register(request):
 
 
 def login(request):
-    pass
-    # form = LoginForm()
-    # return render(request, 'account/login.html', {'form': form})
+    
+    form = LoginForm()
+    return render(request, 'account/login.html', {'form': form})
 
 
 

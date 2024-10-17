@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
 
 from .models import SiteSettings
@@ -27,11 +28,15 @@ from .models import SiteSettings
 
 
 
+@admin.register(SiteSettings,)
 
 
-@admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
-    list_display = ('contact_number', 'email', 'address')
+
+    def logo(self, obj):
+        return format_html('<img src="{}" style="max-width:50px; max-height:100px"/>'.format(obj.site_logo.url))
+    list_display = ('contact_number', 'email', 'address', 'logo')
     # Optional: Restrict admin to edit only one settings entry
     def has_add_permission(self, request):
         return not SiteSettings.objects.exists()
+    

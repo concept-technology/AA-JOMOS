@@ -9,7 +9,7 @@
                     <li>
                         <a href="#">Links</a>
                         <ul>
-                            <li><a href="tel:#"><i class="icon-phone"></i>Call: +234 814 300 6319</a></li>
+                            <li><a href="tel:{{ site_settings.contact_number }}"><i class="icon-phone"></i>Call {{ site_settings.contact_number }}</a></li>
                         </ul>
                     </li>
                 </ul><!-- End .top-menu -->
@@ -17,10 +17,10 @@
 
             <div class="header-right">
                 <div class="social-icons social-icons-color">
-                    <a href="#" class="social-icon social-facebook" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
-                    <a href="#" class="social-icon social-twitter" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
-                    <a href="#" class="social-icon social-pinterest" title="Instagram" target="_blank"><i class="icon-pinterest-p"></i></a>
-                    <a href="#" class="social-icon social-instagram" title="Pinterest" target="_blank"><i class="icon-instagram"></i></a>
+                    <a href="{{site_settings.facebook_link }}" class="social-icon social-facebook" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
+                    <a href="{{site_settings.twiter_link }}" class="social-icon social-twitter" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
+                    <!-- <a href="#" class="social-icon social-pinterest" title="Instagram" target="_blank"><i class="icon-pinterest-p"></i></a> -->
+                    <a href="{{site_settings.instagram_link }}" class="social-icon social-instagram" title="Pinterest" target="_blank"><i class="icon-instagram"></i></a>
                 </div><!-- End .soial-icons -->
                 <ul class="top-menu top-link-menu">
                     <li>
@@ -33,7 +33,7 @@
                             {% endif %}                          
                         </ul>
                     </li>
-                </ul><!-- End .top-menu -->
+                </ul>
 
                 <div class="header-dropdown">
                     <a href="#">USD</a>
@@ -41,6 +41,7 @@
                         <ul>
                             <li><a href="#">Eur</a></li>
                             <li><a href="#">Usd</a></li>
+                            <li><a href="#">Naira</a></li>
                         </ul>
                     </div><!-- End .header-menu -->
                 </div><!-- End .header-dropdown -->

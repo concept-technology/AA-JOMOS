@@ -37,6 +37,14 @@ def initiate_payment(request):
 
     return render(request, 'store/payment.html', {'order': order, 'cart': cart})
 
+import logging
+import sys
+
+# Ensure UTF-8 encoding for stdout (prints) if using prints instead of logging
+sys.stdout.reconfigure(encoding='utf-8')
+
+# Use logging instead of print statements
+logger = logging.getLogger(__name__)
 
 def verify_payment(request, ref):
     try:
@@ -128,16 +136,15 @@ def verify_payment(request, ref):
                 return render(request, 'emails/payment_not_successful.html')
 
         else:
-            print(f"Failed to verify payment. Status code: {response.status_code}, Paystack response: {response.text}")
+            logger.error(f"Failed to verify payment. Status code: {response.status_code}, Paystack response: {response.text}")
             return JsonResponse({'status': 'error', 'message': 'Failed to verify payment.'})
 
     except Order.DoesNotExist:
-        print("Order does not exist for the user.")
+        logger.error("Order does not exist for the user.")
         return JsonResponse({'status': 'error', 'message': 'Order does not exist for the user.'})
     except Payment.DoesNotExist:
-        print("Payment does not exist for the reference.")
+        logger.error("Payment does not exist for the reference.")
         return JsonResponse({'status': 'error', 'message': 'Payment does not exist for the reference.'})
     except requests.exceptions.RequestException as e:
-        print(f"Error verifying payment: {str(e)}")
+        logger.error(f"Error verifying payment: {str(e)}")
         return JsonResponse({'status': 'error', 'message': f"Error verifying payment: {str(e)}"})
-

@@ -10,6 +10,8 @@ env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False)
 )
+
+DEBUG= True
 environ.Env.read_env(BASE_DIR / '.env')
 
 ALLOWED_HOSTS = ['aajomos.com', 'localhost']
@@ -105,29 +107,30 @@ DATABASES = {
         }
 
 
-SECRET_KEY =env('SECRET_KEY', default='django-insecure-=13zeu+im=zl5$+k=)6@y65hkbn1458jlcf^cqtc%t4e$r2*2z')
-PAYSTACK_PUBLIC_KEY = env('PAYSTACK_PUBLIC_KEY', default='rkerfnrkejferfehy')
-PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY', default='ewerewerwerrbbwerjhwbejr')
+SECRET_KEY =env('SECRET_KEY')
+PAYSTACK_PUBLIC_KEY = env('PAYSTACK_PUBLIC_KEY',)
+PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY')
 
 DEBUG_PROPAGATE_EXCEPTIONS = env('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
-EMAIL_HOST = env('EMAIL_HOST', default='fnwwekewkwkwejewkrejwkr')
+
+EMAIL_HOST = env('EMAIL_HOST')
 EMAIL_PORT = 465
 # EMAIL_USE_TLS = True
 EMAIL_USE_SSL = True
-EMAIL_HOST_USER = env('EMAIL_HOST_USER',default='efjhiuhiruhrierfrr')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER',)
 
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='wefjhewwieewirewirewre')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 # Default email address to use for various automated correspondence
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='rffiwuhiwuhwiwhuwhirhiwehriwr')
-SERVER_EMAIL = env('EMAIL_HOST_USER', default='fuhiruwhriwrhiruhwiruwhriwrhw')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+SERVER_EMAIL = env('EMAIL_HOST_USER',)
 ACCOUNT_EMAIL_REQUIRED = True
 
 
-AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID', default='uhweirworiewjriwerhewirhweiuwehwir') 
+AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID') 
 # AWS_ACCESS_KEY_ID = 'AKIAUBKFCNZRUXD6ZRVE'
-AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY', default='fheirehwrwerhewkrjerkwjrenw')
-AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME', default='fjwerejrerjewrjewrejow')
-AWS_S3_SIGNATURE_NAME = env('AWS_S3_SIGNATURE_NAME', default='gggjjhiytt7rytfytfhgvhhhgh')
+AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY',)
+AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_SIGNATURE_NAME = env('AWS_S3_SIGNATURE_NAME')
 
 
 
@@ -219,8 +222,8 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True  # Auto-login after email confirmatio
 
 
 LOGIN_REDIRECT_URL = '/'
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
 
