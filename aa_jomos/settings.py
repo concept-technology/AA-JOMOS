@@ -15,7 +15,7 @@ ALLOWED_HOSTS = ['aajomos.com']
 
 ENVIRONMENT = 'production'
 
-DEBUG = True
+DEBUG = False
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
