@@ -72,7 +72,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "allauth.account.middleware.AccountMiddleware",
     # 'debug_toolbar.middleware.DebugToolbarMiddleware',
-    # 'book_store.middleware.ignore_static_files.IgnoreStaticFilesMiddleware'
+    'book_store.middleware.ignore_static_files.IgnoreStaticFilesMiddleware'
 ]
 ROOT_URLCONF = 'aa_jomos.urls'
 
