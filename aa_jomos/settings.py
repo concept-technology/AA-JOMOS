@@ -2,19 +2,13 @@
 import os
 from pathlib import Path
 import environ
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-
+from dotenv import load_dotenv
+load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# env = environ.Env(
-#     # set casting, default value
-#     DEBUG=(bool, False)
-# )
-environ.Env.read_env(BASE_DIR / '.env')
 
 ALLOWED_HOSTS = ['aajomos.com', '127.0.0.1','localhost']
 
-ENVIRONMENT = 'production'
 
 DEBUG = True
 
@@ -140,8 +134,8 @@ PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY',)
 DEBUG_PROPAGATE_EXCEPTIONS = os.environ.get('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
 EMAIL_HOST = os.environ.get('EMAIL_HOST',)
 EMAIL_PORT = 465
-EMAIL_USE_TLS = True
-# EMAIL_USE_SSL = True
+# EMAIL_USE_TLS = True
+EMAIL_USE_SSL = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
@@ -247,8 +241,8 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True  # Auto-login after email confirmatio
 
 
 LOGIN_REDIRECT_URL = '/'
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
 
