@@ -8,6 +8,9 @@ from django.shortcuts import render
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+
+from delivery.deliveryform import AddressForm, VerifyPhoneForm
+from delivery.models import DeliveryLocations
 from .models import *
 from django.views.generic import DetailView, ListView,View
 from django.db.models import Q
@@ -20,6 +23,7 @@ from .form import *
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 # from django.conf import settings
 from aa_jomos import settings
+
 import random
 import string
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -38,94 +42,63 @@ from django.contrib.messages import get_messages
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.db.models import Avg, Count
+from django.core.mail import send_mail
+
+from allauth.account.views import ConfirmEmailView
+from allauth.account.models import EmailConfirmationHMAC, EmailConfirmation
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.http import Http404
+
+from .models import EmailSubscription
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.template.loader import render_to_string
+
+from django.utils.html import strip_tags
 
 
+
+
+
+class StoreConfig(AppConfig):
+    name = 'book_store'
+    def ready(self):
+        import book_store.signals
+        print("Signals imported and ready.")
+
+# class CustomConfirmEmailView(ConfirmEmailView):
+#     template_name = "account/custom_email_confirm.html"  # Specify the custom template
+
+#     def get_object(self, queryset=None):
+#         """ Retrieve the confirmation object using either EmailConfirmation or EmailConfirmationHMAC """
+#         key = self.kwargs['key']
+#         try:
+#             # Try to retrieve confirmation using HMAC
+#             obj = EmailConfirmationHMAC.from_key(key)
+#             if obj:
+#                 return obj
+#             # If not found, use EmailConfirmation model
+#             obj = EmailConfirmation.objects.get(key=key.lower())
+#             return obj
+#         except EmailConfirmation.DoesNotExist:
+#             raise Http404("Email confirmation link expired or invalid.")
+
+#     def get(self, request, *args, **kwargs):
+#         try:
+#             confirmation = self.get_object()
+#             confirmation.confirm(request)  # Confirm and verify the email
+#             # Redirect to login or a success page
+#             return redirect(reverse('account_login'))  # Replace with your desired URL
+#         except Http404:
+#             # Redirect to an appropriate page if the link is invalid or expired
+#             return redirect(reverse('account_email_verification_sent'))
 
 # get or create session key
 def get_session_key(request):
     if not request.session.session_key:
         request.session.create()
     return request.session.session_key
-
-# receives signal from the session
-class StoreConfig(AppConfig):
-    name = 'my_store'
-
-    def ready(self):
-        import store.signals
-
-# next_url = request.GET.get('next')  # Define next_url early in the code
-#     messages.success(request, 'Coupon is applied')
-#                 if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-#                     return redirect(next_url)
-# class DashBoardView(LoginRequiredMixin,View):
-#     def get(self, request, *args, **kwargs):       
-#         profile_form = UserProfileForm(instance=self.request.user)
-#         password_form = PasswordChangeForm(self.request.user)
-#         cart = Cart.objects.filter(user=self.request.user, is_ordered=True)
-#         order = Order.objects.filter(user=self.request.user, is_ordered=True).order_by('id')
-#         form = CustomerRatingForm(request.POST or None)
-#         rating_form = CustomerRatingForm(self.request.POST or None) if order else None
-#         # Handle case where address might not exist 
-#         address = CustomersAddress.objects.filter(user=self.request.user).first()
-#         address_form = AddressForm(instance=address) if address else AddressForm()
-        
-#         context = {
-#             'profile_form': profile_form,
-#             'password_form': password_form,
-#             'orders': order,
-#             'cart': cart,
-#             'address': address,
-#             'address_form': address_form,
-#             'rating_form':rating_form,
-#             'form': form
-#         }
-#         return render(self.request, 'store/dashboard.html', context)
-    
-#     def post(self, request, *args, **kwargs):
-#         profile_form = UserProfileForm(self.request.POST, instance=self.request.user)
-#         password_form = PasswordChangeForm(self.request.user, self.request.POST)
-        
-#         # Handle case where address might not exist
-#         address = CustomersAddress.objects.filter(user=self.request.user).first()
-#         address_form = AddressForm(self.request.POST, instance=address) if address else AddressForm(self.request.POST)
-        
-#         if 'update_profile' in self.request.POST and profile_form.is_valid():
-#             profile_form.save()
-#             messages.success(self.request, 'Your profile has been updated successfully!')
-#             return redirect('store:dash-board')
-        
-#         elif 'change_password' in self.request.POST and password_form.is_valid():
-#             user = password_form.save()
-#             update_session_auth_hash(self.request, user)  # Important!
-#             messages.success(self.request, 'Your password has been changed successfully!')
-#             return redirect('store:dash-board')
-        
-#         elif 'update_address' in self.request.POST and address_form.is_valid():
-#             address_form.save(commit=False)
-#             address_form.instance.user = self.request.user  # Ensure the address is linked to the current user
-#             address_form.save()
-#             messages.success(self.request, 'Your address has been updated successfully!')
-#             return redirect('store:dash-board')
-        
-#         # Handle invalid forms
-#         if not profile_form.is_valid():
-#             messages.error(self.request, 'There was an error updating your profile.')
-#         if not password_form.is_valid():
-#             messages.error(self.request, 'There was an error changing your password.')
-#         if not address_form.is_valid():
-#             messages.error(self.request, 'There was an error updating your address.')
-
-#         # Re-render the page with the forms and error messages
-#         context = {
-#             'profile_form': profile_form,
-#             'password_form': password_form,
-#             'orders': Order.objects.filter(user=self.request.user, is_ordered=True).order_by('id'),
-#             'cart': Cart.objects.filter(user=self.request.user, is_ordered=True),
-#             'address': address,
-#             'address_form': address_form,
-#         }
-#         return render(self.request, 'store/dashboard.html', context)
 
 
 class DashBoardView(LoginRequiredMixin, View):
@@ -135,7 +108,7 @@ class DashBoardView(LoginRequiredMixin, View):
         cart = Cart.objects.filter(user=self.request.user, is_ordered=True)
         orders = Order.objects.filter(user=self.request.user, is_ordered=True).order_by('id')
         address = CustomersAddress.objects.filter(user=self.request.user).first()
-        address_form = AddressForm(instance=address) if address else AddressForm()
+        address_form = AddressForm(instance=address) 
         
         # # Fetch all products the user has reviewed
         # reviewed_products = Rating.objects.filter(user_ratings=self.request.user).values_list('object_id', flat=True)
@@ -150,7 +123,7 @@ class DashBoardView(LoginRequiredMixin, View):
             'cart': cart,
             'address': address,
             'address_form': address_form,
-            'rating_form': CustomerRatingForm(),
+            # 'rating_form': CustomerRatingForm(),
             # 'unreviewed_products': unreviewed_products,  # Pass unreviewed products to context
         }
         return render(self.request, 'store/dashboard.html', context)
@@ -178,12 +151,15 @@ class DashBoardView(LoginRequiredMixin, View):
             address_form.save()
             messages.success(self.request, 'Your address has been updated successfully!')
             return redirect('store:dash-board')
+        else:
+            messages.error(request, 'There was an error with your submission. Please correct the errors below.')
+            return redirect('store:dash-board')
 
         # Fetch all products the user has reviewed
-        # reviewed_products = Rating.objects.filter(user_ratings=self.request.user).values_list('object_id', flat=True)
+        reviewed_products = Rating.objects.filter(user_ratings=self.request.user).values_list('object_id', flat=True)
 
         # # Fetch all products in the user's orders that have not been reviewed yet
-        # unreviewed_products = Product.objects.filter(order__in=Order.objects.filter(user=self.request.user, is_ordered=True)).exclude(id__in=reviewed_products).distinct()
+        unreviewed_products = Product.objects.filter(order__in=Order.objects.filter(user=self.request.user, is_ordered=True)).exclude(id__in=reviewed_products).distinct()
 
         context = {
             'profile_form': profile_form,
@@ -193,9 +169,11 @@ class DashBoardView(LoginRequiredMixin, View):
             'address': address,
             'address_form': address_form,
             'rating_form': CustomerRatingForm(),
-            # 'unreviewed_products': unreviewed_products,  # Pass unreviewed products to context
+            'unreviewed_products': unreviewed_products,  # Pass unreviewed products to context
         }
         return render(self.request, 'store/dashboard.html', context)
+
+
 
 
 def rate_product(request, slug):
@@ -222,9 +200,6 @@ def generate_random_number(digits=10):
 def create_ref_code():#generate order reference code
     return ''.join(random.choices(string.ascii_lowercase + string.digits,k=15))
 
-
-
-from django.db.models import Sum
 
 def contact_view(request):
     return render(request, 'store/contact.html')
@@ -341,6 +316,7 @@ def product_list_by_category(request, slug):
 
 
 def logout_view(request):
+    
     logout(request)
     return redirect('store/index.html')
 
@@ -350,6 +326,7 @@ def register(request):
 
 
 def login(request):
+    
     form = LoginForm()
     return render(request, 'account/login.html', {'form': form})
 
@@ -357,7 +334,6 @@ def login(request):
 
 
 def home_view(request):
-    new_arrivals = Product.objects.filter(label='new')
     top_products = Product.objects.get_top_products()
     featured_products = Product.get_featured_products()
     top_rated_products = Product.get_top_rated_products()
@@ -365,8 +341,11 @@ def home_view(request):
     get_deal_of_the_day_products = Product.get_deal_of_the_day_products()
     categories = Category.objects.all() #fetch all the category of products
     category_products = {}
-    top_selling_by_category = Product.objects.get_top_selling_by_category()
+    # top_selling_by_category = Product.objects.get_top_selling_by_category()
     new_products = Product.objects.get_new_products()
+    categories = Category.objects.all()
+    top_selling_by_category = Product.get_top_selling_by_category()
+    
     # top_discounted_products = Product.objects.get_top_discounted_products()
     context = {
         'top_products': top_products,
@@ -396,7 +375,7 @@ class CartView(View):
     def get(self, request, *args, **kwargs):
         try:
             coupon_form = CouponForm()
-            location_form = AbujaLocationForm()
+            location_form = DeliveryLocations()
 
             if request.user.is_authenticated:
                 cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
@@ -411,7 +390,7 @@ class CartView(View):
                 order = Order.objects.filter(session_key=session_cart_id, is_ordered=False).first()
                 print('amount',cart_items.count())
             coupons = Coupon.objects.filter(active=True)
-            locations = AbujaLocation.objects.all()
+            locations = DeliveryLocations.objects.all()
             
             
             # Create a dictionary to hold color quantities for each cart item
@@ -453,8 +432,7 @@ class CartView(View):
                 order = Order.objects.filter(cart_id=session_cart_id, is_ordered=False).first()
 
             coupon_form = CouponForm(request.POST)
-            location_form = AbujaLocationForm(request.POST)
-
+            location_form = DeliveryLocations(request.POST)
             if coupon_form.is_valid():
                 coupon_code = coupon_form.cleaned_data['code']
                 try:
@@ -465,13 +443,13 @@ class CartView(View):
                 except Coupon.DoesNotExist:
                     messages.error(request, 'Invalid coupon code.')
 
-            if location_form.is_valid():
-                location_id = location_form.cleaned_data['location']
-                abuja_location = AbujaLocation.objects.get(id=location_id)
-                order.abuja_location = abuja_location
-                order.save()
-                messages.success(request, 'Delivery location updated successfully.')
-
+            # if location_form.is_valid():
+            #     location_id = location_form.cleaned_data['location']
+            #     abuja_location = AbujaLocation.objects.get(id=location_id)
+            #     order.abuja_location = abuja_location
+            #     order.save()
+            #     messages.success(request, 'Delivery location updated successfully.')
+                
             if request.user.is_authenticated:
                 cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
             else:
@@ -487,7 +465,7 @@ class CartView(View):
                 }
 
             coupons = Coupon.objects.filter(active=True)
-            locations = AbujaLocation.objects.all()
+            locations = DeliveryLocations.objects.all()
             context = {
                 'coupon_form': coupon_form,
                 'location_form': location_form,
@@ -573,88 +551,6 @@ def cart_count_view(request):
 
 logger = logging.getLogger(__name__)
 
-@csrf_exempt
-@require_POST
-def add_to_cart(request):
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        slug = request.POST.get('slug')      
-        product = get_object_or_404(Product, slug=slug)
-        quantity = int(request.POST.get('quantity', 1))  # Default quantity to 1 if not provided
-
-        if request.user.is_authenticated:
-            cart_qs = Cart.objects.filter(user=request.user, product=product, is_ordered=False)
-
-            if cart_qs.exists():
-                cart_item = cart_qs.first()
-                messages.error(request, f"{product.title} is already added to cart")
-            else:
-                cart_item = Cart.objects.create(
-                    user=request.user,
-                    product=product,
-                    quantity=quantity,
-                    is_ordered=False
-                )
-                messages.success(request, f"{product.title} is added to cart")
-
-            # Create or update the order
-            order, created = Order.objects.get_or_create(
-                user=request.user,
-                is_ordered=False,
-                defaults={
-                    'reference': f'order-{secrets.token_hex(8)}',
-                    'date': timezone.now()
-                }
-            )
-            if not order.product.filter(id=cart_item.id).exists():
-                order.product.add(cart_item)
-            order.save()
-
-            Wishlist.objects.filter(user=request.user, product=product).delete()
-
-            storage = get_messages(request)
-            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
-
-            cart_count = Cart.objects.filter(user=request.user, is_ordered=False).count()
-
-            return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
-        else:
-            session_cart_id = request.session.get('cart_id')
-            if not session_cart_id:
-                session_cart_id = str(uuid.uuid4())
-                request.session['cart_id'] = session_cart_id
-                request.session.modified = True
-                print(f"New session cart_id created: {session_cart_id}")
-            
-            cart_qs = Cart.objects.filter(cart_id=session_cart_id, product=product, is_ordered=False)
-            if cart_qs.exists():
-                cart_item = cart_qs.first()
-                cart_item.quantity += quantity  # Update the quantity
-            else:
-                cart_item = Cart.objects.create(cart_id=session_cart_id, product=product, is_ordered=False, quantity=quantity)
-            cart_item.save()
-            messages.success(request, f"{product.title} is added to cart")
-
-            # Create or update the order
-            order, created = Order.objects.get_or_create(
-                cart_id=session_cart_id,
-                is_ordered=False,
-                defaults={
-                    'reference': f'order-{secrets.token_hex(8)}',
-                    'date': timezone.now()
-                }
-            )
-
-            if not order.product.filter(id=cart_item.id).exists():
-                order.product.add(cart_item)
-            order.save()
-
-            storage = get_messages(request)
-            response_messages = [{'message': message.message, 'tags': message.tags} for message in storage]
-
-            cart_count = Cart.objects.filter(cart_id=session_cart_id, is_ordered=False).count()
-
-            return JsonResponse({'success': True, 'cart_count': cart_count, 'messages': response_messages})
-    return JsonResponse({'message': 'error processing your request'}, status=400)
 
 @csrf_exempt
 def delete_cart(request):
@@ -745,208 +641,243 @@ def delete_cart(request):
     
 #     return render(request, 'store/check-user-address.html', context)
 
+def load_cities(request):
+    state = request.GET.get('state')  # Get state from the AJAX request
+    cities = DeliveryLocations.objects.filter(state=state).values('town_name')  # Query cities based on state
+    return JsonResponse(list(cities), safe=False)  # Return as JSON  return JsonResponse(list(cities), safe=False)
 
 
+# @method_decorator(login_required, name='dispatch')
+# class CheckoutView(View):
+#     def get(self, *args, **kwargs):
+
+#         profile, created = Profile.objects.get_or_create(user=self.request.user)
+#         # if not profile.phone_number or not profile.is_phone_verified:
+#         #     messages.warning(self.request, "Please provide your phone number before proceeding to checkout.")
+#         #     return redirect('delivery:phone_number_verify')
+#         # # Check if the user has an existing address
+#         try:
+#             address = CustomersAddress.objects.get(user=self.request.user)
+#             form = AddressForm(instance=address)  # Pre-populate form with the existing address
+#         except CustomersAddress.DoesNotExist:
+#             form = AddressForm()  # If no existing address, present a blank form
+
+#         coupon = Coupon.objects.filter(active=True)
+#         states = DeliveryLocations.objects.all()
+
+#         try:
+#             order = Order.objects.get(user=self.request.user, is_ordered=False)
+#             cart = Cart.objects.filter(user=self.request.user, is_ordered=False)
+
+#             if not cart.exists():
+#                 messages.warning(self.request, 'Your cart is empty.')
+#                 return redirect('store:cart')
+
+#             # Pre-populate the phone number in the form if it's verified
+#             form.fields['telephone'].initial = profile.phone_number
+
+#             context = {
+#                 'coupon': coupon,
+#                 'states': states,
+#                 'form': form,
+#                 'order': order,
+#                 'cart': cart,
+#                 'coupon_form': CouponForm(),
+#             }
+
+#             return render(self.request, 'store/checkout.html', context)
+        
+#         except Order.DoesNotExist:
+#             messages.error(self.request, 'You do not have an active order')
+#             return redirect('store:categories-list')
+
+#     def post(self, *args, **kwargs):
+#         try:
+#             form = AddressForm(self.request.POST or None)
+#             order = Order.objects.get(user=self.request.user, is_ordered=False)
+            
+#             if form.is_valid():
+#                 street_address = form.cleaned_data.get('street_address')
+#                 apartment = form.cleaned_data.get('apartment')
+#                 town = form.cleaned_data.get('town')
+#                 state = form.cleaned_data.get('state')
+#                 country = form.cleaned_data.get('country')
+#                 zip_code = form.cleaned_data.get('zip_code')
+
+#                 # Get delivery cost based on state and town
+#                 delivery_location = get_object_or_404(DeliveryLocations, state=state, town_name=town)
+                
+#                 # Check if the user already has an address
+#                 address, created = CustomersAddress.objects.update_or_create(
+#                     user=self.request.user,
+#                     defaults={
+#                         'street_address': street_address,
+#                         'apartment': apartment,
+#                         'town': town,
+#                         'state': state,
+#                         'country': country,
+#                         'zip_code': zip_code,
+#                     }
+#                 )
+
+#                 # Update the order with the new shipping address and delivery location
+#                 order.shipping_address = address
+#                 order.delivery_location = delivery_location  # Set delivery location
+#                 order.save()  # Save the order with the updated delivery location
+
+#                 # Calculate the total with delivery
+#                 total_with_delivery = order.get_total_with_delivery()  # Use the method to calculate total
+#                 order.total_price = total_with_delivery  # Update the order total price
+#                 order.save()  # Save again after updating the total price with delivery
+
+#                 return redirect('paystack:initiate_payment')
+            
+#             messages.warning(self.request, 'Order failed')
+#             return redirect('store:cart')
+                
+#         except ObjectDoesNotExist:
+#             messages.error(self.request, 'You do not have an active order')
+#             return redirect('store:categories')
 
 
 @method_decorator(login_required, name='dispatch')
 class CheckoutView(View):
     def get(self, *args, **kwargs):
-        form = AddressForm(self.request.POST or None)
-        coupon = Coupon.objects.filter(active=True)      
+        # Get or create the user's profile
+        profile = Profile.objects.filter(user=self.request.user).first()
+        if not profile:
+            profile = Profile.objects.create(user=self.request.user)
+
+        try:
+            address = CustomersAddress.objects.get(user=self.request.user)
+            form = AddressForm(instance=address)  # Pre-populate form with the existing address
+        except CustomersAddress.DoesNotExist:
+            form = AddressForm()  # If no existing address, present a blank form
+
+        coupon = Coupon.objects.filter(active=True)
+        states = DeliveryLocations.objects.all()
+
         try:
             order = Order.objects.get(user=self.request.user, is_ordered=False)
             cart = Cart.objects.filter(user=self.request.user, is_ordered=False)
-            address = CustomersAddress.objects.filter(user=self.request.user)
-            
+
             if not cart.exists():
                 messages.warning(self.request, 'Your cart is empty.')
                 return redirect('store:cart')
 
+            # Pre-populate the phone number in the form if it's verified
+            form.fields['telephone'].initial = profile.phone_number
+
             context = {
                 'coupon': coupon,
-                'order': {
-                    'form': form,
-                    'order': order,
-                    'cart': cart,
-                    'coupon': CouponForm()
-                }
+                'states': states,
+                'form': form,
+                'order': order,
+                'cart': cart,
+                'coupon_form': CouponForm(),
             }
 
-            if address.exists():
-                return redirect('store:verify-address')
-            
             return render(self.request, 'store/checkout.html', context)
-        
+
         except Order.DoesNotExist:
             messages.error(self.request, 'You do not have an active order')
-            return redirect('store:categories')
+            return redirect('store:categories-list')
 
     def post(self, *args, **kwargs):
         form = AddressForm(self.request.POST or None)
-        
+
         try:
             order = Order.objects.get(user=self.request.user, is_ordered=False)
-            
-            if form.is_valid():
-                street_address = form.cleaned_data.get('street_address')
-                apartment = form.cleaned_data.get('apartment')
-                town = form.cleaned_data.get('town')
-                state = form.cleaned_data.get('state')
-                country = form.cleaned_data.get('country')
-                zip_code = form.cleaned_data.get('zip_code')
-                
-                billing_address = CustomersAddress.objects.create(
-                    user=self.request.user,
-                    order=order,
-                    street_address=street_address,
-                    apartment=apartment,
-                    town=town,
-                    state=state,
-                    country=country,
-                    zip_code=zip_code,
-                )
-                
-                order.shipping_address = billing_address
-                order.save()
-                return redirect('store:initiate_payment')
-            
-            messages.warning(self.request, 'Order failed')
-            return redirect('store:cart')
-                  
-        except ObjectDoesNotExist:
+        except Order.DoesNotExist:
             messages.error(self.request, 'You do not have an active order')
-            return redirect('store:categories')
+            return redirect('store:categories-list')
+
+        if form.is_valid():
+            street_address = form.cleaned_data.get('street_address')
+            apartment = form.cleaned_data.get('apartment')
+            town = form.cleaned_data.get('town')
+            state = form.cleaned_data.get('state')
+            country = form.cleaned_data.get('country')
+            zip_code = form.cleaned_data.get('zip_code')
+            telephone = form.cleaned_data.get('telephone')
+
+            try:
+                # Get delivery cost based on state and town
+                delivery_location = DeliveryLocations.objects.get(state=state, town_name=town)
+            except DeliveryLocations.DoesNotExist:
+                messages.error(self.request, 'Delivery location not found for the selected state and town.')
+                return render(self.request, 'store/checkout.html', {'form': form})
+
+            # Check if the user already has an address
+            address, created = CustomersAddress.objects.update_or_create(
+                user=self.request.user,
+                defaults={
+                    'street_address': street_address,
+                    'apartment': apartment,
+                    'town': town,
+                    'state': state,
+                    'country': country,
+                    'zip_code': zip_code,
+                    'telephone':telephone
+                }
+            )
+
+            # Update or get the user's profile (do not create a new one if it exists)
+            profile = Profile.objects.filter(user=self.request.user).first()
+            if profile:
+                profile.phone_number = telephone
+                profile.country = country
+                profile.save()
+
+            # Update the order with the new shipping address and delivery location
+            order.shipping_address = address
+            order.delivery_location = delivery_location  # Set delivery location
+            order.save()  # Save the order with the updated delivery location
+
+            # Calculate the total with delivery
+            total_with_delivery = order.get_total_with_delivery()  # Use the method to calculate total
+            order.total_price = total_with_delivery  # Update the order total price
+            order.save()  # Save again after updating the total price with delivery
+
+            return redirect('paystack:initiate_payment')
+
+        # Form is not valid, render the form with error messages
+        messages.warning(self.request, 'Please correct the errors below.')
+        print(form.errors)
+        return render(self.request, 'store/checkout.html', {
+            'form': form,
+            'order': order,
+            'states': DeliveryLocations.objects.all(),
+            'coupon': Coupon.objects.filter(active=True),
+            'coupon_form': CouponForm(),
+        })
 
 # next_url = request.GET.get('next')  # Define next_url early in the code
  
 
-def Update_addressView(request,pk):
+def Update_addressView(request, pk):
     next_url = request.GET.get('next')  # Define next_url early in the code
     
-    address = CustomersAddress.objects.get(user=request.user,pk=pk)
+    # Fetch the address using get_object_or_404 to ensure it exists
+    address = get_object_or_404(CustomersAddress, user=request.user, pk=pk)
     if request.method == 'POST':
+        order = Order.objects.get(user=request.user, is_ordered=False)
         form = AddressForm(request.POST, instance=address)
         if form.is_valid():
-            form.save()
+            updated_address = form.save(commit=False)  # Save the form but don't commit yet
+            updated_address.user = request.user  # Ensure the address is linked to the user
+            updated_address.save()  # Now save the instance
+            order.delivery_location = updated_address
+            order.save()
             messages.success(request, 'Your address has been updated.')
-            # if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
             return redirect('store:verify-address')
-            # messages.error(request, 'error updating your address')
-            # return redirect('store:index')
     else:
         form = AddressForm(instance=address)
     
     context = {
         'form': form,
-        'address': address
     }
     return render(request, 'store/update_address.html', context)
-
-def initiate_payment(request):
-    order = Order.objects.get(is_ordered=False, user=request.user)
-    cart = Cart.objects.filter(user=request.user, is_ordered=False)
-
-    if request.method == "POST":
-        amount = request.POST['amount']
-        email = request.POST['email']
-        pk = settings.PAYSTACK_PUBLIC_KEY
-
-        # Convert amount to float instead of int
-        payment = Payment.objects.create(amount=float(amount), email=email, order=order, user=request.user)
-        payment.save()
-
-        context = {
-            'payment': payment,
-            'field_values': request.POST,
-            'paystack_pub_key': pk,
-            'amount_value': payment.amount_value(),
-            'order': order,
-            'cart':cart,       
-        }
-        
-        return render(request, 'store/make-payment.html', context)
-
-    return render(request, 'store/payment.html', {'order': order, 'cart': cart})
-
-# @login_required
-# def verify_address_and_pay(request):
-#     # Fetch user's addresses
-#     user_addresses = CustomersAddress.objects.filter(user=request.user)
-#     pk = settings.PAYSTACK_PUBLIC_KEY
-#     # Fetch current order details
-#     orders = Order.objects.filter(user=request.user, is_ordered=False)
-    
-#     total_order_cost = 0
-#     total_delivery_cost = 0
-#     total_cost_with_delivery = 0
-#     order = None
-#     order_items = []
-#     coupon = None
-#     payment = None  # Initialize payment as None
-
-#     if orders.exists():
-#         order = orders.first()
-#         total_order_cost = order.get_total()  # get_total() method calculates total cost
-#         total_delivery_cost = order.get_delivery_cost()  # get_delivery_cost() method calculates delivery cost
-#         total_cost_with_delivery = total_order_cost + total_delivery_cost
-#         order_items = order.product.all()  # Access the related products directly from the order
-#         if order.coupon:
-#             coupon = order.coupon
-
-#     if request.method == 'POST':
-#         amount = request.POST['amount']
-#         email = request.POST['email']
-#         ref_number = request.POST['ref']
-#         amount = int(total_cost_with_delivery * 100)  # Paystack expects the amount in kobo
-#         email = request.user.email
-
-#         headers = {
-#             "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
-#             "Content-Type": "application/json"
-#         }
-#         data = {
-#             "email": email,
-#             "amount": amount,
-#             "ref": ref_number,
-#         }
-#         url = "https://api.paystack.co/transaction/initialize"
-#         response = requests.post(url, headers=headers, data=json.dumps(data))
-#         response_data = response.json()
-
-#         if response_data['status']:
-#             payment = Payment.objects.create(amount=float(amount), email=email, order=order, user=request.user, ref=ref_number)
-#             payment.save()
-#             authorization_url = response_data['data']['authorization_url']
-#             print({'ref':ref_number})
-#             return redirect(authorization_url)
-#         else:
-#             # Handle error here
-#             context = {
-#                 'addresses': user_addresses,
-#                 'order': order,
-#                 'total_order_cost': total_order_cost,
-#                 'total_delivery_cost': total_delivery_cost,
-#                 'total_cost_with_delivery': total_cost_with_delivery,
-#                 'order_items': order_items,
-#                 'coupon': [coupon] if coupon else None,
-#                 'error': 'There was a problem initializing the payment. Please try again.',
-#             }
-#             return render(request, 'store/check-user-address.html', context)
-
-#     context = {
-#         'addresses': user_addresses,
-#         'order': order,
-#         'total_order_cost': total_order_cost,
-#         'total_delivery_cost': total_delivery_cost,
-#         'total_cost_with_delivery': total_cost_with_delivery,
-#         'order_items': order_items,
-#         'coupon': [coupon] if coupon else None,
-#         'paystack_pub_key': pk,
-#       # Check if payment is not None
-#     }
-#     return render(request, 'store/check-user-address.html', context)
-
 
 @login_required
 def verify_address_and_pay(request):
@@ -1038,69 +969,6 @@ def verify_address_and_pay(request):
         'ref':generate_random_number(),
     }
     return render(request, 'store/check-user-address.html', context)
-
-
-def verify_payment(request, ref):
-    try:
-        order = Order.objects.get(is_ordered=False, user=request.user)
-        payment = Payment.objects.get(ref=ref)
-        address = CustomersAddress.objects.get(user=request.user)
-        paystack_secret_key = settings.PAYSTACK_SECRET_KEY
-        verify_url = f'https://api.paystack.co/transaction/verify/{ref}'
-        headers = {
-            'Authorization': f'Bearer {paystack_secret_key}',
-            'Content-Type': 'application/json',
-        }
-        response = requests.get(verify_url, headers=headers, timeout=60)
-        if response.status_code == 200:
-            data = response.json()
-            paystack_amount = data['data']['amount'] / 100  # Convert kobo to naira
-            expected_amount = order.get_total_with_delivery()
-
-            if paystack_amount == expected_amount and data['data']['status'] == 'success':
-                payment.verified = True
-                payment.save()
-                # Mark order products as ordered
-                order_products = order.product.all()
-                order_products.update(is_ordered=True)
-
-                # Update order status and create invoice
-                order.is_ordered = True
-                order.payment = payment
-                order.reference = create_ref_code() #create a reference code
-                order.save()
-
-                # Create invoice
-                invoice = Invoice.objects.create(
-                    invoice_number=generate_random_number(),  # function for generating invoice numbers
-                    order=order,
-                    payment=payment,
-                    issued_at=timezone.now()
-                    # Add more fields as needed
-                )
-                invoice.save()
-                # save additional invoice details
-                order.invoice_number =  invoice.invoice_number
-                order.Payment.ref = payment.ref
-                order.save()
-                order.shipping_address =address
-                return render(request,'store/success.html', {'invoice': invoice, 'order': order, 'payment': payment})
-            else:
-                return render(request, 'store/payment_not_successful.html')
-
-        else:
-            print(f"Failed to verify payment. Status code: {response.status_code}, Paystack response: {response.text}")
-            return JsonResponse({'status': 'error', 'message': 'Failed to verify payment.'})
-
-    except Order.DoesNotExist:
-        print("Order does not exist for the user.")
-        return JsonResponse({'status': 'error', 'message': 'Order does not exist for the user.'})
-    except Payment.DoesNotExist:
-        print("Payment does not exist for the reference.")
-        return JsonResponse({'status': 'error', 'message': 'Payment does not exist for the reference.'})
-    except requests.exceptions.RequestException as e:
-        print(f"Error verifying payment: {str(e)}")
-        return JsonResponse({'status': 'error', 'message': f"Error verifying payment: {str(e)}"})
 
 
 
@@ -1261,20 +1129,22 @@ def search_view(request):
     
     return render(request, 'store/search_results.html', context)
 
-
-
+@transaction.atomic
 @ensure_csrf_cookie
 def product_detail(request, slug):
     form_slug = request.POST.get('product_slug') 
     product = get_object_or_404(Product, slug=slug) if slug else form_slug 
     colors = product.color.all()  # Fetch only the colors associated with the product
     sizes = product.size.all()  # Fetch only the sizes associated with the product
-  
+    # size_color = ProductSizeColor.objects.filter(product=product).values('size', 'color').distinct()
+    size_color = ProductSizeColor.objects.filter(product=product).select_related('size', 'color')
+    
     if request.user.is_authenticated:
         in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
         is_in_cart = Cart.objects.filter(product=product, is_ordered=False, user=request.user).exists()
         user_rating = CustomerRating.objects.filter(user=request.user, product=product).first()
         cart = Cart.objects.filter(product=product, is_ordered=False, user=request.user).first()
+        print({'user':request.user.profile.phone_number},'added to cart ')
     else:
         session_key = get_session_key(request)
         is_in_cart = Cart.objects.filter(product=product, is_ordered=False, session_key=session_key).exists()
@@ -1324,14 +1194,11 @@ def product_detail(request, slug):
         'all_user_rating': all_user_rating,
         'is_in_cart': is_in_cart,
         'next_product': next_product,
-        'csrf_token': request.META.get('CSRF_COOKIE'),
+   
         'related_products': related_products,
         'in_wishlist': in_wishlist,
-        'colors': colors,
-        'color_quantities': color_quantities,
-        'quantity': cart_quantity,
-        'sizes': sizes,  # Pass the sizes related to the specific product
         'size_discount_percentages': size_discount_percentages,
+        'size_colors':size_color,
     }
 
     return render(request, 'store/product_detail.html', context)
@@ -1422,7 +1289,7 @@ def toggle_wishlist(request, product_id):
         return redirect(next_url)
     return redirect('store:wishlist')
 
-    return JsonResponse({'message': message, 'in_wishlist': in_wishlist})
+    # return JsonResponse({'message': message, 'in_wishlist': in_wishlist})
 
 
 def remove_from_wishlist(request, product_id):
@@ -1498,29 +1365,26 @@ class UpdateCartQuantity(View):
             if cart_item.size is None:
                 return JsonResponse({'message': 'Size not found for this cart item'}, status=400)
 
-            # Calculate the total quantity of the same product in the cart
-            if request.user.is_authenticated:
-                cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
+            # Calculate the total quantity from the Size model for the same product
+            product_sizes = cart_item.product.size.all()
+            total_quantity = product_sizes.aggregate(total_pieces=Sum('pieces'))['total_pieces'] or 0
+
+            # Determine if the wholesale price should be used
+            if total_quantity >= cart_item.product.minimum_order:
+                price_per_unit = cart_item.size.wholesale_price
             else:
-                session_cart_id = request.session.get('cart_id', None)           
-                if not session_cart_id:
-                    session_cart_id = str(uuid.uuid4())
-                    request.session['cart_id'] = session_cart_id
-                    request.session.modified = True
-                cart_items = Cart.objects.filter(session_key=session_cart_id, is_ordered=False)
-                product_total_quantity = cart_items.filter(product=cart_item.product).aggregate(total_qty=Sum('quantity'))['total_qty']
-                product_total_quantity = product_total_quantity if product_total_quantity is not None else 0
+                price_per_unit = cart_item.size.discount_price if cart_item.size.discount_price else cart_item.size.price
 
-                # Determine if the wholesale price should be used
-                if product_total_quantity >= cart_item.product.minimum_order:
-                    price_per_unit = cart_item.size.wholesale_price
-                else:
-                    price_per_unit = cart_item.size.discount_price if cart_item.size.discount_price else cart_item.size.price
-
-            # Calculate size and product price
+            # Calculate the cart item total price based on the updated quantity and price
             cart_item_total = price_per_unit * quantity
 
             # Calculate the total price for all items in the cart
+            if request.user.is_authenticated:
+                cart_items = Cart.objects.filter(user=request.user, is_ordered=False)
+            else:
+                session_cart_id = request.session.get('cart_id', None)
+                cart_items = Cart.objects.filter(session_key=session_cart_id, is_ordered=False)
+            
             total_price = sum(item.get_total_price() for item in cart_items)
 
             # Fetch the order and calculate the total with delivery
@@ -1539,7 +1403,7 @@ class UpdateCartQuantity(View):
                 'total_order_and_delivery': int(total_order_and_delivery),
                 'cart_item_total': cart_item_total,
                 'total_order': total_price,
-                'product_total_quantity': product_total_quantity,
+                'total_quantity': total_quantity,
                 'messages': [{'message': 'Cart updated successfully', 'tags': 'success'}],
             })
 
@@ -1620,21 +1484,23 @@ def handle_unauthenticated_user(request, product, size, color, quantity):
         return {'message': f'Error: {str(e)}'}
 
 
-
 def adjust_cart_item_price(cart_item, product, size, quantity):
-    total_quantity = Cart.objects.filter(
-        user=cart_item.user,
-        product=product,
-        is_ordered=False,
-        quantity=quantity
-    ).aggregate(total_quantity=Sum('quantity'))['total_quantity']
-
+    # Sum all the pieces for the sizes of the same product
+    total_quantity = Size.objects.filter(
+        products=product  # `products` is the related name for the ManyToMany relationship with Product
+    ).aggregate(total_pieces=Sum('pieces'))['total_pieces'] or 0
+    print({'total qty:': total_quantity})
+    # Check if total pieces is greater than or equal to the product's minimum order
     if total_quantity >= product.minimum_order:
-        cart_item.price = size.wholesale_price
+        cart_item.price = size.wholesale_price # Use wholesale price
+        print({'price is wholesale': cart_item.price})
+        print({' minimum order is ': product.minimum_order})
+        
     else:
-        cart_item.price = size.discount_price
+        cart_item.price = size.discount_price  # Use discount price
+        print({'the price is  discount': cart_item.price})
+        print({' minimum order is ': product.minimum_order})
     cart_item.save()
-
 
 def update_or_create_order(request, cart_item, cart_id=None):
     if request.user.is_authenticated:
@@ -1734,3 +1600,96 @@ def update_cart_color_and_qty(request):
         logger.error(f"Error updating cart: {str(e)}")
         return JsonResponse({'message': f'Error: {str(e)}'}, status=400)
 
+
+
+class EmailSubscriptionView(View):
+    def post(self, *args, **kwargs):
+        email = self.request.POST.get('email')
+        # Log the email input
+        print(f'Received email: {email}')
+
+        # Validate the email
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(self.request, 'Please enter a valid email address.')
+            print('Invalid email address')
+            return redirect('store:subscribe_email')  # Ensure 'subscribe_email' exists in your urls.py
+
+        # Check if the email already exists in the database
+        if EmailSubscription.objects.filter(email=email).exists():
+            messages.error(self.request, 'This email is already subscribed.')
+            print('Email already subscribed')
+        else:
+            # Create and save the subscription
+            EmailSubscription.objects.create(email=email)
+            messages.success(self.request, 'Thank you for subscribing!')
+            print('Email subscription created successfully')
+
+        # Redirect to the homepage or wherever you want after subscription
+        return redirect('store:index')
+
+
+def send_newsletter(request):
+    subscribers = EmailSubscription.objects.all()
+    email_list = [subscriber.email for subscriber in subscribers]
+
+    if email_list:
+        send_mail(
+            subject='Our Latest News',
+            message='Here is the latest news from our eCommerce store.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=email_list,
+            fail_silently=False,
+        )
+        messages.success(request, f'Successfully sent emails to {len(email_list)} subscribers.')
+    else:
+        messages.error(request, 'No subscribers found.')
+
+    return redirect('some_view')  # Change 'some_view' to where you want to redirect after sending
+
+
+
+
+def cancel_order(request, order_id):
+    # Fetch the order
+    order = get_object_or_404(Order, id=order_id)
+
+    # Mark the order as canceled
+    order.user_cancelled = True
+    order.save()
+
+    # Email subject and sender
+    subject = f"Your Order #{order.reference} Has Been Canceled"
+    from_email = settings.DEFAULT_FROM_EMAIL
+    recipient_list = [order.user.email]
+
+    # Create link for the user to continue the order
+    continue_order_link = request.build_absolute_uri(reverse('store:continue_order', args=[order.id]))
+
+    # Render email content
+    html_message = render_to_string('emails/user_order_canceled.html', {
+        'order': order,
+        'user': order.user,
+        'continue_order_link': continue_order_link,
+    })
+    plain_message = strip_tags(html_message)  # Fallback for non-HTML email clients
+
+    # Send the email
+    send_mail(subject, plain_message, from_email, recipient_list, html_message=html_message)
+
+    # Redirect to the cart page after canceling the order
+    return redirect('store:cart')
+
+
+
+def continue_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+
+    # Reactivate the order by setting the canceled status to False
+    if order.user_cancelled:
+        order.user_cancelled = False
+        order.save()
+
+    # Redirect the user to the checkout page
+    return redirect('store:check-out')

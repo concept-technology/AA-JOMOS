@@ -56,12 +56,14 @@
                                                 </div><!-- End .product-cat -->
                                                 <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{item.product.title}}</a></h3><!-- End .product-title -->
                                                 <div class="product-price">
-                                                    {% for size in item.size  %}		
-                                                    {% if forloop.counter == 1%}
-                                                    <span class="new-price">&#8358;{{size.discount_price|floatformat:2|intcomma}}</span>
-                                                    <span class="old-price">&#8358;{{size.price|floatformat:2|intcomma}}</span>
-                                                    {% endif %}
+													{% for size in item.product.size.all %}													
+													{% if forloop.counter == 1 %}			
+                                                    <span class="new-price">&#8358;{{size.wholesale_price|floatformat:2|intcomma}} - </span>
+                                                    <span class="new-price">&#8358;{{size.price|floatformat:2|intcomma}}</span> 
+													{% endif %}					
+													
 													{% endfor %}
+													
                                                 </div><!-- End .product-price -->
                                                 <div class="ratings-container">
                                                     <style>
@@ -221,7 +223,7 @@
                     console.log('Add to cart triggered', { 'slug': productSlug });
                 
                     $.ajax({
-                        url: "{% url 'store:add-to-cart' %}",
+                        url: "",
                         method: 'POST',
                         data: {
                             slug: productSlug,

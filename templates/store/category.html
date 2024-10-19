@@ -1,13 +1,16 @@
 {% extends "store/base.html" %}
 {%load static %}
+{% block title %}
+	Product | Categories
+{% endblock %}
 {% block content %}
 {% load humanize %}
-{% load star_rating %}   
-
+{% load star_rating %}
+	 
         <main class="main">
         	<div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
         		<div class="container">
-        			<h1 class="page-title">A.A Jomos <small>Nigeria  ltd</small><span> shop</span></h1>
+        			<h1 class="page-title">Book shop<small> and stationary</small><span> products category</span></h1>
         		</div><!-- End .container -->
         	</div><!-- End .page-header -->
             <nav aria-label="breadcrumb" class="breadcrumb-nav mb-2">
@@ -113,16 +116,16 @@
                                             <div class="product-body">
 												
 												<h3 class="product-title"><a href="{{product.get_absolute_url}}">{{item.product.title}}</a></h3>
-												{% if item.total_stock == 0 %}
+												{% if item.product.total_stock == 0 %}
 													<p href="{{product.get_absolute_url}}">out of stock</p>
 															{% else %}
-															<b href="{{product.get_absolute_url}}">{{item.total_stock}} in stock</b>
+															<span href="{{product.get_absolute_url}}" class="old-price">{{ item.product.total_stock|floatformat:2|intcomma }} in stock</span>
 													{% endif %}
                                                 <div class="product-price">
 													{% for size in item.sizes %}													
 													{% if forloop.counter == 1 %}			
-                                                    <b class="new-price">&#8358;{{size.discount_price|floatformat:2|intcomma}}</b>
-                                                    <span class="old-price">&#8358;{{size.price|floatformat:2|intcomma}}</span> <br>
+                                                    <span class="new-price">&#8358;{{size.wholesale_price|floatformat:2|intcomma}} - </span>
+                                                    <span class="new-price">&#8358;{{size.price|floatformat:2|intcomma}}</span> 
 													{% endif %}					
 													
 													{% endfor %}

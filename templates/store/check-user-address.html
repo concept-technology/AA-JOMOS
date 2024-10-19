@@ -1,13 +1,12 @@
 {% extends 'store/base.html' %}
 
-{% block content %}
-    {{ block.super }}
-    {% load humanize %}
-
 {% block title %}
     {{user }} checkout
 {% endblock title %}
     
+{% block content %}
+    {{ block.super }}
+    {% load humanize %}
     <nav aria-label="breadcrumb" class="breadcrumb-nav">
         <div class="container">
             <ol class="breadcrumb">
@@ -31,7 +30,7 @@
                         
                         {% for address_item in addresses %}
                         <p>
-                            {{ user }}<br>
+                        name:   {{ user }}<br>
                             {{ address_item.street_address }}<br>
                             {{ address_item.apartment }},<br> 
                             {{ address_item.town }}<br>
@@ -86,11 +85,10 @@
                                 </tbody>
                             </table><!-- End .table table-summary -->
 
-                            <a href="{% url 'store:initiate_payment' %}">
+                            <a href="{% url 'paystack:initiate_payment' %}">
                                     <button id="pay-btnx" class="btn btn-primary btn-primary mb-4">Pay</button>					
                         </a>										
                                 </div><!-- End .form-box -->
-                            <!-- <a href="{% url 'store:initiate_payment' %}" class="btn btn-outline-primary-2 btn-order btn-block">Proceed to Payment</a> -->
                         </div><!-- End .summary -->
                     </div><!-- End .card-body -->
                 </div><!-- End .card-dashboard -->
@@ -132,7 +130,7 @@
                     callback: function(response) {
                         console.log("Payment successful, redirecting");  // Log success
                         showLoadingIndicator();
-                        window.location.href = "{% url 'store:verify_payment' ref %}";
+                        window.location.href = "{% url 'paystack:verify_payment' ref %}";
                     },
                 };
                 if (Boolean(currency)) {

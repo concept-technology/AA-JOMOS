@@ -2,45 +2,22 @@
 import os
 from pathlib import Path
 import environ
-import dj_database_url
-
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'handlers': {
-#         'file': {
-#             'level': 'DEBUG',
-#             'class': 'logging.FileHandler',
-#             'filename': 'django_debug.log',
-#         },
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['file'],
-#             'level': 'DEBUG',
-#             'propagate': True,
-#         },
-#     },
-# }
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False)
 )
-# environ.Env.read_env(BASE_DIR / '.env')
+environ.Env.read_env(BASE_DIR / '.env')
+ALLOWED_HOSTS = ['aajomos.com']
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
+ENVIRONMENT = 'production'
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = 'django-insecure-=13zeu+im=zl5$+k=)6@y65hkbn1458jlcf^cqtc%t4e$r2*2z'
-SECRET_KEY =os.environ.get('SECRET_KEY', default='django-insecure-=13zeu+im=zl5$+k=)6@y65hkbn1458jlcf^cqtc%t4e$r2*2z')
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', default=True)
+DEBUG = False
 
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 INSTALLED_APPS = [
     'django.contrib.auth',
@@ -49,16 +26,17 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "phonenumber_field",
     'jazzmin',
-    'django.contrib.admin',
-    'gunicorn',
-    'dj_database_url',
-    "corsheaders",
     'allauth',
     'allauth.account',
-    'allauth.socialaccount',   
-    'allauth.socialaccount.providers.facebook',   
-    'allauth.socialaccount.providers.google',   
+    # Optional -- requires install using `django-allauth[socialaccount]`.
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.facebook',
+    'django.contrib.admin',
+    'gunicorn',
+    "corsheaders",
     'PIL',
     'widget_tweaks',
     'rest_framework',
@@ -73,10 +51,14 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'requests',
     'xhtml2pdf',
-    'environ'
+    'environ',
+    'delivery',
+    'paystack_api',
     # 'jet_django',
-]
+    'settings',
+    # 'django_inline_actions'
 
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -89,9 +71,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "allauth.account.middleware.AccountMiddleware",
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     'book_store.middleware.ignore_static_files.IgnoreStaticFilesMiddleware'
 ]
-
 ROOT_URLCONF = 'aa_jomos.urls'
 
 TEMPLATES = [
@@ -105,6 +87,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'settings.context_processors.site_settings',
             ],
         },
     },
@@ -113,27 +96,61 @@ TEMPLATES = [
 WSGI_APPLICATION = 'aa_jomos.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+print("DJANGO_SETTINGS_MODULE:", os.environ.get("DJANGO_SETTINGS_MODULE"))
+
+# https://docs.djangoproject.com/en/3.0/ref/settings/#allowed-hosts
 
 
 # DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'aa_jomos_database',
-#         'USER': 'root',
-#         'PASSWORD': 'Tamara1!',
-#         'HOST': 'aa-jomos-database.c7y2yuoqejxn.eu-north-1.rds.amazonaws.com',
-#         'PORT': '5432',
+#         'default': {
+#             'ENGINE': 'django.db.backends.mysql', 
+#             'NAME':    os.environ.get('DATABASE_NAME'),        
+#             'HOST': os.environ.get('DATABASE_HOST'),                   
+#             'USER': os.environ.get('DATABASE_USER_NAME'),          
+#             'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+#             'PORT': '3306',                       
 #         }
 #     }
-
+    
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-     }
- }
+        'default': {
+            'ENGINE': 'django.db.backends.mysql', 
+            'NAME':  'concxyea_aajoms_store_database',        
+            'HOST': 'localhost',                   
+            'USER': 'concxyea_aajomos_admin_root_user',          
+            'PASSWORD': 'hKA%hrcTF7o#',
+            'PORT': '3306',                       
+        }
+    }
+ 
+
+
+SECRET_KEY =os.environ.get('SECRET_KEY')
+PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY',)
+PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY',)
+
+DEBUG_PROPAGATE_EXCEPTIONS = os.environ.get('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
+EMAIL_HOST = os.environ.get('EMAIL_HOST',)
+EMAIL_PORT = 465
+EMAIL_USE_TLS = True
+# EMAIL_USE_SSL = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+# Default email address to use for various automated correspondence
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
+SERVER_EMAIL = os.environ.get('EMAIL_HOST_USER')
+ACCOUNT_EMAIL_REQUIRED = True
+
+
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID',) 
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY',)
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME',)
+AWS_S3_SIGNATURE_NAME = os.environ.get('AWS_S3_SIGNATURE_NAME',)
+AWS_CLOUDFRONT_KEY_ID = os.environ.get('AWS_CLOUDFRONT_KEY_ID')
+aws_cloudfront_key = os.environ.get('AWS_CLOUDFRONT_KEY', '')
+AWS_CLOUDFRONT_KEY = aws_cloudfront_key.replace('\\n', '\n').encode('ascii').strip()
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -163,9 +180,11 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+
+
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
+    # 'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 JAZZMIN_SETTINGS = {
@@ -200,17 +219,16 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
   # Tell Django to copy static assets into a path called `staticfiles` (this is specific to Render)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+# DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATICFILES_STORAGE = 'book_store.custom_storage.IgnoreStaticFilesStorage'
 
-# https://docs.djangoproject.com/en/3.0/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = []
 
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
 # Application definition
-
+ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = '/profile/'  # Example redirect for authenticated users
+ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = '/login/'  # Example redirect for anonymous users
 
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 LOGIN_REDIRECT_URL = 'store:index'
@@ -218,31 +236,21 @@ LOGOUT_REDIRECT_URL = 'store:index'
 SIGNUP_REDIRECT_URL = 'store:index'
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_LOGOUT_ON_GET = True
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_EMAIL_CONFIRMATION_HMAC = True
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True  # Auto-login after email confirmation
+# ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1  # Example: 1 day until the confirmation link expires
 
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'andrewsamuelcloud@gmail.com'
-EMAIL_HOST_PASSWORD = '6319@gmail.coM'  # or App Password if 2-Step Verification is enabled
-DEFAULT_FROM_EMAIL = 'andrewsamuelcloud@gmail.com'
 
-AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID') 
-AWS_ACCESS_KEY_ID = 'AKIAUBKFCNZRUXD6ZRVE'
-AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_SIGNATURE_NAME = env('AWS_S3_SIGNATURE_NAME')
-AWS_S3_REGION_NAME = 'eu-north-1'
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL =  None
-AWS_S3_VERIFY = True
-AWS_QUERYSTRING_EXPIRE = 10
-AWS_S3_CUSTOM_DOMAIN = 'd2nxnkp3c6n4f.cloudfront.net'
-AWS_CLOUDFRONT_KEY_ID = env.str('AWS_CLOUDFRONT_KEY_ID').strip()
-AWS_CLOUDFRONT_KEY = env.str('AWS_CLOUDFRONT_KEY', multiline=True).encode('ascii').strip()
+LOGIN_REDIRECT_URL = '/'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_USERNAME_REQUIRED = False
+
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -252,6 +260,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 1
 }
 
+
 SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
@@ -259,7 +268,7 @@ SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
-DEBUG_PROPAGATE_EXCEPTIONS = os.environ.get('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
+# DEBUG_PROPAGATE_EXCEPTIONS = os.environ.get('DEBUG_PROPAGATE_EXCEPTIONS', default=False)
 
 # Custom settings
 STAR_RATINGS_STAR_HEIGHT = 20
@@ -294,6 +303,5 @@ ACCOUNT_FORMS = {
     'user_token': 'allauth.account.forms.UserTokenForm',
 }
 
-PAYSTACK_PUBLIC_KEY = env('PAYSTACK_PUBLIC_KEY')
-PAYSTACK_SECRET_KEY = env('PAYSTACK_SECRET_KEY')
+
 

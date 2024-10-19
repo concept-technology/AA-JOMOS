@@ -20,3 +20,10 @@ def get_trending_products(trending_products_by_category, category_slug):
 @register.simple_tag
 def get_categories():
     return Category.objects.all()
+
+@register.filter
+def multiply(value, arg):
+    try:
+        return float(value) * float(arg)
+    except (ValueError, TypeError):
+        return ''

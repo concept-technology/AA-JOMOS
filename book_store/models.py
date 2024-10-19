@@ -14,6 +14,25 @@ from django.db.models import Avg
 from django.urls import reverse
 from django.db.models import F, OuterRef, Subquery
 from django.db.models import Avg, Count, Sum
+from django.utils.http import urlencode
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+from delivery.models import DeliveryLocations
+from paystack_api.models import Payment
+from django.core.exceptions import ValidationError
+from phonenumber_field.modelfields import PhoneNumberField
+from django.contrib.auth.models import User
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    phone_number = PhoneNumberField(region='NG', blank=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+
+    otp = models.CharField(max_length=6, blank=True, null=True)
+    is_phone_verified = models.BooleanField(default=False)
+    def __str__(self):
+        return self.user.username
+
 category_choices = (
         ('new', 'new'),
         ('featured', 'featured'),
@@ -40,8 +59,9 @@ gender_choices =(
     ('Male', 'male'),
     ('Female', 'female'),
 )
+from django.contrib.auth.models import AbstractUser
 
-
+#   
 class SizeManager(models.Manager):
     def get_top_discounted_sizes(self, limit=3):
         return self.annotate(
@@ -59,13 +79,13 @@ class ProductManager(models.Manager):
 
     
     @staticmethod
-    def get_top_selling_by_category():
+    def get_top_selling_by_category(limit=10):
         # Ensure products have at least one sale
         return Product.objects.annotate(
             total_quantity_sold=Sum('quantity_sold')
-        ).filter(total_quantity_sold__gt=0).order_by('-total_quantity_sold')
+        ).filter(total_quantity_sold__gt=0).order_by('-total_quantity_sold')[:limit]
 
-    def get_products_by_label(self, limit=5):
+    def get_products_by_label(self, limit=10):
         labels = [choice[0] for choice in label_choices]
         products_by_label = []
 
@@ -96,7 +116,10 @@ class ProductManager(models.Manager):
         
         return self.annotate(
             top_discount_amount=Subquery(size_subquery)
-        ).order_by('-top_discount_amount')[:limit]          
+        ).order_by('-top_discount_amount')[:limit]   
+        
+        
+               
 class Category(models.Model):
     title = models.CharField(max_length=255,)
     slug =models.SlugField(default='')
@@ -115,6 +138,14 @@ class Category(models.Model):
 
     
 
+class Color(models.Model):
+    name = models.CharField(max_length=50)
+    img  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
+    stock = models.IntegerField(default =1,blank=True, null=True) 
+    is_available = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
 
  
 class Size(models.Model):
@@ -122,27 +153,18 @@ class Size(models.Model):
     price = models.IntegerField(default=0, blank=True,null=True)
     discount_price = models.IntegerField(default=0)
     wholesale_price = models.IntegerField(default=0)
-    quantity = models.IntegerField(default=1)
+    pieces = models.IntegerField(default=0)
     objects = SizeManager()
- 
+    product_colors = models.ManyToManyField(Color, through='ProductSizeColor', related_name='size_colors')
     def __str__(self) -> str:
         return self.size
 
-class Color(models.Model):
-    name = models.CharField(max_length=50)
-    img  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
-    quantity = models.IntegerField(default =1,blank=True, null=True) 
-    is_available = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.name
-
+    
 
 
 class Product(models.Model):
-    title = models.CharField(max_length=255)
-    description= models.TextField(max_length=1000)
-    additional_information= models.TextField(max_length=1000, default='')
+    title = models.CharField(max_length=100)
+    description= models.TextField(max_length=255,)
     feature1 =  models.CharField(max_length=255, blank=True,null=True)
     feature2 =  models.CharField(max_length=255,blank=True,null=True)
     feature3 =  models.CharField(max_length=255,blank=True,null=True)
@@ -165,7 +187,7 @@ class Product(models.Model):
     specification10 =  models.CharField(max_length=255,blank=True,null=True)
     
     size = models.ManyToManyField(Size, related_name='products', through='ProductSizeColor') 
-    img_1  = models.ImageField(upload_to='static/media/img', default='img')
+    img_1  = models.ImageField(upload_to='static/media/img', default='img', blank=True,null=True)
     img_2  = models.ImageField(upload_to='static/media/img', default='img', blank=True, null=True)
     img_3  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
     img_4  = models.ImageField(upload_to='static/media/img', default='img',blank=True, null=True)
@@ -187,7 +209,9 @@ class Product(models.Model):
     def is_on_sale(self):
         return self.discount_price > 0
     
-    
+    @property
+    def total_stock(self):
+        return self.color.aggregate(total_stock=Sum('stock'))['total_stock'] or 0
     @staticmethod
     def get_products_on_sale():
         return Product.objects.filter(label='sale')  # Filter products with discount price
@@ -201,14 +225,65 @@ class Product(models.Model):
     def get_deal_of_the_day_products():
         return Product.objects.filter(is_deal_of_the_day=True)[:1]
 
+    @staticmethod
+    def get_top_selling_by_category():
+        categories = Category.objects.all()
+        top_selling = {}
+        for category in categories:
+            # Fetch products with quantity_sold greater than 0 and order them by quantity_sold
+            top_selling_products = Product.objects.filter(
+                category=category,
+                quantity_sold__gt=0
+            ).order_by('-quantity_sold')[:5]
+
+            # If the queryset is empty, skip the category
+            if top_selling_products.exists():
+                top_selling[category.title] = top_selling_products
+            else:
+                top_selling[category.title] = None  # or [] to indicate no top-selling products
+
+        return top_selling
+
     
+    
+    def get_full_url(self):
+        # Assuming you're using the request object to get the full URL
+        from django.contrib.sites.models import Site
+        current_site = Site.objects.get_current()
+        return f"https://{current_site.domain}{self.get_absolute_url()}"
+
+    def get_facebook_share_url(self):
+        share_url = self.get_full_url()
+        return f"https://www.facebook.com/sharer/sharer.php?{urlencode({'u': share_url})}"
+
+    def get_twitter_share_url(self):
+        share_url = self.get_full_url()
+        text = f"Check out this product: {self.title}"
+        return f"https://twitter.com/intent/tweet?{urlencode({'url': share_url, 'text': text})}"
+
+    def get_whatsapp_share_url(self):
+        share_url = self.get_full_url()
+        text = f"Check out this product: {self.title} - {share_url}"
+        return f"https://api.whatsapp.com/send?{urlencode({'text': text})}"
+
+    def get_linkedin_share_url(self):
+        share_url = self.get_full_url()
+        return f"https://www.linkedin.com/shareArticle?{urlencode({'url': share_url, 'title': self.title})}"
+
+    def get_email_share_url(self):
+        share_url = self.get_full_url()
+        subject = f"Check out this product: {self.title}"
+        body = f"Check out this product on our website: {self.title} - {share_url}"
+        return f"mailto:?{urlencode({'subject': subject, 'body': body})}"
+
+
+
     @staticmethod
     def get_top_rated_products():
-        # Ensure products have at least one review
         return Product.objects.annotate(
             average_rating=Avg('ratings__rating'),
             review_count=Count('ratings')
-        ).filter(review_count__gt=0).order_by('-average_rating')
+        ).filter(review_count__gt=0).order_by('-average_rating')[:5]
 
     def get_stock_status(self):
         stock = Stock.objects.filter(product=self).first()
@@ -259,67 +334,16 @@ class Product(models.Model):
         return next_product
     
 class ProductSizeColor(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_colors')
-    size = models.ForeignKey(Size, on_delete=models.CASCADE, related_name='product_colors')
-    color = models.ForeignKey(Color, on_delete=models.CASCADE, blank=True,null= True, related_name='product_colors')
-
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_size_colors')
+    size = models.ForeignKey(Size, on_delete=models.CASCADE, related_name='size_product_colors')
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='color_product_colors', default='')
     class Meta:
         unique_together = ('product', 'size', 'color')
         
 
     def __str__(self):
         return f'{self.product.title} - {self.size.size} - {self.color.name if self.color.name else None}'
-      
-# class Cart(models.Model):
-#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', null=True, blank=True)
-#     product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='product')
-#     quantity = models.IntegerField(default =1) 
-#     is_ordered = models.BooleanField(default=False)  
-#     is_in_cart = models.BooleanField(default=False)
-#     cart_id = models.UUIDField(default=uuid.uuid4,)
-#     session_key = models.CharField(max_length=40, null=True, blank=True)
-#     size = models.ForeignKey(Size, on_delete=models.CASCADE, blank=True, null=True)
-#     color = models.ForeignKey(Color, on_delete=models.CASCADE, blank=True, null=True)
-#     def get_discount_price(self):
-#         return self.quantity * self.product.discount_price
-
-    
-#     def get_normal_price(self):
-#         return self.quantity * self.product.price
-            
-#     def get_amount_saved(self):
-#         return self.get_normal_price() - self.get_discount_price()
-    
-#     def get_price_tag(self):
-#         discount_price = self.product.discount_price
-#         normal_price = self.product.price
-#         if discount_price:
-#             return discount_price
-#         return normal_price
-
-   
-#     def get_total_price(self):
-#         if self.get_discount_price():
-#             return self.get_discount_price()
-#         return self.get_normal_price()
-        
-#     def add_quantity(self):
-#         qty = self.quantity
-#         qty +=1
-#         return qty
-    
-#     def __str__(self):
-#         price = self.product.price
-#         dis_count_price = self.product.discount_price
-#         title = self.product.title
-#         if not dis_count_price:
-#             return f"item: {title}, price: {price}, quantity: {self.quantity}, color:{self.color.name}, size {self.size.size}"        
-#         return f"item:{title} price: {dis_count_price}, quantity: {self.quantity}, color: {self.color.name if self.color else None}, size {self.size.size}"
-            
-
-#     def get_title(self):
-#         return self.product.title
-
+ 
 
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
@@ -332,6 +356,7 @@ class Cart(models.Model):
     size = models.ForeignKey(Size, on_delete=models.CASCADE, blank=True, null=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, blank=True, null=True)
 
+
     def get_discount_price(self):
         if self.size and self.size.discount_price:
             return self.quantity * self.size.discount_price
@@ -341,6 +366,22 @@ class Cart(models.Model):
         if self.size:
             return self.quantity * self.size.price
         return 0
+
+    def get_total_price(self):
+        if self.size:
+            return self.get_discount_price()
+        return self.get_normal_price()
+    
+    
+    def get_discount_price(self):
+        if self.size and self.size.discount_price:
+            return self.quantity * self.size.discount_price
+        return self.quantity * self.size.price
+
+    # def get_normal_price(self):
+    #     if self.size:
+    #         return self.quantity * self.size.price
+    #     return 0
 
     def get_amount_saved(self):
         return self.get_normal_price() - self.get_discount_price()
@@ -354,20 +395,35 @@ class Cart(models.Model):
             return normal_price
         return 0
 
+
     def get_total_price(self):
         if self.size:
-            return self.get_discount_price()
-        return self.get_normal_price()
+            size = self.size
+            product = self.product
+            quantity = self.quantity
+            # Apply wholesale price if quantity meets or exceeds the minimum order
+            if size.pieces >= product.minimum_order:
+                price = size.wholesale_price
+            else:
+                # Check if retail price or discount price should be applied
+                if size.discount_price:  # If there's a discount price, apply it
+                    price = size.discount_price
+                else:
+                    price = size.price  # Apply retail price if no discount is available
 
+            return price * quantity  # Return the price based on the quantity
+        return 0
+    
     def add_quantity(self):
         self.quantity += 1
         return self.quantity
 
     def __str__(self):
-        price = self.size.discount_price if self.size.discount_price else self.size.price
-        # discount_price = self.size.discount_price if self.size else "N/A"
-        title = self.product.title
-        return f"item: {title}, price: {price }, quantity: {self.quantity}, color: {self.color.name if self.color else None}, size {self.size.size if self.size else None}"
+        if self.size:  # Check if size is not None
+            price = self.size.discount_price if self.size.discount_price else self.size.price
+        else:
+            price = "No size available"  # Handle the case where size is None
+        return f"{self.product.title} - {price}"
 
     def get_title(self):
         return self.product.title
@@ -377,10 +433,6 @@ address_choices =(
     ('billing', 'billing Address')
 )
 
-phone_regex = RegexValidator(
-    regex=r'^\+?1?\d{9,15}$',
-    message="Phone number  must be entered in the format: '+999999999'. Up to 15 digits allowed."
-)
 
 class CartColor(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
@@ -389,54 +441,28 @@ class CartColor(models.Model):
     def __str__(self) -> str:
         return f"{self.color.name} {self.quantity}"
 
+
 class CustomersAddress(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', blank=True, null=True )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='', blank=True, null=True , related_name='users')
     street_address = models.CharField(max_length=300)
     apartment = models.CharField(max_length=255)
-    town = models.CharField(max_length=255)
-    state = models.CharField(max_length=255)
-    telephone = models.CharField(validators=[phone_regex], max_length=17, blank=True)
+    town = models.CharField(max_length=50, default='')
+    city = models.CharField(max_length=50, default='')
+    state = models.CharField(max_length=50, default='')
+    telephone = PhoneNumberField(region='NG')
     zip_code = models.CharField(max_length=20)
-    # country = CountryField(multiple=False)
-    country = models.CharField(max_length=20, default='Nigeria')
+    country = CountryField(blank_label='(select country)')
+    # country = models.CharField(max_length=20, default='Nigeria')
     message = models.TextField(max_length=500, null=True, blank=True)
     # payment_option = models.CharField(max_length=255, choices=payment_choices, blank=True,null=True)
-   
+  
     def __str__(self):
-       return f"{self.user.username}:   address is {self.street_address}" 
+       return f"{self.street_address}, {self.apartment}, {self.telephone}, {self.state}, {self.zip_code}" 
    
     def get_absolute_url(self):
         return reverse("store:update-address", kwargs={"pk": self.pk})
     
-    
-class Payment(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='' )
-    amount = models.PositiveIntegerField()
-    ref = models.CharField(max_length=200)
-    email = models.EmailField()
-    verified = models.BooleanField(default=False)
-    date_created = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ('-date_created',)
-
-    def __str__(self):
-        return f"Payment: {self.amount}"
-
-    def save(self, *args, **kwargs):
-        while not self.ref:
-            ref = secrets.token_urlsafe(10)
-            object_with_similar_ref = Payment.objects.filter(ref=ref)
-            if not object_with_similar_ref:
-                self.ref = ref
-
-        super().save(*args, **kwargs)
-        
-        
-    def amount_value(self):
-        return int(self.amount) * 100
-
-    
+  
    
    
 
@@ -458,13 +484,7 @@ del_status = (
     ('delivered', 'delivered'),
 )      
 
-class AbujaLocation(models.Model):
-    location = models.CharField(max_length=255)
-    delivery_cost = models.DecimalField(max_digits=10, decimal_places=2, default=1000)
-    days = models.IntegerField(default=2)
-    
-    def __str__(self):
-        return self.location
+
  
 class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default='' ,null=True, blank=True)
@@ -480,11 +500,14 @@ class Order(models.Model):
     refund_granted = models.BooleanField(default=False)
     date = models.DateTimeField(default=timezone.datetime.now())
     delivery_status = models.CharField(max_length=255, default='Processing',choices=del_status)
-    abuja_location = models.ForeignKey(AbujaLocation, on_delete=models.SET_NULL, blank=True, null=True)
+    delivery_location = models.ForeignKey(DeliveryLocations, on_delete=models.SET_NULL, blank=True, null=True)
     cart_id = models.UUIDField(null=True, blank=True)
     session_key = models.CharField(max_length=40, null=True, blank=True)
     invoice_number = models.CharField(max_length=50, blank=True, null=True)
-
+    approved = models.BooleanField(default=False)
+    user_cancelled = False
+    
+    
     def save(self, *args, **kwargs):
         # Generate invoice number if not set
         if not self.invoice_number:
@@ -502,13 +525,13 @@ class Order(models.Model):
             return items.quantity
         return None
     
-    def get_total(self):
-        total = 0
-        for item in self.product.all():
-            total += item.get_total_price()
-        if self.coupon:
-            total -= self.coupon.amount
-        return total 
+    # def get_total(self):
+    #     total = 0
+    #     for item in self.product.all():
+    #         total += item.get_total_price()
+    #     if self.coupon:
+    #         total -= self.coupon.amount
+    #     return total 
     
     def get_coupon(self):
  
@@ -527,18 +550,35 @@ class Order(models.Model):
             return '-'
         return queryset
     
-        # get the price in the order
-    def total_price(self):
-        return self.get_total()
-    
- 
-    def get_delivery_cost(self):# calculates the delivery cost
-        if self.abuja_location:
-            return self.abuja_location.delivery_cost
-        return 0
+
+
+    def get_total(self):
+        total = 0
+        for cart_item in self.product.all():
+            # Use the total price from the cart item's get_total_price method
+            total += cart_item.get_total_price()
+
+        # Apply coupon discount if available
+        if self.coupon:
+            total -= self.coupon.amount
+
+        return total
 
     def get_total_with_delivery(self):
         return self.get_total() + self.get_delivery_cost()
+
+    def get_delivery_cost(self):
+        if self.delivery_location:
+            return self.delivery_location.delivery_cost
+        return 0
+    
+    
+    def get_delivery_cost(self):
+        if self.delivery_location:
+            return self.delivery_location.delivery_cost
+        return 0
+
+
 
 
 class Refunds(models.Model):
@@ -587,16 +627,9 @@ class Wishlist(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     session_key = models.CharField(max_length=40, null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    added_at = models.DateTimeField(auto_now_add=True)
-  
-  
-   
-  
+    added_at = models.DateTimeField(auto_now_add=True) 
     class Meta:
         unique_together = ('user', 'product', 'session_key')
-        
-        
-
     def __str__(self):
         return f"{self.user or self.session_key} - {self.product.title}"
     
@@ -607,3 +640,10 @@ class Stock(models.Model):
         return f"{self.product.title} {self.quantity}"
 
 
+
+class EmailSubscription(models.Model):
+    email = models.EmailField(unique=True)
+    date= models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.email

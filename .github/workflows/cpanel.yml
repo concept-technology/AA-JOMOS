@@ -1,0 +1,62 @@
+name: Build and deploy to cPanel via lftp
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - uses: actions/checkout@v4
+
+      # Set up Python
+      - name: Set up Python version
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      # Activate virtual environment and install dependencies
+      - name: Activate virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          
+
+      # Collect static files
+      - name: install dependencies
+        run: pip install -r requirements.txt
+
+      # Collect static files
+      - name: Collect static files
+        run: python manage.py collectstatic --noinput
+
+      # Install lftp for FTP deployment
+      - name: Install lftp
+        run: sudo apt-get install lftp -y
+
+      # Verify lftp installation
+      - name: Check lftp version
+        run: lftp --version
+
+      # Deploy to cPanel using plain FTP via lftp
+      - name: Deploy via lftp (Plain FTP)
+        env:
+          FTP_HOST: ${{ secrets.CPANEL_FTP_HOST }}
+          FTP_USER: ${{ secrets.CPANEL_FTP_USER }}
+          FTP_PASS: ${{ secrets.CPANEL_FTP_PASS }}
+          FTP_PORT: ${{ secrets.CPANEL_FTP_PORT }}
+        run: |
+          echo "Starting deployment via lftp (Plain FTP)"
+          lftp -c "
+          set ftp:ssl-allow false;
+          set ftp:passive-mode true;
+          set net:timeout 10;
+          set net:max-retries 1;
+          set net:reconnect-interval-base 5;
+          open -u $FTP_USER,$FTP_PASS ftp://$FTP_HOST:$FTP_PORT;
+          mirror -R --exclude-glob venv --exclude-glob *.exe --exclude-glob *.pyc --exclude-glob __pycache__ --exclude-glob *.log --delete --no-symlinks --parallel=10 --only-newer ./ /public_html" 
+          echo "Deployment completed"

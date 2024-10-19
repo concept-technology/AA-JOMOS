@@ -1,89 +1,96 @@
 {% extends 'store/base.html' %}
 {% load static %}
 {% load humanize %}
+{% block title %}
+
+<title>JOMOS | Home </title>
+<meta name="keywords" content="aajomos nigeria lid ">
+<meta name="description" content="Explore a wide range of books, stationery, and office supplies at aajomos. Shop bestsellers, academic books, and quality stationery items.">
+<meta name="keywords" content="books, stationery, office supplies, online book store, bestsellers, academic books, notebooks, pens, art supplies">
+<meta name="author" content="aajomos nigeria limited">
+<meta property="og:title" content="Shop Books & Stationery | Your Store Name">
+<meta property="og:description" content="Find books, notebooks, pens, and a variety of stationery products at Your Store Name. Fast shipping and great deals!">
+<meta property="og:image" content="{{ site_settings.site_logo.url }}"> <!-- URL to a preview image -->
+<meta property="og:url" content="https://aajomos.com">
+<meta property="og:type" content="website">
+<meta name="robots" content="index, follow">
+
+<!-- Canonical Tag to Avoid Duplicate Content -->
+<link rel="canonical" href="https://aajomos.com">
+
+{% endblock title %}
  {% block content %}  
  {% load custom_filters %}
  {% load star_rating %}
-   
+ <!-- <img src="{% static  'assets/images/backgrounds/book3.jpg' %}" alt="Image Description"> -->
+  
         <main>           
-          <div class="intro-section pt-3 pb-3 mb-2">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <div class="intro-slider-container slider-container-ratio mb-2 mb-lg-0">
-                                <div class="intro-slider owl-carousel owl-simple owl-dark owl-nav-inside" data-toggle="owl" data-owl-options='{
-                                    "nav": false, 
-                                    "dots": true,
-                                    "responsive": {
-                                        "768": {
-                                            "nav": true,
-                                            "dots": false
-                                        }
-                                    }
-                                }'>
-                                
-                        
-                                    <!-- discounted products -->
-                             
-                                <div class="intro-slide">
-                                    <figure class="slide-imagex">
-                                        <picture>
-                                            <source media="(max-width: 480px)" srcset="{{product.img_1.url}}">
-                                            <img src="{% static 'assets/images/aajomoslogo.jpg' %}" alt="Image Description">
-                                        </picture>
-                                    </figure><!-- End .slide-image -->
 
-                                    <div class="intro-content">
-                                        <h3 class="intro-subtitle text-primary">welcome to</h3><!-- End .h3 intro-subtitle -->
-                                        <h1 class="intro-title">
-                                            A.A JOMOS 
-                                        </h1><!-- End .intro-title -->
+            <div class="intro-slider owl-carousel owl-theme owl-nav-inside owl-light" data-toggle="owl" 
+            data-owl-options='{
+                "dots": true,
+                "nav": false, 
+                "responsive": {
+                    "1200": {
+                        "nav": true,
+                        "dots": false
+                    }
+                }
+            }'>
+            <div class="intro-slide" style="background-image: url('{% static 'assets/images/backgrounds/book4.jpg' %}');">
+                <div class="container intro-content">
+                    <div class="row justify-content-end">
+                        <div class="col-auto col-sm-7 col-md-6 col-lg-5">
+                            <h3 class="intro-subtitle text-primary">welcome</h3><!-- End .h3 intro-subtitle -->
+                            <h1 class="intro-title">AA JOOMOS<br>Book Store</h1><!-- End .intro-title -->
 
-                                        <div class="intro-price">
-                                            <sup>Book store</sup>
-                                            <span class="text-primary">
-                                                &<sup>stationary</sup>
-                                            </span>
-                                        </div><!-- End .intro-price -->
+                            <div class="intro-price">
+                                <sup>AND</sup>
+                                <span class="text-primary">
+                                    Stationary<sup></sup>
+                                </span>
+                            </div><!-- End .intro-price -->
 
-                                        <a href="{% url 'store:categories-list' %}" class="btn btn-primary btn-round">
-                                            <span>explore</span>
-                                            <i class="icon-long-arrow-right"></i>
-                                        </a>
-                                    </div><!-- End .intro-content -->
-                                </div><!-- End .intro-slide -->
-                           
-                       
-                        
-                            </div><!-- End .intro-slider owl-carousel owl-simple -->
-                            
-                                <span class="slider-loader"></span><!-- End .slider-loader -->
-                            </div><!-- End .intro-slider-container -->
-                        </div><!-- End .col-lg-8 -->
-
-                        <div class="col-lg-4">
-                            <div class="intro-banners">
-                                {% for product in top_products %}                                   
-                                <div class="banne mb-lg-1 mb-xl-2 d-flex">
-                                    <div class="m-1">
-
-                                        <a href="#">
-                                            <img src="{{product.img_1.url}}" alt="Banner" style="width: 80px;">
-                                            <h4 class="banner-subtitle d-lg-none d-xl-block"><a href="#">Top books</a></h4><!-- End .banner-subtitle -->
-                                        </a>
-                                    </div>
-
-                                    <div class="banner-conten m-3">
-                                        <h3 class="banner-title"><a href="#"> <br>{{product.title}}</a></h3><!-- End .banner-title -->
-                                        <a href="{{product.get_absolute_url}}" class="banner-link">Shop Now<i class="icon-long-arrow-right"></i></a>
-                                    </div><!-- End .banner-content -->
-                                </div><!-- End .banner -->
-                                {%endfor%}      
-                            </div><!-- End .intro-banners -->
-                        </div><!-- End .col-lg-4 -->
+                            <a href="{% url 'store:categories-list' %}" class="btn btn-primary btn-round">
+                                <span>Shop More</span>
+                                <i class="icon-long-arrow-right"></i>
+                            </a>
+                        </div><!-- End .col-md-6 offset-md-6 -->
                     </div><!-- End .row -->
-                </div><!-- End .container -->
-            </div><!-- End .intro-section -->
+                </div><!-- End .intro-content -->
+            </div><!-- End .intro-slide -->
+
+
+            {% for product in top_rated_products %}                             
+            <div class="intro-slide" style="background-image: url('{{product.img_1.url}}'); background-position: left;  background-repeat: no-repeat;">
+                <div class="container intro-content">
+                    <div class="row justify-content-end">
+                        <div class="col-auto col-sm-7 col-md-6 col-lg-5">
+                            <h3 class="intro-subtitle text-third">Top rated products</h3><!-- End .h3 intro-subtitle -->
+                            <h1 class="intro-title">{{product.title}}</h1>
+                            <!-- <h1 class="intro-title">Dre Studio 3</h1>End .intro-title -->
+                            
+                            {% for size in product.size.all %}
+                            <div class="intro-price">
+                                <sup class="intro-old-price"></sup>
+                                <span class="text-third">
+                                    &#8358;{{ size.discount_price|floatformat:2|intcomma }}<sup></sup>
+                                </span>
+                            </div><!-- End .intro-price -->
+                            {%endfor%}
+                            <a href="{{product.get_absolute_url}}" class="btn btn-primary btn-round">
+                                <span>Buy now</span>
+                                <i class="icon-long-arrow-right"></i>
+                            </a>
+                        </div><!-- End .col-lg-11 offset-lg-1 -->
+                    </div><!-- End .row -->
+                </div><!-- End .intro-content -->
+            </div><!-- End .intro-slide -->
+            {%endfor%}
+
+
+     
+        </div><!-- End .intro-slider owl-carousel owl-simple -->
 
             <div class="container featured">
                 <ul class="nav nav-pills nav-border-anim nav-big justify-content-center mb-3" role="tablist">
@@ -93,9 +100,9 @@
                     <li class="nav-item">
                         <a class="nav-link" id="products-sale-link" data-toggle="tab" href="#products-sale-tab" role="tab" aria-controls="products-sale-tab" aria-selected="false">On Sale</a>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link" id="products-top-link" data-toggle="tab" href="#products-top-tab" role="tab" aria-controls="products-top-tab" aria-selected="false">Top Rated</a>
-                    </li>
+                    </li> -->
                 </ul>
 
                 <div class="tab-content tab-content-carousel">
@@ -120,22 +127,19 @@
                                         "items":4
                                     }
                                 }
-                            }'>
-
-                            
+                            }'>                           
                             {% for product in featured_products %}                             
-                            <div class="product product-2">
+                            <div class="product product-2" style="padding: 20px;">
                                 <figure class="product-media">
                                     <a href="{{product.get_absolute_url}}">
                                         <img src="{{product.img_1.url}}" alt="Product image" class="product-image">
                                     </a>
-
                                     <div class="product-action-vertical">
                                         <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
                                     </div><!-- End .product-action -->
 
                                     <div class="product-action product-action-dark">
-                                        {% if product.get_stock_status == 0 %}                                           
+                                        {% if product.total_stock == 0 %}                                           
                                         <span class="product-label label-out">Out of Stock</span>
                                         {%else%}
                                         <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
@@ -155,15 +159,15 @@
                                     <div class="product-price">                
                                         {% for size in product.size.all  %}                     
                                         {% if forloop.counter == 1 %}
+                                        <span class="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
                                         <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                        <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
                                         {% endif %}
                                         {% endfor %}
-                                        <span class="out-text">{{product.get_stock_status}} in stock</span>
+                                        <span class="out-text">{{product.total_stock}} in stock</span>
                                     </div><!-- End .product-price -->
         
                                     <div class="ratings-container">
-                                        <div class="ratings">
+                                        <div class="ratings,">
 
                                             <style>
                                                 #star-ratings {
@@ -172,10 +176,8 @@
                                                 }
                                             </style>
                                             <div id="star-ratings">
-                                                <p id="average-rating">
-                                                    {{ product.average_rating|floatformat:1 }}
-                                                </p>
                                                 {% star_rating product.average_rating %}
+                                                {{ product.average_rating|floatformat:1 }}
                                             </div>
                                             <!-- <div class="ratings-val" style="width: 60%;"></div>End .ratings-val -->
                                         </div><!-- End .ratings -->
@@ -210,19 +212,19 @@
                                     }
                                 }
                             }'>
-                            {% for product in top_rated_products %}
-                            <div class="product product-2">
+                                                   
+                            {% for product in top_rated_products %}                             
+                            <div class="product product-2" style="padding: 20px;">
                                 <figure class="product-media">
                                     <a href="{{product.get_absolute_url}}">
                                         <img src="{{product.img_1.url}}" alt="Product image" class="product-image">
                                     </a>
-
                                     <div class="product-action-vertical">
                                         <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
                                     </div><!-- End .product-action -->
 
                                     <div class="product-action product-action-dark">
-                                        {% if product.get_stock_status == 0 %}                                           
+                                        {% if product.total_stock == 0 %}                                           
                                         <span class="product-label label-out">Out of Stock</span>
                                         {%else%}
                                         <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
@@ -236,26 +238,40 @@
                                     <div class="product-cat">
                                         <a href="#">{{product.category.title}}</a>
                                     </div><!-- End .product-cat -->
-                                    <h3 class="product-title"><a href="product.html">{{product.title}}</a></h3><!-- End .product-title -->
+                                    <!-- <h3 class="product-title"><a href="product.html">GoPro - HERO7 Black HD Waterproof Action</a></h3>End .product-title -->
+                                  
+                                    <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{product.title}}</a></h3><!-- End .product-title -->
                                     <div class="product-price">                
                                         {% for size in product.size.all  %}                     
                                         {% if forloop.counter == 1 %}
+                                        <span class="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
                                         <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                        <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
                                         {% endif %}
                                         {% endfor %}
-                                        <span class="out-text">{{product.get_stock_status}} in stock</span>
+                                        <span class="out-text">{{product.total_stock}} in stock</span>
                                     </div><!-- End .product-price -->
         
                                     <div class="ratings-container">
-                                        <div id="star-ratingsx"  style="width: 100%;">
-                                            {% star_rating product.average_rating %}
+                                        <div class="ratings,">
+
+                                            <style>
+                                                #star-ratings {
+                                                    font-size: 20px;
+                                                    color: gold;
+                                                }
+                                            </style>
+                                            <div id="star-ratings">
+                                                {% star_rating product.average_rating %}
+                                                {{ product.average_rating|floatformat:1 }}
+                                            </div>
+                                            <!-- <div class="ratings-val" style="width: 60%;"></div>End .ratings-val -->
                                         </div><!-- End .ratings -->
+                                        <!-- <span class="ratings-text">( 2 Reviews )</span> -->
                                     </div><!-- End .rating-container -->
                                 </div><!-- End .product-body -->
-                            </div><!-- End .product -->
-                            {%endfor %}
-                          
+                            </div><!-- End .product -->                 
+                            {% endfor %}
+
                 
                         </div><!-- End .owl-carousel -->
                     </div><!-- .End .tab-pane -->
@@ -282,44 +298,47 @@
                                 }
                             }'>
 
-                            {% for product in top_rated_products %}
-                            <div class="product product-2">
+                                                   
+                            {% for product in products_on_sale %}                             
+                            <div class="product product-2" style="padding: 20px;">
                                 <figure class="product-media">
                                     <a href="{{product.get_absolute_url}}">
                                         <img src="{{product.img_1.url}}" alt="Product image" class="product-image">
                                     </a>
-
                                     <div class="product-action-vertical">
                                         <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
                                     </div><!-- End .product-action -->
 
-                                    <div class="product-action product-action-dark">                                        
-                                        {% if product.get_stock_status == 0 %}                                           
+                                    <div class="product-action product-action-dark">
+                                        {% if product.total_stock == 0 %}                                           
                                         <span class="product-label label-out">Out of Stock</span>
                                         {%else%}
-                                        <a href="#" class="btn-product btn-cart" title="view product"><span>{{product.title}}</span></a>
+                                        <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
                                         {% endif %}
+                                        <!-- <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a> -->
                                         <a href="popup/quickView.html" class="btn-product btn-quickview" title="Quick view"><span>quick view</span></a>
                                     </div><!-- End .product-action -->
                                 </figure><!-- End .product-media -->
 
-                                <div class="product-body m-5">
+                                <div class="product-body">
                                     <div class="product-cat">
-                                        <a href="{{get_absolute_url}}">{{product.category.title}}</a>
+                                        <a href="#">{{product.category.title}}</a>
                                     </div><!-- End .product-cat -->
+                                    <!-- <h3 class="product-title"><a href="product.html">GoPro - HERO7 Black HD Waterproof Action</a></h3>End .product-title -->
+                                  
                                     <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{product.title}}</a></h3><!-- End .product-title -->
                                     <div class="product-price">                
                                         {% for size in product.size.all  %}                     
                                         {% if forloop.counter == 1 %}
+                                        <span class="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
                                         <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                        <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
                                         {% endif %}
                                         {% endfor %}
-                                        <span class="out-text">{{product.get_stock_status}} in stock</span>
+                                        <span class="out-text">{{product.total_stock}} in stock</span>
                                     </div><!-- End .product-price -->
         
                                     <div class="ratings-container">
-                                        <div c>
+                                        <div class="ratings,">
 
                                             <style>
                                                 #star-ratings {
@@ -328,16 +347,17 @@
                                                 }
                                             </style>
                                             <div id="star-ratings">
-                                                <p id="average-rating">
-                                                    {{ product.average_rating|floatformat:1 }}
-                                                </p>
                                                 {% star_rating product.average_rating %}
+                                                {{ product.average_rating|floatformat:1 }}
                                             </div>
+                                            <!-- <div class="ratings-val" style="width: 60%;"></div>End .ratings-val -->
                                         </div><!-- End .ratings -->
+                                        <!-- <span class="ratings-text">( 2 Reviews )</span> -->
+                                    </div><!-- End .rating-container -->
                                 </div><!-- End .product-body -->
-                            </div><!-- End .product -->
-                        </div><!-- End .owl-carousel -->
-                        {% endfor %}
+                            </div><!-- End .product -->                 
+                            {% endfor %}
+
                     </div><!-- .End .tab-pane -->
                 </div><!-- End .tab-content -->
             </div><!-- End .container -->
@@ -365,10 +385,7 @@
                 </div><!-- End .cta -->
             </div><!-- End .container -->
 
-            <div class="bg-light deal-container pt-7 pb-7 mb-5">
-                
-                
-                
+            <div class="bg-light deal-container pt-7 pb-7 mb-5">              
                 <div class="container">
                     <div class="heading text-center mb-4">
                         <h2 class="title">Deals & Outlet</h2><!-- End .title -->
@@ -430,11 +447,11 @@
                                                 <div class="product-price">                
                                                     {% for size in product.size.all  %}                     
                                                     {% if forloop.counter == 1 %}
-                                                    <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                                    <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
+                                                    <span class="new-price" id="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
+                                                    <span class="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
                                                     {% endif %}
                                                     {% endfor %}
-                                                    <span class="out-text">{{product.get_stock_status}} in stock</span>
+                                                    <span class="out-text">{{product.total_stock}} in stock</span>
                                                 </div><!-- End .product-price -->
                     
                                                 <div class="ratings-container">
@@ -454,10 +471,7 @@
                                     {% endif %}
 
                                  
-                                    {% if forloop.counter == 2 %}                               
-                              
-                                    
-                                    
+                                    {% if forloop.counter == 2 %}                                      
                                     <div class="col-6">
                                         <div class="product product-2">
                                             <figure class="product-media">
@@ -481,15 +495,14 @@
                                                     <a href="#">Computers & Tablets</a>
                                                 </div><!-- End .product-cat -->
                                                 <h3 class="product-title"><a href="product.html">Apple - Smart Keyboard Folio  for 11-inch iPad Pro</a></h3><!-- End .product-title -->
-                                                <div class="product-price">
-                                                    {% if product.discount_price %}
-                                                    <span class="new-price" id="new-price">&#8358;{{ product.discount_price|floatformat:2|intcomma }}</span>
-                                                    <span class="old-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
-                                                    {% else %}
-                                                    <span class="new-price">&#8358;{{ product.price|floatformat:2|intcomma }}</span>
+                                                <div class="product-price">                
+                                                    {% for size in product.size.all  %}                     
+                                                    {% if forloop.counter == 1 %}
+                                                    <span class="new-price" id="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
+                                                    <span class="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
                                                     {% endif %}
-            
-                                                    <span class="out-text">{{product.get_stock_status}} in stock</span>
+                                                    {% endfor %}
+                                                    <span class="out-text">{{product.total_stock}} in stock</span>
                                                 </div><!-- End .product-price -->
                     
                                                 <div class="ratings-container">
@@ -525,6 +538,7 @@
             <div class="container">
                 <hr class="mt-3 mb-6">
             </div><!-- End .container -->
+            {% if new_products %}                                
  
             <div class="container trending">
                 <div class="heading heading-flex mb-3">
@@ -564,54 +578,65 @@
                                     
                              
                                    
-                                   {% for product in new_products %}                                        
-                                    <div class="product product-2">
-                                        <figure class="product-media">
-                                            <span class="product-label label-circle {{product.label}}">{{product.get_human_readable_label}}</span>
-                                            <a href="{{product.get_absolute_url}}">
-                                                <img src="{{product.img_1.url}}" alt="Product image" class="product-image" style="width: 200px; height: 220px;">
-                                            </a>
+                            {% for product in new_products %}                             
+                            <div class="product product-2" style="padding: 20px;">
+                                <figure class="product-media">
+                                    <a href="{{product.get_absolute_url}}">
+                                        <img src="{{product.img_1.url}}" alt="Product image" class="product-image">
+                                    </a>
+                                    <div class="product-action-vertical">
+                                        <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
+                                    </div><!-- End .product-action -->
 
-                                            <div class="product-action-vertical">
-                                                <a href="{{product.get_add_to_wishlist_url}}" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
-                                            </div><!-- End .product-action -->
+                                    <div class="product-action product-action-dark">
+                                        {% if product.total_stock == 0 %}                                           
+                                        <span class="product-label label-out">Out of Stock</span>
+                                        {%else%}
+                                        <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a>
+                                        {% endif %}
+                                        <!-- <a href="#" class="btn-product btn-cart" title="Add to cart"><span>add to cart</span></a> -->
+                                        <a href="popup/quickView.html" class="btn-product btn-quickview" title="Quick view"><span>quick view</span></a>
+                                    </div><!-- End .product-action -->
+                                </figure><!-- End .product-media -->
 
-                                            <div class="product-action product-action-dark">
-                                                <a href="" class="btn-productx "><span>{{product.title}}</span></a>
-                                                <a href="popup/quickView.html" class="btn-product btn-quickview" title="Quick view"><span>quick view</span></a>
-                                            </div><!-- End .product-action -->
-                                        </figure><!-- End .product-media -->
+                                <div class="product-body">
+                                    <div class="product-cat">
+                                        <a href="#">{{product.category.title}}</a>
+                                    </div><!-- End .product-cat -->
+                                    <!-- <h3 class="product-title"><a href="product.html">GoPro - HERO7 Black HD Waterproof Action</a></h3>End .product-title -->
+                                  
+                                    <h3 class="product-title"><a href="{{product.get_absolute_url}}">{{product.title}}</a></h3><!-- End .product-title -->
+                                    <div class="product-price">                
+                                        {% for size in product.size.all  %}                     
+                                        {% if forloop.counter == 1 %}
+                                        <span class="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
+                                        <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
+                                        {% endif %}
+                                        {% endfor %}
+                                        <span class="out-text">{{product.total_stock}} in stock</span>
+                                    </div><!-- End .product-price -->
+        
+                                    <div class="ratings-container">
+                                        <div class="ratings,">
 
-                                        <div class="product-body">
-                                            <div class="product-cat">
-                                                <a href="#">{{product.category.title}}</a>
-                                            </div><!-- End .product-cat -->
-                                            <h3 class="product-title"><a href="product.get_absolute_url">{{product.title}}</a></h3><!-- End .product-title -->
-                                            <div class="product-price">                
-                                                {% for size in product.size.all  %}                     
-                                                {% if forloop.counter == 1 %}
-                                                <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                                <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
-                                                {% endif %}
-                                                {% endfor %}
-                                                <span class="out-text">{{product.get_stock_status}} in stock</span>
-                                            </div><!-- End .product-price -->
-                
-                                            <div class="ratings-container">
-                                                <div class="ratings">
-                                                    <div class="ratings-val" style="width: 100%;"></div><!-- End .ratings-val -->
-                                                </div><!-- End .ratings -->
-                                                <!-- <span class="ratings-text">( 4 Reviews )</span> -->
-                                            </div><!-- End .rating-container -->
-
-                                            <!-- <div class="product-nav product-nav-dots">
-                                                <a href="#" style="background: #69b4ff;"><span class="sr-only">Color name</span></a>
-                                                <a href="#" style="background: #ff887f;"><span class="sr-only">Color name</span></a>
-                                                <a href="#" class="active" style="background: #333333;"><span class="sr-only">Color name</span></a>
-                                            </div>End .product-nav -->
-                                        </div><!-- End .product-body -->
-                                    </div><!-- End .product -->
-                                    {% endfor %}                    
+                                            <style>
+                                                #star-ratings {
+                                                    font-size: 20px;
+                                                    color: gold;
+                                                }
+                                            </style>
+                                            <div id="star-ratings">
+                                                {% star_rating product.average_rating %}
+                                                {{ product.average_rating|floatformat:1 }}
+                                            </div>
+                                            <!-- <div class="ratings-val" style="width: 60%;"></div>End .ratings-val -->
+                                        </div><!-- End .ratings -->
+                                        <!-- <span class="ratings-text">( 2 Reviews )</span> -->
+                                    </div><!-- End .rating-container -->
+                                </div><!-- End .product-body -->
+                            </div><!-- End .product -->                 
+                            {% endfor %}
+                            {%endif%}
                                 </div><!-- End .owl-carousel -->
                             </div><!-- .End .tab-pane -->
                             <div class="tab-pane p-0 fade" id="trending-tv-tab" role="tabpanel" aria-labelledby="trending-tv-link">
@@ -664,11 +689,11 @@
                                             <div class="product-price">                
                                                 {% for size in product.size.all  %}                     
                                                 {% if forloop.counter == 1 %}
-                                                <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                                <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
+                                                <span class="new-price" id="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
+                                                <span class="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
                                                 {% endif %}
                                                 {% endfor %}
-                                                <span class="out-text">{{product.get_stock_status}} in stock</span>
+                                                <span class="out-text">{{product.total_stock}} in stock</span>
                                             </div><!-- End .product-price -->
                 
                                             <div class="ratings-container">
@@ -689,9 +714,7 @@
                                         </div><!-- End .product-body -->
                                     </div><!-- End .product -->
                                     {%endfor%}
-                                    {% endif %}
-                                
-                        
+                                    {% endif %}           
                                 </div><!-- End .owl-carousel -->
                             </div><!-- .End .tab-pane -->
               
@@ -749,53 +772,52 @@
                                     }
                                 }
                             }'>
-                            {% for category_data in top_selling_by_category %}
-                            {% for product in category_data.products %}
-                            <div class="product product-2">
-                                <figure class="product-media">
-                                    <span class="product-label label-circle {{product.label}}">{{product.get_human_readable_label}}</span>
-                                    <a href="{{product.get_absolute_url}}">
-                                        <img src="{{product.img_1.url}}" alt="Product image" class="product-image" style="width: 200px; height: 220px;">
-                                    </a>
-
-                                    <div class="product-action-vertical">
-                                        <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
-                                    </div><!-- End .product-action -->
-
-                                    <div class="product-action product-action-dark">
-                                        <a href="#" class="btn-produc" title="Add to cart"><span>{{product.title}}</a>
-                                        <!-- <a href="popup/quickView.html" class="btn-product btn-quickview" title="Quick view"><span>quick view</span></a> -->
-                                    </div><!-- End .product-action -->
-                                </figure><!-- End .product-media -->
-
-                                <div class="product-body">
-                                    <div class="product-cat">
-                                        <a href="#">{{product.category.title}}</a>
-                                    </div><!-- End .product-cat -->
-                                    <h3 class="product-title"><a href="product.html">{{product.title}}</a></h3><!-- End .product-title -->
-                                    <div class="product-price">                
-                                        {% for size in product.size.all  %}                     
-                                        {% if forloop.counter == 1 %}
-                                        <span class="new-price" id="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
-                                        <span class="old-price">&#8358;{{ size.price|floatformat:2|intcomma }}</span>
-                                        {% endif %}
-                                        {% endfor %}
-                                        <span class="out-text">{{product.get_stock_status}} in stock</span>
-                                    </div><!-- End .product-price -->
-        
-                                    <div class="ratings-container">
-                                        <div id="star-ratings"  style="width: 100%;">
-                                            {% load star_rating %}
-                                            {% star_rating rating.rating %}
-                                        </div><!-- End .ratings -->
-                                    </div><!-- End .rating-container -->
-                                        <!-- <span class="ratings-text">( 4 Reviews )</span> -->
-                                    </div><!-- End .rating-container -->
-                                </div><!-- End .product-body -->
+                            {% for category, products in top_selling_by_category.items %}
+                            {% for product in products %}
+                                <div class="product product-2" style="padding: 10px;">
+                                    <figure class="product-media">
+                                        <span class="product-label label-circle {{ product.label }}">{{ product.get_human_readable_label }}</span>
+                                        <a href="{{ product.get_absolute_url }}">
+                                            <img src="{{ product.img_1.url }}" alt="Product image" class="product-image" style="width: 200px; height: 220px;">
+                                        </a>
+                        
+                                        <div class="product-action-vertical">
+                                            <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to wishlist</span></a>
+                                        </div><!-- End .product-action -->
+                        
+                                        <div class="product-action product-action-dark">
+                                            <a href="#" class="btn-produc" title="Add to cart"><span>{{ product.title }}</a>
+                                        </div><!-- End .product-action -->
+                                    </figure><!-- End .product-media -->
+                        
+                                    <div class="product-body">
+                                        <div class="product-cat">
+                                            <a href="#">{{ product.category.title }}</a>
+                                        </div><!-- End .product-cat -->
+                                        <h3 class="product-title"><a href="product.html">{{ product.title }}</a></h3><!-- End .product-title -->
+                                        <div class="product-price">                
+                                            {% for size in product.size.all %}                     
+                                                {% if forloop.first %}
+                                                    <span class="new-price" id="new-price">&#8358;{{ size.wholesale_price|floatformat:2|intcomma }} - </span>
+                                                    <span class="new-price">&#8358;{{ size.discount_price|floatformat:2|intcomma }}</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <span class="out-text">{{ product.total_stock }} in stock</span>
+                                        </div><!-- End .product-price -->
+                            
+                                        <div class="ratings-container">
+                                            <div id="star-ratings" style="width: 100%;">
+                                                {% load star_rating %}
+                                                {% star_rating product.average_rating %}
+                                                {{ product.average_rating|floatformat:1 }}
+                                            </div><!-- End .ratings -->
+                                        </div><!-- End .rating-container -->
+                                    </div><!-- End .product-body -->
+                                </div><!-- End .product product-2 -->
+                            {% endfor %}
+                        {% endfor %}
+                        
                             </div><!-- End .product -->
-
-                            {% endfor%}
-                            {% endfor%}
                         </div><!-- End .owl-carousel -->
                     </div><!-- .End .tab-pane -->
               
@@ -816,11 +838,11 @@
                                     <h3 class="cta-title">Shop Social</h3><!-- End .cta-title -->
                                     <p class="cta-desc">follow us on our social media platforms</p><!-- End .cta-desc -->  
                                     <div class="social-icons social-icons-colored justify-content-center">
-                                        <a href="#" class="social-icon social-facebook" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
-                                        <a href="#" class="social-icon social-twitter" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
-                                        <a href="#" class="social-icon social-instagram" title="Instagram" target="_blank"><i class="icon-instagram"></i></a>
-                                        <a href="#" class="social-icon social-youtube" title="Youtube" target="_blank"><i class="icon-youtube"></i></a>
-                                        <a href="#" class="social-icon social-pinterest" title="Pinterest" target="_blank"><i class="icon-pinterest"></i></a>
+                                        <a href="{{site_settings.facebook_link}}" class="social-icon social-facebook" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
+                                        <a href="{{ite_settings.twiter_link}}" class="social-icon social-twitter" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
+                                        <a href="{{site_settings.instagram_link}}" class="social-icon social-instagram" title="Instagram" target="_blank"><i class="icon-instagram"></i></a>
+                                        <a href="{{site_settings.youtube_link}}" class="social-icon social-youtube" title="Youtube" target="_blank"><i class="icon-youtube"></i></a>
+                                        <a href="{{site_settings.pinterest_link}}" class="social-icon social-pinterest" title="Pinterest" target="_blank"><i class="icon-pinterest"></i></a>
                                     </div><!-- End .soial-icons -->
                                 </div><!-- End .cta-wrapper -->
                             </div><!-- End .col-lg-6 -->
@@ -829,9 +851,10 @@
                                     <h3 class="cta-title">Get the Latest Deals</h3><!-- End .cta-title -->
                                     <p class="cta-desc">subscribe to our newsletter<br> and receive <span class="text-primary">5% coupon</span> for first shopping</p><!-- End .cta-desc -->
                             
-                                    <form action="#">
+                                    <form method="POST" action="{% url 'store:subscribe_email' %}">
                                         <div class="input-group">
-                                            <input type="email" class="form-control" placeholder="Enter your Email Address" aria-label="Email Adress" required>
+                                            {% csrf_token %}
+                                            <input type="email" class="form-control" name="email" placeholder="Enter your Email Address" aria-label="Email Adress" required>
                                             <div class="input-group-append">
                                                 <button class="btn btn-primary btn-rounded" type="submit"><i class="icon-long-arrow-right"></i></button>
                                             </div><!-- .End .input-group-append -->
@@ -843,14 +866,12 @@
                     </div><!-- End .bg-white -->
                 </div><!-- End .cta -->
             </div><!-- End .container -->
-            {% block title %}
-            A.A JOMOS | Home
-       
-        {% endblock title %}
-        
+  
         </main><!-- End .main -->
 
   
+
+    
     
     <button id="scroll-top" title="Back to Top"><i class="icon-arrow-up"></i></button>
 

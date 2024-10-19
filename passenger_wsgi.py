@@ -1,0 +1,1 @@
+from aa_jomos.wsgi import application

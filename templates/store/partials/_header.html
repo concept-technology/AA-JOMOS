@@ -1,8 +1,7 @@
 {% load static %}
 {% load cart_tags %}
 {% load custom_filters %}
-<header class="header header-6">
-  
+<header class="header header-6"> 
     <div class="header-top">
         <div class="container">
             <div class="header-left">
@@ -10,7 +9,7 @@
                     <li>
                         <a href="#">Links</a>
                         <ul>
-                            <li><a href="tel:#"><i class="icon-phone"></i>Call: +234 814 300 6319</a></li>
+                            <li><a href="tel:{{ site_settings.contact_number }}"><i class="icon-phone"></i>Call {{ site_settings.contact_number }}</a></li>
                         </ul>
                     </li>
                 </ul><!-- End .top-menu -->
@@ -18,23 +17,23 @@
 
             <div class="header-right">
                 <div class="social-icons social-icons-color">
-                    <a href="#" class="social-icon social-facebook" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
-                    <a href="#" class="social-icon social-twitter" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
-                    <a href="#" class="social-icon social-pinterest" title="Instagram" target="_blank"><i class="icon-pinterest-p"></i></a>
-                    <a href="#" class="social-icon social-instagram" title="Pinterest" target="_blank"><i class="icon-instagram"></i></a>
+                    <a href="{{site_settings.facebook_link }}" class="social-icon social-facebook" title="Facebook" target="_blank"><i class="icon-facebook-f"></i></a>
+                    <a href="{{site_settings.twiter_link }}" class="social-icon social-twitter" title="Twitter" target="_blank"><i class="icon-twitter"></i></a>
+                    <!-- <a href="#" class="social-icon social-pinterest" title="Instagram" target="_blank"><i class="icon-pinterest-p"></i></a> -->
+                    <a href="{{site_settings.instagram_link }}" class="social-icon social-instagram" title="Pinterest" target="_blank"><i class="icon-instagram"></i></a>
                 </div><!-- End .soial-icons -->
                 <ul class="top-menu top-link-menu">
                     <li>
                         <a href="#">Links</a>
                         <ul>
-                            {% if user.is_authenticated %}
+                            {% if request.user.is_authenticated %}
                             <li><a href="{% url 'store:dash-board'%}"><i class="icon-user"></i> hello {{user}}</a></li>
                             {% else %}             
                             <li><a href="{% url 'account_login' %}" ><i class="icon-user"></i>Login</a></li>
                             {% endif %}                          
                         </ul>
                     </li>
-                </ul><!-- End .top-menu -->
+                </ul>
 
                 <div class="header-dropdown">
                     <a href="#">USD</a>
@@ -42,6 +41,7 @@
                         <ul>
                             <li><a href="#">Eur</a></li>
                             <li><a href="#">Usd</a></li>
+                            <li><a href="#">Naira</a></li>
                         </ul>
                     </div><!-- End .header-menu -->
                 </div><!-- End .header-dropdown -->
@@ -75,7 +75,7 @@
             </div>
             <div class="header-center">
                 <a href="{% url 'store:index'%}" class="logo">
-                    <img src="{% static 'assets/images/aajomoslogo.jpg' %}" alt="Logo" width="82" height="20">
+                    <img src="{{ site_settings.site_logo.url }}" alt="Logo" width="82" height="20">
                 </a>
             </div><!-- End .header-left -->
             <div class="header-right">
@@ -110,12 +110,16 @@
                                     <div class="demo-list">
                                         {% get_categories as categories %}
                                         {% for category in categories %}
+                                        
+                                        {% if category %}                     
                                         <div class="demo-item">
                                             <a href="{% url 'store:product_list_by_category' category.slug %}">
                                             <span class="demo-bg" style="background-image: url({{category.img.url}});"></span>
                                             <span class="demo-title">{{category.title}}</span>
                                             </a>
                                         </div><!-- End .demo-item -->
+                                        {% endif %}
+
                                       {% endfor %}
                                     </div><!-- End .demo-list -->
                                     <div class="megamenu-action text-center">
@@ -133,32 +137,23 @@
                                         <div class="menu-col">
                                             <div class="row">
                                                 <div class="col-md-6">
-                                                    <div class="menu-title">Shop with sidebar</div><!-- End .menu-title -->
+                                                    <div class="menu-title">Shop</div>
                                                     <ul>
-                                                        <li><a href="">Shop List</a></li>
+                                                        <li><a href="{% url 'admin:index' %}">Admin</a></li>
                                                        <li><a href=""><span>Shop Market<span class="tip tip-new">New</span></span></a></li>
                                                     </ul>
 
-                                                    <div class="menu-title">Shop no sidebar</div><!-- End .menu-title -->
-                                                    <ul>
-                                                        <li><a href=""><span>Shop Boxed No Sidebar<span class="tip tip-hot">Hot</span></span></a></li>
-                                                        <li><a href="">Shop Fullwidth No Sidebar</a></li>
-                                                    </ul>
+                                                 
                                                 </div><!-- End .col-md-6 -->
 
                                                 <div class="col-md-6">
-                                                    <div class="menu-title">Product Category</div><!-- End .menu-title -->
+                                                    <div class="menu-title">Product Category</div><!-- End .menu-title --> 
+                                                    <div class="menu-title">Pages</div><!-- End .menu-title -->
                                                     <ul>
-                                                        <li><a href="">Product Category Boxed</a></li>
-                                                        <li><a href=""><span>Product Category Fullwidth<span class="tip tip-new">New</span></span></a></li>
-                                                    </ul>
-                                                    <div class="menu-title">Shop Pages</div><!-- End .menu-title -->
-                                                    <ul>
-                                                        <li><a href="{% url 'store:cart' %}">Cart</a></li>
-                                                        
+                                                        <li><a href="{% url 'store:cart' %}">Cart</a></li>     
                                                         <li><a href="{% url 'store:wishlist' %}">Wishlist</a></li>
                                                         <li><a href="{% url 'store:dash-board' %}">My Account</a></li>
-                                                        <li><a href="{% url 'admin:index' %}">admin</a></li>
+                                                        <li><a href="{% url 'admin:index' %}" target="blank">admin</a></li>
                                                     
                                                     </ul>
                                                 </div><!-- End .col-md-6 -->
@@ -186,12 +181,9 @@
 
                             <ul>
                                 <li>
-                                    <a href="about" class="sf-with-ul">About</a>
 
                                     <ul>
-                                        <li><a href="">About 01</a></li>
-                                        <li><a href="">About 02</a></li>
-                                        <li><a href="{% url 'admin:index' %}">admin</a></li>
+                                        <li><a href="{% url 'admin:index' %}" target="_blank">admin</a></li>
                                     </ul>
                                 </li>
                             
