@@ -6,16 +6,17 @@ import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env = environ.Env(
-    # set casting, default value
-    DEBUG=(bool, False)
-)
+# env = environ.Env(
+#     # set casting, default value
+#     DEBUG=(bool, False)
+# )
 environ.Env.read_env(BASE_DIR / '.env')
-ALLOWED_HOSTS = ['aajomos.com']
+
+ALLOWED_HOSTS = ['aajomos.com', '127.0.0.1','localhost']
 
 ENVIRONMENT = 'production'
 
-DEBUG = False
+DEBUG = True
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
@@ -111,8 +112,15 @@ print("DJANGO_SETTINGS_MODULE:", os.environ.get("DJANGO_SETTINGS_MODULE"))
 #             'PORT': '3306',                       
 #         }
 #     }
-    
-DATABASES = {
+if DEBUG:
+    DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+else: 
+    DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql', 
             'NAME':  'concxyea_aajoms_store_database',        
@@ -150,7 +158,7 @@ AWS_S3_SIGNATURE_NAME = os.environ.get('AWS_S3_SIGNATURE_NAME',)
 AWS_CLOUDFRONT_KEY_ID = os.environ.get('AWS_CLOUDFRONT_KEY_ID')
 aws_cloudfront_key = os.environ.get('AWS_CLOUDFRONT_KEY', '')
 AWS_CLOUDFRONT_KEY = aws_cloudfront_key.replace('\\n', '\n').encode('ascii').strip()
-
+AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN')
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -219,11 +227,8 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
   # Tell Django to copy static assets into a path called `staticfiles` (this is specific to Render)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-# DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-STATICFILES_STORAGE = 'book_store.custom_storage.IgnoreStaticFilesStorage'
-
 
 
 # Application definition

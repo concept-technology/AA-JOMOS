@@ -1,6 +1,20 @@
 {% extends "store/base.html" %}
 {% block title %}
-product | {{ product.title }}
+<meta name="description" content="explore our product catalogue for your books and stationary">
+<meta name="keywords" content="our books and stationay catalogue">
+<meta name="author" content="Aajomos Nigeria Limited">
+<title>aa jomos | {{product.title}}</title>
+<!-- Open Graph Meta Tags for Social Media -->
+<meta property="og:title" content="{{product.title}}">
+<meta property="og:description" content="{{product.description}}">
+<meta property="og:image" content="{{product.img_1.url}}"> <!-- URL to a preview image -->
+<meta property="og:type" content="website">
+<!-- Twitter Card Meta Tags -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{product.title}}">
+<meta name="twitter:description" content="{{product.description}}">
+<meta name="twitter:image" content="{{product.img_1.url}}">
+
 {% endblock title %}
 {% load static %}
 {% block content %}

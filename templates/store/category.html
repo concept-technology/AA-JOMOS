@@ -1,7 +1,24 @@
 {% extends "store/base.html" %}
 {%load static %}
 {% block title %}
-	Product | Categories
+
+<meta name="description" content="explore our product catalogue for your books and stationary">
+<meta name="keywords" content="our books and stationay catalogue">
+<meta name="author" content="Aajomos Nigeria Limited">
+<title>books and stationary catalogue</title>
+<!-- Open Graph Meta Tags for Social Media -->
+<meta property="og:title" content="Sign Up for an Account | Aajomos Nigeria Limited">
+<meta property="og:description" content="Join Aajomos Nigeria Limited by creating an account to access special offers, track your orders, and manage your profile seamlessly.">
+<meta property="og:image" content="https://aajomos.com/images/signup-banner.jpg"> <!-- URL to a preview image -->
+<meta property="og:url" content="https://aajomos.com/sign-up">
+<meta property="og:type" content="website">
+
+<!-- Twitter Card Meta Tags -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="our books and stationay catalogue">
+<meta name="twitter:description" content="explore our product catalogue for your books and stationary">
+<meta name="twitter:image" content="https://aajomos.com/images/twitter-card-signup.jpg">
+
 {% endblock %}
 {% block content %}
 {% load humanize %}
@@ -10,7 +27,7 @@
         <main class="main">
         	<div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
         		<div class="container">
-        			<h1 class="page-title">Book shop<small> and stationary</small><span> products category</span></h1>
+        			<h1 class="page-title">Book <small> and stationary</small><span> explore</span></h1>
         		</div><!-- End .container -->
         	</div><!-- End .page-header -->
             <nav aria-label="breadcrumb" class="breadcrumb-nav mb-2">

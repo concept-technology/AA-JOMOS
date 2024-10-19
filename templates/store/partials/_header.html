@@ -102,31 +102,7 @@
                 <nav class="main-nav">
                     <ul class="menu sf-arrows">
                         <li class="megamenu-container">
-                            <a href="{% url 'store:index'%}" class="sf-with-ul">Home</a>
-
-                            <div class="megamenu demo">
-                                <div class="menu-col">
-                                    <div class="menu-title">Choose your demo</div><!-- End .menu-title -->
-                                    <div class="demo-list">
-                                        {% get_categories as categories %}
-                                        {% for category in categories %}
-                                        
-                                        {% if category %}                     
-                                        <div class="demo-item">
-                                            <a href="{% url 'store:product_list_by_category' category.slug %}">
-                                            <span class="demo-bg" style="background-image: url({{category.img.url}});"></span>
-                                            <span class="demo-title">{{category.title}}</span>
-                                            </a>
-                                        </div><!-- End .demo-item -->
-                                        {% endif %}
-
-                                      {% endfor %}
-                                    </div><!-- End .demo-list -->
-                                    <div class="megamenu-action text-center">
-                                        <a href="{% url 'store:categories-list' %}" class="btn btn-outline-primary-2 view-all-demos"><span>View All</span><i class="icon-long-arrow-right"></i></a>
-                                    </div><!-- End .text-center -->
-                                </div><!-- End .menu-col -->
-                            </div><!-- End .megamenu -->
+                            <a href="{% url 'store:index'%}" class="sf-with-ul" target="_blank">Home</a>
                         </li>
                         <li>
                             <a href="{% url 'store:categories-list'%}" class="sf-with-ul">Shop</a>
