@@ -59,4 +59,5 @@ jobs:
           set net:reconnect-interval-base 10;
           open -u $FTP_USER,$FTP_PASS ftp://$FTP_HOST:$FTP_PORT;
           mirror -R --exclude-glob venv --exclude-glob *.exe --exclude-glob *.pyc --exclude-glob __pycache__ --exclude-glob *.log --delete --no-symlinks --parallel=2 --only-newer ./ /public_html
+          "
           echo "Deployment completed"
